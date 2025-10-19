@@ -12,7 +12,6 @@ import os.path
 
 
 
-
 def _dataset_info(txt_labels,folder_dataset):
     with open(txt_labels, 'r') as f:
         images_list = f.readlines()
