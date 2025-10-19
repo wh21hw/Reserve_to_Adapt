@@ -19,8 +19,8 @@ def get_args():
     parser = argparse.ArgumentParser(description="Script to launch training",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     #domains
-    parser.add_argument("--source", help="Source" ,default='C:/Users/46025/Desktop/复现论文/osda2019/Reserve_to_Adapt/data/amazon_0-9_train_all.txt')
-    parser.add_argument("--target", help="Target", default='C:/Users/46025/Desktop/复现论文/osda2019/Reserve_to_Adapt/data/webcam_0-9_20-30_test.txt')
+    parser.add_argument("--source", help="Source" ,default='/home/tongyujun/Reserve_to_Adapt-main/data/amazon_0-9_train_all.txt')
+    parser.add_argument("--target", help="Target", default='/home/tongyujun/Reserve_to_Adapt-main/data/webcam_0-9_20-30_test.txt')
     
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size")
     parser.add_argument("--learning_rate", type=float, default=5e-5, help="Learning rate")   
@@ -30,7 +30,7 @@ def get_args():
     parser.add_argument("--all_classes", type=int, default=12,help=" Known+unknown classes")
    
     #path of the folders used
-    parser.add_argument("--log_dir", default="C:/Users/46025/Desktop/复现论文/osda2019/Reserve_to_Adapt/log/of31/", help="Path of the log folder")
+    parser.add_argument("--log_dir", default="/home/tongyujun/Reserve_to_Adapt-main/log/of31/", help="Path of the log folder")
     parser.add_argument("--data_dir", default="/home/tongyujun/Office/", help="Path of the dataset")
 
     #to select gpu/num of workers
@@ -417,8 +417,3 @@ print('class_num'+ str(args.all_classes)   + str(args))
 sys.stdout = orig_stdout
 f.close()
 
-
-if __name__ == '__main__':
-    # Windows: required when using multiprocessing (spawn)
-    multiprocessing.freeze_support()
-    main()
