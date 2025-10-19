@@ -123,7 +123,7 @@ target_test = torch.utils.data.DataLoader(ds2, batch_size=args.batch_size, shuff
 all_centroids = Centroids(class_num=args.shared_classes, dim=args.shared_classes, use_cuda=torch.cuda.is_available())
 discriminator = LargeAdversarialNetwork(256).cuda() if torch.cuda.is_available() else LargeAdversarialNetwork(256)
 # 修正ResNet模型路径为Windows本地缓存路径
-feature_extractor = ResNetFc(model_name='resnet50',model_path='C:/Users/46025/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth')
+feature_extractor = ResNetFc(model_name='resnet50',model_path='C:/Users/46025/Desktop/复现论文/osda2019/Reserve_to_Adapt/预训练model/resnet50-19c8e357.pth')
 cls = CLS(feature_extractor.output_num(), args.all_classes, bottle_neck_dim=256)
 net = nn.Sequential(feature_extractor, cls).cuda() if torch.cuda.is_available() else nn.Sequential(feature_extractor, cls)
 
