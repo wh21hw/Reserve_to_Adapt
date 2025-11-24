@@ -32,17 +32,18 @@ def get_split_dataset_info(txt_list,folder_dataset):
     return names, labels
 
 class CustomDataset(data.Dataset):
+    #自定义实现了torch.utils.data.Dataset类
     def __init__(self, names, labels, img_transformer=None,is_train=None):
         
         self.names = names
         self.labels = labels
         self.N = len(self.names)
-        self._image_transformer = img_transformer
-        self.is_train = is_train
+        self._image_transformer = img_transformer #图像变换函数
+        self.is_train = is_train #是否为训练集
      
     def __getitem__(self, index):
         framename = self.names[index]
-        img = Image.open(framename).convert('RGB')
+        img = Image.open(framename).convert('RGB')#图片转RGB格式
 
    
         data,label = self._image_transformer(img,self.labels[index], self.is_train)

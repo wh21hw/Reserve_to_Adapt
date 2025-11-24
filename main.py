@@ -67,23 +67,27 @@ f = open(args.log_dir + '/out.txt', 'w')
 sys.stdout = f
 
 # 源域数据转换：保持原逻辑，仅修正函数名避免重复定义
+#标签one-hot编码
+#特征从224x224x3转换为3x224x224张量
 def transform_source(data, label, is_train):
     label = one_hot(args.all_classes, label)
     transform_train = transforms.Compose([
-        transforms.Resize((256, 256)),
-        transforms.RandomCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
+        transforms.Resize((256, 256)),#强制缩放到256x256
+        transforms.RandomCrop(224),#随机裁取224x224
+        transforms.RandomHorizontalFlip(),#随机水平翻转
+        transforms.ToTensor(),#转换为张量 形状为[3,224,224],一张图片某个像素的 RGB 值是 (255, 127, 0)，经过 ToTensor() 后会变成 (1.0, 0.5, 0.0)
     ])
     data = transform_train(data)
     return data, label
 
-images,labels = get_split_dataset_info(args.source, args.data_dir)
-ds = CustomDataset(images,labels,img_transformer=transform_source,is_train=True)
+images,labels = get_split_dataset_info(args.source, args.data_dir) #读取源域数据
+ds = CustomDataset(images,labels,img_transformer=transform_source,is_train=True) #ds是一个Dataset对象
 # 修正num_workers=0，避免Windows多线程错误
-source_train = torch.utils.data.DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True, drop_last=True)
+source_train = torch.utils.data.DataLoader(ds, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True, drop_last=True)#droplast保证每次取一批数据，可能要BN?
 
-# 目标域训练集转换：修正函数名避免重复定义
+
+# 目标域训练集转换：修正函数名避免重复定义 
+# 给未知类留标签，0-9为已知类，10为未知类
 def transform_target_train(data, label, is_train):
     if label in range(10):
         label = one_hot(11, label)
@@ -124,14 +128,14 @@ all_centroids = Centroids(class_num=args.shared_classes, dim=args.shared_classes
 discriminator = LargeAdversarialNetwork(256).cuda() if torch.cuda.is_available() else LargeAdversarialNetwork(256)
 # 修正ResNet模型路径为Windows本地缓存路径
 feature_extractor = ResNetFc(model_name='resnet50',model_path='C:/Users/46025/Desktop/复现论文/osda2019/Reserve_to_Adapt/预训练model/resnet50-19c8e357.pth')
-cls = CLS(feature_extractor.output_num(), args.all_classes, bottle_neck_dim=256)
+cls = CLS(feature_extractor.output_num(), args.all_classes, bottle_neck_dim=256)#分类器
 net = nn.Sequential(feature_extractor, cls).cuda() if torch.cuda.is_available() else nn.Sequential(feature_extractor, cls)
 
 # ----------------------------find virtual class
-customgenearator = DomainBus([source_train, target_train])
+customgenearator = DomainBus([source_train, target_train])#迭代产生ource_train, target_train的数据对
 with torch.no_grad():
-    with Accumulator(['fs','ft','ls', 'lt']) as ProbRecorder:#feature_source, feature_target, label_source, label_target
-        for i, ((im_source, label_source), (im_target, label_target)) in enumerate(customgenearator):
+    with Accumulator(['fs','ft','ls', 'lt']) as ProbRecorder:#feature_source, feature_target, label_source, label_target收集numpy数据的容器
+        for i, ((im_source, label_source), (im_target, label_target)) in enumerate(customgenearator):#按批次读取数据对
             # 动态判断是否使用GPU
             if torch.cuda.is_available():
                 im_source = im_source.cuda()
@@ -139,11 +143,11 @@ with torch.no_grad():
                 im_target = im_target.cuda()
                 label_target = label_target.cuda()
             
-            _, feature_source, fc_source, predict_prob_source = net.forward(im_source)
-            ft1, feature_target, fc_target, predict_prob_target = net.forward(im_target)
-            fs,ft,ls,lt = [variable_to_numpy(x) for x in (feature_source, feature_target, torch.nonzero(label_source,as_tuple=True)[1], torch.nonzero(label_target,as_tuple=True)[1]) ]
-            ProbRecorder.updateData(globals())
-  
+            _, feature_source, fc_source, predict_prob_source = net.forward(im_source)#源域数据前向传播得到：_:特征提取器输出的，feature_source:特征,维度是瓶颈层输出的256，fc_source:分类器输出(fc层)，predict_prob_source:预测概率(softmax)
+            ft1, feature_target, fc_target, predict_prob_target = net.forward(im_target)#目标域数据前向传播,ft1：特征提取器输出的，feature_target:特征,维度是瓶颈层输出的256，fc_target:分类器输出(fc层)，predict_prob_target:预测概率(softmax)
+            fs,ft,ls,lt = [variable_to_numpy(x) for x in (feature_source, feature_target, torch.nonzero(label_source,as_tuple=True)[1], torch.nonzero(label_target,as_tuple=True)[1]) ]#把收集到的数据转成numpy格式，以使用accumulator存储
+            ProbRecorder.updateData(globals())#fs: np.ndarray [B,256]ft: np.ndarray [B,256]ls: np.ndarray [B]（源标签索引）lt: np.ndarray [B]（目标标签索引，训练时目标标签被映射/合并为11类等）讲这些追加到容器中
+    #所有批次数据的结果已存储在ProbRecorder中
     s_centroids = [] # calculate source class centroids
     for i in range(args.shared_classes):
         s_centroids.append(ProbRecorder['fs'][ProbRecorder['ls']==i].mean(axis=0))

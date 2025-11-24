@@ -78,26 +78,26 @@ class ResNetFc(BaseFeatureExtractor):
     def output_num(self):
         return self.__in_features
 
-class CLS(nn.Module):
-    def __init__(self, in_dim, out_dim, bottle_neck_dim=256,  temp=0.05):
-        super(CLS, self).__init__()
-        self.temp = 1#nn.Parameter(torch.ones(1,device='cuda'), requires_grad=True)
-        if bottle_neck_dim:
-            self.bottleneck = nn.Linear(in_dim, bottle_neck_dim)
-            self.weight1 = torch.nn.Parameter(torch.FloatTensor(1), requires_grad = True)
-            self.fc = nn.Linear(bottle_neck_dim, out_dim, bias = False)
+class CLS(nn.Module):#继承自torch.nn.Module
+    def __init__(self, in_dim, out_dim, bottle_neck_dim=256,  temp=0.05):#in_dim:特征提取后的维度，outdim:类别数，bottle_neck_dim:瓶颈层维度
+        super(CLS, self).__init__()#调用父类的初始化方法，继承参数管理、自动求导等
+        self.temp = 1#nn.Parameter(torch.ones(1,device='cuda'), requires_grad=True)温度系数，概率分布平滑度
+        if bottle_neck_dim:#如果指定了瓶颈层维度
+            self.bottleneck = nn.Linear(in_dim, bottle_neck_dim)#线性变换层，将输入特征映射到瓶颈维度降维，从in_dim到bottle_neck_dim
+            self.weight1 = torch.nn.Parameter(torch.FloatTensor(1), requires_grad = True)#学习的参数，微调瓶颈层输出的特征尺度
+            self.fc = nn.Linear(bottle_neck_dim, out_dim, bias = False)#线性变换层，将瓶颈特征映射到类别数维度
             
             self.main = nn.Sequential(
-                self.bottleneck,
+                self.bottleneck,#瓶颈层，最终维度256
                 nn.Sequential(
-                    nn.BatchNorm1d(bottle_neck_dim),
-                    nn.LeakyReLU(0.2, inplace=True),
-                    self.fc
+                    nn.BatchNorm1d(bottle_neck_dim),#批量归一化，对256维（batchsize x 256）的特征进行归一化
+                    nn.LeakyReLU(0.2, inplace=True),#LeakReLU激活函数，允许小于0的输入有非零输出，inplace=True表示直接在输入上修改
+                    self.fc#线性层，最终输出类别数维度
                 ),
-                nn.Softmax(dim=-1)
+                nn.Softmax(dim=-1)#对线性层输出的类别进行softmax转换为概率
             )
-        else:
-            self.fc = nn.Linear(in_dim, out_dim)
+        else:#没有瓶颈层
+            self.fc = nn.Linear(in_dim, out_dim)#直接从输入特征映射到类别数维度
             # if fc_init is not None:
             #     nn.init.constant_(self.fc.weight, fc_init)
             self.main = nn.Sequential(
@@ -105,29 +105,29 @@ class CLS(nn.Module):
                 nn.Softmax(dim=-1)
             )
 
-    def forward(self, x):
-        out = [x]
+    def forward(self, x):#forward propagation
+        out = [x]#初始化一个list，先把特征维度放进去
         
-        for i, module in enumerate(self.main.children()):
-            if i==0:
+        for i, module in enumerate(self.main.children()):#遍历 self.main 中的所有子模块（按顺序：瓶颈层→BN→LeakyReLU→fc→Softmax）
+            if i==0:#第一个模块是瓶颈层
                 x = module(x)
-                x = x/torch.norm(x, dim =-1,keepdim=True)
+                x = x/torch.norm(x, dim =-1,keepdim=True)#对瓶颈层输出的特征进行L2归一化，除以模长，保持特征向量的方向不变，长度为1
             else:
-                x = module(x)
-            out.append(x)
+                x = module(x)#其他层直接前向传播
+            out.append(x)#把每一层的输出都存到out列表中
        
-        out[-2] = out[-2]/ self.temp
-        out[-1] = nn.Softmax(dim=-1)(out[-2])
-        return out
+        out[-2] = out[-2]/ self.temp#softmax之前的线性层做调整，除以温度系数，由于后续是softmax，当温度系数较大时，概率分布更平滑
+        out[-1] = nn.Softmax(dim=-1)(out[-2])#重新计算softmax概率分布
+        return out#返回所有层的输出列表
     
-    def virt_forward(self, K, feature_source, logits: torch.Tensor, target: Union[torch.Tensor, None] = None,  ) -> torch.Tensor:
-        if self.training:
-            with torch.no_grad():
-                W_yi = torch.gather(self.fc.weight, 0, target.unsqueeze(1).expand(target.size(0), self.fc.weight.size(1)))   
-                W_virt = torch.norm(W_yi,dim=1).unsqueeze(-1).unsqueeze(-1) * ((K / torch.norm(K, dim =1).unsqueeze(-1)).unsqueeze(0))
-            vir = torch.bmm(W_virt, feature_source.unsqueeze(-1)).squeeze(-1)
-            logits = torch.cat([logits, vir], dim=-1)
-            x = nn.Softmax(-1)(logits)
+    def virt_forward(self, K, feature_source, logits: torch.Tensor, target: Union[torch.Tensor, None] = None,  ) -> torch.Tensor:#虚拟类，论文第一大模块：reserve space for unknown classes
+        if self.training:#训练模式 feature_source:源域特征 K:目标域特征 logits:线性层输出的类别得分 target:源域标签
+            with torch.no_grad():#不计算梯度
+                W_yi = torch.gather(self.fc.weight, 0, target.unsqueeze(1).expand(target.size(0), self.fc.weight.size(1)))#按源域真实标签target，从fc层（softmax前的线性层）self.fc.weight取出对应的weights,对于第i个样本，j类取第j行，放到W_yi中第i行
+                W_virt = torch.norm(W_yi,dim=1).unsqueeze(-1).unsqueeze(-1) * ((K / torch.norm(K, dim =1).unsqueeze(-1)).unsqueeze(0))#生成虚拟类的权重，并对已知类权重做归一化
+            vir = torch.bmm(W_virt, feature_source.unsqueeze(-1)).squeeze(-1)#计算特征和虚拟类权重的点积，得到虚拟类的的得分
+            logits = torch.cat([logits, vir], dim=-1)#将虚拟类得分添加到原始类别得分中
+            x = nn.Softmax(-1)(logits)#对扩展后的得分做softmax，得到最终类别概率分布
         return x
     
 
