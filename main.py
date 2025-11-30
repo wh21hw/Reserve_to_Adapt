@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
-import IMPClusterer
+from IMPClusterer import IMPClusterer
 
 import faiss
 from data import *
@@ -160,11 +160,22 @@ with torch.no_grad():
         s_centroids.append(ProbRecorder['fs'][ProbRecorder['ls']==i].mean(axis=0))
     s_centroids = np.stack(s_centroids,axis=0)#根据源域标签索引ls，把对应的特征fs取出来，计算每个类的均值作为类中心，最终得到形状为[shared_classes,256]的s_centroids数组
 
-    K_cluster =20# cluster target class centroids 对目标域类中心进行聚类
-    faiss_kmeans = faiss.Kmeans(256, int(K_cluster), niter=800, verbose=False, min_points_per_centroid=1, gpu=False)#kmeans聚类
-    faiss_kmeans.train(ProbRecorder['ft'])#对目标域特征ft进行聚类，得到K_cluster个类中心
-    t_centroids = faiss_kmeans.centroids#记录目标域类中心，形状为[K_cluster,256]
-    
+    #K_cluster =20# cluster target class centroids 对目标域类中心进行聚类
+    #faiss_kmeans = faiss.Kmeans(256, int(K_cluster), niter=800, verbose=False, min_points_per_centroid=1, gpu=False)#kmeans聚类
+    #faiss_kmeans.train(ProbRecorder['ft'])#对目标域特征ft进行聚类，得到K_cluster个类中心
+    #t_centroids = faiss_kmeans.centroids#记录目标域类中心，形状为[K_cluster,256]
+    """
+    初始化阶段，修改为对目标域进行imp聚类
+    """
+    imp = IMPClusterer(alpha = 0.05)
+    #获取目标域特征
+    ft_tensor = torch.from_numpy(ProbRecorder['ft']).cuda()
+    #进行imp聚类
+    t_centroids_tensor = imp.fit(ft_tensor, max_clusters = 100)
+    t_centroids = t_centroids_tensor.cpu().numpy()
+    print(f"初始化聚类簇数为{len(t_centroids)}")
+    K_cluster = len(t_centroids)
+
     # find nomatched target cluster
     cost = np.linalg.norm(s_centroids[:,None,:] -  t_centroids[None,:,:],axis=-1)#源域类中心和目标域类中心之间的欧氏距离矩阵，形状为[shared_classes,K_cluster]
     _,t_match = linear_sum_assignment(cost)#匈牙利算法，找到源域类中心和目标域类中心之间的最佳匹配，t_match是目标域类中心的索引数组，表示每个源域类中心对应的目标域类中心索引
@@ -315,10 +326,14 @@ while epoch <70:#训练70个epoch
         s_centroids.append(ProbRecorder['fss'][np.nonzero(ProbRecorder['label_s'])[1]==i].mean(axis=0))#用源域真实标签更新源域类中心
     s_centroids = np.stack(s_centroids,axis=0)
 
-    faiss_kmeans = faiss.Kmeans(256, int(K_cluster), niter=800, verbose=False, min_points_per_centroid=1, gpu=False)#对目标域类中心进行聚类K_cluster = 20
-    faiss_kmeans.train(ProbRecorder['ftt'])  #对目标域特征ft训练
-    t_centroids = faiss_kmeans.centroids#记录目标域类中心，形状为[K_cluster,256]
-
+    #faiss_kmeans = faiss.Kmeans(256, int(K_cluster), niter=800, verbose=False, min_points_per_centroid=1, gpu=False)#对目标域类中心进行聚类K_cluster = 20
+    #faiss_kmeans.train(ProbRecorder['ftt'])  #对目标域特征ft训练
+    #t_centroids = faiss_kmeans.centroids#记录目标域类中心，形状为[K_cluster,256]
+    ftt_tensor = torch.from_numpy(ProbRecorder['ftt']).cuda()
+    t_centroids_tensor = imp.fit(ftt_tensor, max_clusters=100)
+    t_centroids = t_centroids_tensor.cpu().numpy()
+    K_cluster = len(t_centroids)
+    print(f"第{epoch+1}轮训练后聚类簇数为{len(t_centroids)}")
     # find nomatched target cluster
     cost = np.linalg.norm(s_centroids[:,None,:] -  t_centroids[None,:,:],axis=-1)#源域类中心和目标域类中心之间的欧氏距离矩阵，形状为[shared_classes,K_cluster]
     _,t_match = linear_sum_assignment(cost)#匈牙利算法匹配到源域的已知类
