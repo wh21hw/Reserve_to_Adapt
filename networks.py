@@ -143,24 +143,24 @@ class AdversarialNetwork(nn.Module):
             x = module(x)
         return x
 
-class LargeAdversarialNetwork(AdversarialNetwork):
+class LargeAdversarialNetwork(AdversarialNetwork):#对抗网络
     def __init__(self, in_feature):
-        super(LargeAdversarialNetwork, self).__init__()
-        self.ad_layer1 = nn.Linear(in_feature, 1024)
-        self.ad_layer2 = nn.Linear(1024, 1024)
-        self.ad_layer3 = nn.Linear(1024, 1)
-        self.sigmoid = nn.Sigmoid()
+        super(LargeAdversarialNetwork, self).__init__()#调用父类初始化方法
+        self.ad_layer1 = nn.Linear(in_feature, 1024)#线性层，将输入特征映射到1024维
+        self.ad_layer2 = nn.Linear(1024, 1024)#线性层，1024维到1024维
+        self.ad_layer3 = nn.Linear(1024, 1)#线性层，1024维到1维，输出对抗判别结果
+        self.sigmoid = nn.Sigmoid()#sigmoid激活函数，将输出映射到0-1之间，表示概率
 
         self.main = nn.Sequential(
-            self.ad_layer1,
-            nn.BatchNorm1d(1024),
-            nn.LeakyReLU(0.2, inplace=True),
-            self.ad_layer2,
-            nn.BatchNorm1d(1024),
-            nn.LeakyReLU(0.2, inplace=True),
-            self.ad_layer3,
-            self.sigmoid
-        )
+            self.ad_layer1,#线性层，输入特征到1024维
+            nn.BatchNorm1d(1024),#批量归一化,对1024维特征进行归一化
+            nn.LeakyReLU(0.2, inplace=True),#LeakReLU激活函数
+            self.ad_layer2,#线性层，1024维到1024维
+            nn.BatchNorm1d(1024),#批量归一化
+            nn.LeakyReLU(0.2, inplace=True),#LeakReLU激活函数
+            self.ad_layer3,#线性层，1024维到1维
+            self.sigmoid#sigmoid激活函数，输出概率
+        )#对原来的main进行重新定义，前两个线性层加入了BN和LeakyReLU激活函数
 
 
 class GradientReverseLayer(torch.autograd.Function):

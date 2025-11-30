@@ -1,5 +1,5 @@
 
-class DomainBus(object):
+class DomainBus(object):#打包了源域和目标域的dataloaders，方便每次迭代时同时从源域和目标域获取一个batch的数据
 
     def __init__(self, domainloaders, train_samplers=None, iter_num=-1):
 

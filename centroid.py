@@ -6,12 +6,12 @@ import torch.nn.functional as F
 
 class Centroids(object):
     def __init__(self, class_num, dim, use_cuda):
-        self.class_num = class_num
-        self.src_ctrs = torch.ones((class_num, dim))
-        self.tgt_ctrs = torch.ones((class_num, dim+1))
-        self.src_ctrs *= 1e-10
-        self.tgt_ctrs *= 1e-10
-        self.dim = dim
+        self.class_num = class_num#类别数
+        self.src_ctrs = torch.ones((class_num, dim))#源域类中心，形状为[class_num,dim]dim是特征维度
+        self.tgt_ctrs = torch.ones((class_num, dim+1))#目标域类中心，形状为[class_num,dim+1]
+        self.src_ctrs *= 1e-10#初始化为很小的值，避免后续计算中出现除以零的情况
+        self.tgt_ctrs *= 1e-10#同上
+        self.dim = dim#特征维度
         if use_cuda:
             self.src_ctrs = self.src_ctrs.cuda()
             self.tgt_ctrs = self.tgt_ctrs.cuda()
@@ -19,11 +19,11 @@ class Centroids(object):
 
     def get_centroids(self, domain=None, cid=None):
         if domain == 'source':
-            return self.src_ctrs if cid is None else self.src_ctrs[cid, :]
+            return self.src_ctrs if cid is None else self.src_ctrs[cid, :]#返回指定类别的源域类中心
         elif domain == 'target':
-            return self.tgt_ctrs if cid is None else self.tgt_ctrs[cid, :]
+            return self.tgt_ctrs if cid is None else self.tgt_ctrs[cid, :]#返回指定类别的目标域类中心
         else:
-            return self.src_ctrs, self.tgt_ctrs
+            return self.src_ctrs, self.tgt_ctrs#返回所有源域和目标域类中心
     
 
     
