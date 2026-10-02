@@ -6,7 +6,9 @@ New-Item -ItemType Directory -Force -Path $outputPath | Out-Null
 $officeArchive = Join-Path $outputPath 'office31_images.tar'
 & tar -cf $officeArchive -C (Join-Path $repoPath 'data') domain_adaptation_images
 if ($LASTEXITCODE -ne 0) { throw 'Office-31 archive creation failed' }
-$weightPath = Join-Path $repoPath '预训练model/resnet50-19c8e357.pth'
+$weightDirectory = Get-ChildItem -LiteralPath $repoPath -Directory | Where-Object Name -Like '*model' | Select-Object -First 1
+if (-not $weightDirectory) { throw 'Pretrained model directory not found' }
+$weightPath = Join-Path $weightDirectory.FullName 'resnet50-19c8e357.pth'
 Copy-Item -LiteralPath $weightPath -Destination $outputPath -Force
 $archivePaths = @($officeArchive, (Join-Path $outputPath 'resnet50-19c8e357.pth'))
 $manifest = foreach ($filePath in $archivePaths) {
