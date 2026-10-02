@@ -1,6 +1,4 @@
 import numpy as np
-import tensorflow as tf
-import tensorlayer as tl
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -147,6 +145,9 @@ def setGPU(i):
 
 class Logger(object):
     def __init__(self, log_dir, clear=False):
+        global tf, tl
+        import tensorflow as tf
+        import tensorlayer as tl
         if clear:
             os.system('rm %s -r'%log_dir)
         tl.files.exists_or_mkdir(log_dir)

@@ -1,6 +1,9 @@
 import os
 import sys
 import argparse
+import json
+import random as python_random
+import time
 
 import faiss
 from data import *
@@ -44,6 +47,12 @@ def get_args():
 
 
 args = get_args()
+seed = int(os.environ.get('RTA_SEED', '1'))
+python_random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+started_at = time.time()
 
 orig_stdout = sys.stdout
 max_iter = 10000
@@ -65,7 +74,18 @@ print('THE OUTPUT IS SAVED IN A TXT FILE HERE ----------------------------------
 print('\n')
 
 f = open(args.log_dir + '/out.txt', 'w')
-sys.stdout = f
+class Tee:
+    def write(self, text):
+        orig_stdout.write(text)
+        orig_stdout.flush()
+        f.write(text)
+        f.flush()
+    def flush(self):
+        orig_stdout.flush()
+        f.flush()
+sys.stdout = Tee()
+with open(os.path.join(args.log_dir, 'config.json'), 'w') as config_file:
+    json.dump(dict(vars(args), seed=seed), config_file, indent=2)
 
 
 def transform(data, label, is_train):
@@ -124,7 +144,7 @@ target_test = torch.utils.data.DataLoader(ds2, batch_size=args.batch_size, shuff
 #----------------------------load the class centroids bank
 all_centroids = Centroids(class_num=args.shared_classes, dim=args.shared_classes, use_cuda=True)
 discriminator = LargeAdversarialNetwork(256).cuda()
-feature_extractor = ResNetFc(model_name='resnet50',model_path='/home/tongyujun/.cache/torch/hub/checkpoints/resnet50-19c8e357.pth')
+feature_extractor = ResNetFc(model_name='resnet50',model_path=os.environ['RTA_MODEL_PATH'])
 cls = CLS(feature_extractor.output_num(), args.all_classes, bottle_neck_dim=256)
 net = nn.Sequential(feature_extractor, cls).cuda()
 
@@ -405,9 +425,27 @@ while epoch <70:
         best_unk = unkn
         best_hos = hos
         best_epoch = epoch
+        torch.save(dict(model=net.state_dict(), epoch=epoch, HOS=float(hos)),
+                   os.path.join(args.log_dir, 'best.pt'))
     torch.cuda.empty_cache()
 
     epoch = epoch + 1
+    metrics = dict(epoch=epoch, OS=float(acc_os), OS_star=float(acc_os_star),
+                   unknown=float(unkn), HOS=float(hos),
+                   best=dict(epoch=best_epoch, OS=float(best_os), OS_star=float(best_os_star),
+                             unknown=float(best_unk), HOS=float(best_hos)),
+                   elapsed_seconds=time.time()-started_at, seed=seed)
+    with open(os.path.join(args.log_dir, 'history.jsonl'), 'a') as history:
+        history.write(json.dumps(metrics)+'\n')
+    with open(os.path.join(args.log_dir, 'metrics.json'), 'w') as metrics_file:
+        json.dump(metrics, metrics_file, indent=2)
+    torch.save(dict(model=net.state_dict(), discriminator=discriminator.state_dict(),
+                    epoch=epoch, metrics=metrics,
+                    optimizer_feature=optimizer_feature_extractor.optimizer.state_dict(),
+                    optimizer_cls=optimizer_cls.optimizer.state_dict(),
+                    optimizer_discriminator=optimizer_discriminator.optimizer.state_dict()),
+               os.path.join(args.log_dir, 'last.tmp.pt'))
+    os.replace(os.path.join(args.log_dir, 'last.tmp.pt'), os.path.join(args.log_dir, 'last.pt'))
 
 
 
