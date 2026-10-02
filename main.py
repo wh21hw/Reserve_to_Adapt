@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 import json
-import random
+import random as python_random
 from pathlib import Path
 # 补充缺失的导入（原代码使用了torch相关模块但未导入）
 import torch
@@ -55,7 +55,7 @@ def get_args():
     return parser.parse_args()
 
 args = get_args()
-random.seed(args.seed)
+python_random.seed(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

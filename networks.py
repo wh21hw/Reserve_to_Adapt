@@ -28,7 +28,7 @@ class ResNetFc(BaseFeatureExtractor):
             model_path = None
             print('invalid model path!')
         if model_path:
-            self.model_resnet.load_state_dict(torch.load(model_path, map_location='cpu'))
+            self.model_resnet.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=False))
         if model_path or normalize:
             self.normalize = True
             self.mean = False
