@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+artifacts/
+pipeline-results/
+log/
+runs/
+checkpoints/
+data/**
+!data/*.txt
+OfficeHome/
+预训练model/
+*.pth
+*.pt
+*.tar
+*.tar.gz
+*.zip

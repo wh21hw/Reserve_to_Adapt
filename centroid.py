@@ -1,0 +1,59 @@
+from __future__ import division, print_function, absolute_import
+import numpy as np
+import torch
+from utilities import *
+import torch.nn.functional as F
+
+class Centroids(object):
+    def __init__(self, class_num, dim, use_cuda):
+        self.class_num = class_num#类别数
+        self.src_ctrs = torch.ones((class_num, dim))#源域类中心，形状为[class_num,dim]dim是特征维度
+        self.tgt_ctrs = torch.ones((class_num, dim+1))#目标域类中心，形状为[class_num,dim+1]
+        self.src_ctrs *= 1e-10#初始化为很小的值，避免后续计算中出现除以零的情况
+        self.tgt_ctrs *= 1e-10#同上
+        self.dim = dim#特征维度
+        if use_cuda:
+            self.src_ctrs = self.src_ctrs.cuda()
+            self.tgt_ctrs = self.tgt_ctrs.cuda()
+            
+
+    def get_centroids(self, domain=None, cid=None):
+        if domain == 'source':
+            return self.src_ctrs if cid is None else self.src_ctrs[cid, :]#返回指定类别的源域类中心
+        elif domain == 'target':
+            return self.tgt_ctrs if cid is None else self.tgt_ctrs[cid, :]#返回指定类别的目标域类中心
+        else:
+            return self.src_ctrs, self.tgt_ctrs#返回所有源域和目标域类中心
+    
+
+    
+
+    @torch.no_grad()
+    def update(self, pred_s, pred_t, label_s,label_unk=None, ):
+        self.upd_src_centroids(pred_s, label_s)
+        self.upd_tgt_centroids(pred_t, label_unk)
+
+    
+    @torch.no_grad()
+    def upd_src_centroids(self, probs, labels):      
+        for i in range(self.class_num):
+            
+            data_idx = np.argwhere(labels[:,i] == 1)[:,0]
+            new_centroid = torch.mean(torch.tensor(probs[data_idx, :self.dim]), 0).squeeze()
+        
+            if len(data_idx):
+                self.src_ctrs[i, :] = new_centroid.to(self.src_ctrs.device)
+        
+
+    @torch.no_grad()
+    def upd_tgt_centroids(self, probs, labels):
+        
+        if labels is None:
+            return
+       
+        for i in range(self.class_num):
+            
+            data_idx = np.argwhere(labels==i)
+            new_centroid = torch.mean(torch.tensor(probs[data_idx]), 0).squeeze()
+            self.tgt_ctrs[i, :] = new_centroid.to(self.tgt_ctrs.device)
+
