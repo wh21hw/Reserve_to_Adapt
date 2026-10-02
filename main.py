@@ -386,7 +386,7 @@ while epoch <70:
    
 
     # =================================evaluation
-    with TrainingModeManager([feature_extractor, cls], train=False) as mgr, Accumulator(['predict_prob','predict_index', 'label']) as accumulator:
+    with torch.no_grad(), TrainingModeManager([feature_extractor, cls], train=False) as mgr, Accumulator(['predict_prob','predict_index', 'label']) as accumulator:
         for (i, (im, label)) in enumerate(target_test):
             im = im.cuda()
             label = label.cuda()

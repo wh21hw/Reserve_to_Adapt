@@ -9,7 +9,8 @@ SGD momentum 0.9, weight decay 5e-4, 10 known outputs + 2 unknown outputs,
 
 Minimal changes: pretrained path via RTA_MODEL_PATH; unused TensorFlow logger
 imports deferred; RTA_SEED; streaming logs; per-epoch metrics and checkpoints.
-Neither evaluation accuracy nor training gradients are changed by logging.
+Evaluation uses no_grad to avoid retaining a graph between epochs on T4.
+Neither evaluation predictions nor training gradients are changed by this.
 
 Office-31 A->W uses the original data lists (known 0-9, unknown 20-30).
 Paper Table I: OS*=92.2%, UNK=93.8%, HOS=93.0%.
