@@ -16,6 +16,16 @@ Node is installed at `/home/wanghao21/.local/opt/osda-node/bin/node`.
 Use `node --use-env-proxy dist/index.js` from the CLI directory, or the `colab`
 launcher in `~/.local/bin` if configured.
 
+Local CLI adjustments: OAuth timeout is 15 minutes; background OAuth inherits
+Node's proxy flag; upload chunks are 5 MiB with concurrency 2. These changes fix
+browser callback timing, proxy authentication and excessive upload memory use.
+If initial kernel creation fails while the VM is starting, restart the local CLI
+daemon and reattach to the existing VM rather than allocating another instance.
+
+When the shared Drive API client hits quota, upload inputs with `colab fs upload`
+to `/content/osda-upload`, execute `scripts/mount_drive.py`, then execute
+`scripts/persist_data.py`. This writes and verifies the files on mounted Drive.
+
 1. `colab auth login`, then `colab drive login` (human browser authorization).
 2. Create the Drive folders and upload the archive, manifest and weights.
 3. `colab runtime available`, then `colab runtime create --accelerator T4`.

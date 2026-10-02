@@ -1,7 +1,7 @@
 from pathlib import Path
 from google.colab import drive
 
-drive.mount('/content/drive')
+drive.mount('/content/drive', timeout_ms=900000)
 for folder in ('datasets', 'pretrained', 'runs'):
     Path('/content/drive/MyDrive/OSDA', folder).mkdir(parents=True, exist_ok=True)
 print('DRIVE_READY', flush=True)

@@ -478,7 +478,8 @@ while epoch < args.epochs:
                     optimizer_feature=optimizer_feature_extractor.optimizer.state_dict(),
                     optimizer_cls=optimizer_cls.optimizer.state_dict(),
                     optimizer_discriminator=optimizer_discriminator.optimizer.state_dict()),
-               os.path.join(args.log_dir, 'last.pt'))
+               os.path.join(args.log_dir, 'last.tmp.pt'))
+    os.replace(os.path.join(args.log_dir, 'last.tmp.pt'), os.path.join(args.log_dir, 'last.pt'))
 
 print ('Best: Epoch:{}\tOS: {:.3f}\tOS*:{:.3f}\tUnk:{:.3f}\tHos:{:.3f}'.format(best_epoch, best_os,best_os_star,best_unk,best_hos))
 print('class_num'+ str(len(t_centroids))   + str(args))#改t_centroids
