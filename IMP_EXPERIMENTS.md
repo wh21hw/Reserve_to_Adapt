@@ -593,6 +593,8 @@ on checkpoint包随后下载完成（187.2MiB）；本地zip CRC及内部last.pt
 
 exec113启动唯一seed1 structure_off完整arm；运行目录/content/imp-runs/matched-structure-full-a2w-seed1-v1/structure_off，console/content/matched-full-a2w-seed1-off-console-v1.log，L4 endpoint gpu-l4-s-kkb-ass1a1-13n8bs33o8id1。此处仅启动，不宣称完成或收益；正常期间只attach观察，必要时独立shell，不在kernel队列追加诊断。失败保留证据，不自动调参/重跑。seed2/3必须各自导出warm/cache、估先验和strict handoff后才训练；当前未完成此准备，不能复用seed1 proposal冒充三种子矩阵。OfficeHome/VisDA仍在完整范围内。
 
+完整off训练最近完成epoch16、epoch17 batch1仍running，已跨过epoch12选样转换；后期一个batch选20未知样本（不再误用top16截断）。早期完整run与旧pilot同配置/初始化但数值并非逐元素轨迹重放，未承诺GPU确定性。新增完整日志审计`matched_full_audit.py`及合成测试：66epoch/924batch、公式/有限性/计数/后期选样范围/固定final与禁止标签选取；两组正例和9类负例通过。合成日志不是完整训练完成证据，仍需实际history和独立checkpoint collector。GitHub本轮两次push均网络失败，76045cee尚未确认同步。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
