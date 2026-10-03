@@ -431,6 +431,20 @@ colab-cli exec69在现有L4端点完成，状态done。独立worker执行实际m
 这是损失连接预检：virtual使用固定随机方向、gate使用全1权重、unknown selection使用前16样本；没有验证完整GMM、虚拟聚类刷新、真实未知选样、整轮训练与长期显存。不将它写成完整训练通过；Pr→Rw和VisDA尚未做真实batch检查。
 报告及console已下载至 `pipeline-results/multitask-preflight-v1.json` 和 `multitask-preflight-console-v1.log`；报告SHA256 `64f8e338b96a3985566d745fb207f37f0fd8010f5047dd8152c83b19dc23231d`。未重启runtime、未修改既有模型checkpoint。
 
+### Pr→Rw 数据打包与传输（2026-10-03，进行中）
+
+新增 `scripts/pack-officehome-task.ps1`，仅按两个任务列表打包，并生成6142图片+2列表的逐文件SHA/大小manifest。源包43,309,310字节，SHA `fef471edd5535d0ccdcf4d3d3f6809bd44388eb4445cdea9c70c460e88c8c76b`；目标包757,071,899字节，SHA `04088dfeeee9da261439f609f0257cf24c890a1e32c87c2b5c15ae97fdfb5e35`。本地路径 `artifacts/officehome-pr2rw-v1`，不纳入Git。
+Drive API列表查询间歇成功/请求配额失败。成功创建 `OSDA/datasets/officehome-pr2rw-v1` 文件夹ID `10Q6tfMPLwtZB1l1xJU536sqJErIVWgbo`，但目标包 resumable upload 初始化403：`storageQuotaExceeded`，用户Drive存储已满；未上传目标包，未删除任何Drive文件。
+源包已通过fs直传现有L4 `/content/product_0-24_train_all.zip`；运行时字节数/整包SHA核验与本地一致。目标包超过500MiB，下一步需改为受校验的分片直传再重组（Drive不可用的回退），或者用户自行释放Drive空间。新增 `scripts/verify_officehome_colab.py` 为逐条归档/解压/图片验证准备，尚未执行。尚未完成目标传输、数据解压或Pr→Rw GPU预检。
+
+### Pr→Rw 数据已就绪、实际 batch 预检通过（2026-10-03）
+
+Drive storageQuotaExceeded回退：目标包分成250MiB/250MiB/232,783,899字节三片，通过fs传到原L4；没有删除用户Drive文件。exec75逐片校验并重组，完整目标包SHA与本地 `04088dfeeee9da261439f609f0257cf24c890a1e32c87c2b5c15ae97fdfb5e35` 一致。重组脚本两项本地测试通过（损坏片阻止生成、拒绝覆盖）。
+exec76独立worker验证两个归档整包SHA、全部6144条目（6142图片+2列表）的归档内及解压后SHA/大小，并对全部图片执行verify和像素load；状态done。数据解压于 `/content/osda-officehome-pr2rw-v1`，这是临时运行时存储，不是已持久化到Drive。
+exec77实际入口DataLoader+模型前反向预检，source/target各64张224×224真实图片，分类输出29（25known+4unknown槽），target_train标签恒定、评价保留65原始类别。损失10.302968979，所有梯度有限，峰值已分配GPU 11,307,958,272字节（约10.53GiB），优化器step=0，状态done。
+仍只是损失连接测试：virtual为随机10方向、gate=1、unknown选前16；传入virtual-clusters=35仅为了预检入口参数，未运行Kmeans，未把35定为正式OfficeHome配置。完整聚类刷新/选样/训练尚未验证，VisDA仍待真实列表与backbone选择。
+重组、输入校验、预检报告及两个console已下载到 `pipeline-results/officehome-*`。入口SHA与本地 `89ae1377f4d852b96eb2fe6f2d2786928dbe2a8fde0e4d015cf86701c8a755f4` 一致。本地完整数据包与逐文件manifest保留于 `artifacts/officehome-pr2rw-v1`；没有删除分片、旧实验或checkpoint。
+
 Stage5d结果包SHA256 `8ac6452bd6b96c7ddaa16629b3d2721bcc1adf77a2954065dfc3fa1149478d6c` 已下载、校验、解压。
 三组checkpoint均已下载，本地归档哈希及内部last.pt哈希全部核验匹配：
 
