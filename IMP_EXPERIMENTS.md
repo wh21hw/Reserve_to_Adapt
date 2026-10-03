@@ -453,6 +453,34 @@ checkpoint扩充实际source/target关系bank、virtual模板、sklearn mixture�
 已观测完整预热、适应期真实GMM选择与每轮虚拟聚类刷新正常。最近检查日志epoch43（0-based）且exec仍running；中途指标不作最终成绩、不据此选checkpoint。以完整70条history及固定final报告为完成依据。Drive已满，输出目前在临时/content，完成后必须立即下载checkpoint/配置/history/audit。启动manifest已下载至 `pipeline-results/rta-multitask-a2w-seed1-launch-v1.json`。
 GitHub上次push返回RPC/curl55失败且同时打印Everything up-to-date，不能据后一句宣称同步成功；尚需核验远端ref。没有重启runtime。
 
+### A→W L4 baseline seed1：70 epoch完成并归档（2026-10-03）
+
+exec78正常结束，exec79独立collector通过。history严格为1–70，无缺轮；末轮checkpoint epoch70，预热checkpoint epoch4；scheduler计数末轮980/预热56，GRL计数1960/112。独立center-crop、顺序批次评价与原日志三个指标逐项一致（误差<1e-12）。
+
+| 选择规则 | OS* (%) | UNK (%) | HOS (%) | 与论文A→W HOS93.0的差（百分点） |
+| --- | ---: | ---: | ---: | ---: |
+| 固定final，第70轮 | 91.5469 | 88.5820 | 90.0401 | -2.9599 |
+| 目标标签oracle-best，第30轮（日志epoch29） | 94.6464 | 87.7322 | 91.0582 | -1.9418 |
+
+固定final相对论文OS*92.2/UNK93.8分别低0.6531/5.2180百分点。不是已复现论文成绩；目前仅一个L4 seed，不能报告三seed均值/标准差，更不能拿旧T4三seed均值与它组成同环境统计。oracle-best使用目标标签且仅诊断；完整目标标签只用于评价，不用于训练、IMP先验或参数选择。
+逐类评价中phone（原始ID21）准确率6.25%，提示未知检测不均衡；这是事后诊断，不允许据此挑gate阈值、结构系数或针对该目标类别调参。
+三个归档均已下载、校验并解压，内部checkpointSHA也匹配：
+
+| 本地归档（pipeline-results/） | 归档SHA256 |
+| --- | --- |
+| rta-multitask-a2w-seed1-results-v1.zip | e5a108132eb9a149f97a8424dee908ae2e601060eaa026ccfdbc2dd1916aed7c |
+| rta-multitask-a2w-seed1-warmup-v1.zip | 2f17cc44682dc1de0e28c269e760144beb6c5a44e18a8a34cc6e368e575a3319 |
+| rta-multitask-a2w-seed1-checkpoints-v1.zip | a1331cb6ec5784de6ab3e267b8e440e267f4f53b8c1da14efc6961e873136e31 |
+
+last.pt SHA `869f72602c6ed5f0db133fe4b55e8e3dcfae0d99814ae45555fa8bca30dfbb61`，warmup-complete.pt SHA `ff88bdc9d49a1a8c151baa8b4ca166549a2723195882ec37fe5056e0d91f1eb1`，best.pt SHA `544d65b899adb7016c53a79e332358e92de3c36fd2b45c42879feb80a3901625`。
+seed2在seed1完整审计/本地保存后按原计划启动：exec84，同目录根下 `office31-a2w_seed2`，仅seed改为2，其余main/utilities hash及70epoch预算相同；最近核查日志epoch11，状态running。seed3尚未启动。不得因seed1结果偏低重新选seed或调参。
+远端ref实际核查为 `5188580b5cfc4b5a35566c8c81a6c60c17bbed9d`，是当前HEAD祖先；尚未同步新提交，先前push失败不是成功。
+
+### 预热特征缓存兼容性审计（2026-10-03）
+
+独立CPU shell比较旧Stage4预热checkpoint与本次固定第4轮checkpoint，两者epoch均4，但model/discriminator tensor state不相等；最大绝对差分别0.00218248/0.000459805。报告已下载至 `pipeline-results/warm-checkpoint-compatibility-v1.json`。
+因此旧冻结features及候选proposal不能直接作为新完整baseline匹配的IMP输入，须从本次固定warm checkpoint重新导出并重建候选。未确认差异的具体成因，不将其直接归因GPU、随机种子或某项代码修改。已有Stage5/6a旧缓存诊断仍保留其原scope，不追溯声称对齐本次完整baseline。已保存状态字段也不等于已经证明resume轨迹一致，下一步还需独立恢复/重放检查。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
