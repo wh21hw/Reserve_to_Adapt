@@ -353,3 +353,70 @@ exec51执行唯一预先声明的uniform18两epoch适应，exit0；无非有限l
 checkpoint内部last.pt SHA256 `e96827ab4d55eaa8d997379a78c929a52709f61d31af09847c920e033ec205c2`。
 两个归档均已下载到pipeline-results，结果归档SHA256已校验并解压；checkpoint归档SHA256及内部last.pt SHA256也已本地核验匹配。
 结果包包含失败缓存诊断、独立预检日志、worker源文件、模型快照、逐轮指标、配置和无标签final logits。
+
+### Stage 5d：未知组件边缘化的分层头 — 已完成
+
+保留raw已知/未知组件logits，把未知组件作为潜变量，而不是K个监督语义类别。
+组未知证据 `logsumexp(z_U + log(pi)) + log(2)`，本stage固定pi=1/K，已知logit不变；条件原型分配为softmax(z_U+log(pi))。
+已知10类+一个未知的C+1输出用于source CE、未知伪标签CE、target entropy、virtual CE和最终预测。
+RTA关系KL/GMM、样本选择、adv、virtual模板及原损失系数保留；未知CE不再强迫单个原型赢得全部概率。
+reference2固定来自原头总槽先验，仍非校准未知比例。没有扫目标标签阈值。
+
+固定seed1/warm epoch4/两个完整adaptation epoch，三组original2/proto2/proto18，初始化、优化器状态及初始关系bank等按Stage5b同规则交接。
+这同时改变了平坦损失/决策语义，不能把相对Stage5b的差异只归因于容量。组内结构本阶段由候选初始化与边缘似然梯度学习，尚不增加独立结构loss或更新DP浓度/组件数。
+先验证分裂一个组件并分配其权重后的组输出、组级loss和共享logit梯度不变；不宣称独立组件SGD轨迹不变。
+没有latent语义标签监督，原型可能塌缩，必须记录条件占用及中心方向相似性。真正语义类数和数量不确定性仍未解决。
+
+exec55解包，代码包SHA256 `e8fd2b1a8c335cb4adf02a7f278fb7e2c220a7765dd00f0a2fb35a1e44f4657f`；exec56代数测试通过。
+均匀/非均匀prior分裂组件后的semantic logits、预测、source CE、unknown组CE、semantic entropy、virtual CE及共享logit梯度相同，极端logit有限。
+exec57在独立worker中检查三组真实图像的同状态交接、全损失前反向、mixture buffer持久化及重载semantic logits精确相同，未step。
+
+实际运行顺序为exec58 proto18、exec59 original2、exec60 proto2，各完成固定epoch5/6，exit0。
+首次入口继承notebook遗留PILOT_ARM=proto18，所以并非最初口头描述的先跑original2。实际proto18配置/预算均符合预声明，审计与console一致，没有重跑或覆盖。
+后续入口取消隐式default，并由三个wrapper显式指定实验组。此运行顺序变动不改每组checkpoint、seed、训练预算，也不按成绩选组。
+
+| 分层初始化 | 固定final OS* (%) | UNK (%) | HOS (%) | 硬预测未知样本数（564中） | 有硬归属latent槽 |
+| --- | --- | --- | --- | --- | --- |
+| original2 | 86.93 | 75.75 | 80.95 | 236 | 2 |
+| proto2 | 87.32 | 74.96 | 80.67 | 237 | 2 |
+| proto18 | 91.62 | 65.52 | 76.40 | 188 | 18 |
+
+三组oracle-best恰为final，仅作诊断，不因此改变固定final选择规则。
+分层original2相对Stage5b原平坦original2 HOS低0.14百分点；分层proto18低于分层proto2约4.27百分点，低于原平坦proto18约7.59百分点。
+没有多seed方差或完整训练证据，不能认定分层方法普遍无效，也不能把组级一致性通过当作性能提升。
+
+exec61固定final诊断/归档：proto18每槽1–25个硬归属未知预测样本，没有空槽；条件soft质量和输出组概率均有限。
+未知组soft概率均值0.2063，方向两两cosine均值0.49794（初始化0.51007），最大0.86714（初始化0.86677）。
+初始/末轮同槽方向cosine均值0.99930，尚未显示明显方向坍缩，但两轮内原型方向几乎未变。
+方向相似度/占用不是语义纯度检验，既不证明18类，也不证明结构学习充分。原采集字段occupancy.semantic_unknown_count是未知**样本数**，不是语义类数。
+本阶段只用边缘似然更新latent heads，**没有独立条件结构loss、数据驱动mixture权重或完整DP后验更新**，这些仍待分项验证。
+
+### Stage 5e：同checkpoint的未知决策规则离线审计 — 已完成
+
+exec66复用Stage5c uniform18固定final logits，原始logits已经带log(2/K)，没有再次加先验。
+固定比较原最大单槽后collapse与已知10+unknown logsumexp的边缘化决策；无训练、无偏置扫描、无checkpoint选择。
+使用单独evaluation-only标签仅报告每类宏平均；首先复算原指标与Stage5c逐项精确匹配。
+
+| 同一个uniform18 checkpoint的决策 | OS* (%) | UNK (%) | HOS (%) | 硬预测未知样本数 |
+| --- | --- | --- | --- | --- |
+| 最大单槽后collapse | 95.20 | 37.30 | 53.60 | 95 |
+| 未知组证据边缘化 | 92.23 | 65.36 | 76.50 | 185 |
+
+仅改变决策，就有90个样本改判为未知，HOS提高22.90百分点；这是明确隔离决策影响的证据，不是新训练成果。
+而Stage5d分层proto18训练后的HOS76.40，并未比这次固定checkpoint决策审计表现更高。
+不能因目标评价更高就偷偷把Stage5c的旧结果改写为分层训练结果；两个规则全部保留。
+
+下一步先区分已修复的输出语义与尚未学习充分的原型结构/先验；不再通过尝试不同推断阈值挑目标HOS。
+在加入新loss前核实其源先验、无标签责任分配和条件结构约束，并冻结方案后开展完整预算对照，避免长期停留在两epoch pilot。
+最终三数据集各一任务及seed1/2/3范围不变，当前仍未完成。
+
+Stage5d结果包SHA256 `8ac6452bd6b96c7ddaa16629b3d2721bcc1adf77a2954065dfc3fa1149478d6c` 已下载、校验、解压。
+三组checkpoint均已下载，本地归档哈希及内部last.pt哈希全部核验匹配：
+
+| 组 | checkpoint归档SHA256 |
+| --- | --- |
+| original2 | `10abf749b10e1cd24a87e0adef3f917a83e80f46a5cf7d7500f4c2dda507cf5d` |
+| proto2 | `44c680aad7d1972c316a33b319cee4845809e70473595a03a75c26437ee52d64` |
+| proto18 | `b90383b060fc5ddde2f3807cee1a1eab4d80fd26dbb285b486110dd3a725d9ae` |
+
+Stage5e审计归档SHA256 `f965d585efe21a52b50f80a56fcc9141a3f71c6e348fc31948a176a094812f87` 已下载、核验、解压；包含两规则结果和完整审计脚本。
