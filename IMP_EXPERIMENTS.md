@@ -583,6 +583,16 @@ exec103 off与exec105 on均正常done，各固定epoch5/6、28次SGD更新，sch
 
 on checkpoint包随后下载完成（187.2MiB）；本地zip CRC及内部last.pt SHA 4e942bfd47cade7401512e36671f0e66bcea0cb34a27ea80a3af246a140190e8与summary匹配。两组结果与checkpoint均已本地保存。实验记录和入口已提交20d0148d，但此次GitHub push连接重置，未确认远端同步；不将本地commit当已推送。
 
+### 匹配结构完整预算入口与首组启动（2026-10-03）
+
+对照短程后继续固定λ0/.1，未根据target短程指标调系数。逐项核对published-code后发现不能把短程恒定top16及4混合组件静默延长：0-based epoch<=10使用known posterior>.8及nonknown top16，后期known使用最小均值组硬指示、unknown选择最大均值组；0-based epoch<=30刷新4组件，之后2组件。层次化语义CE/entropy仍是明确方法变更，不是假称原flat baseline。
+
+新增`matched_full_budget.py`作为严格基点SHA锁定、每个replacement anchor恰好出现一次的扩展规则，`scripts/test_matched_full_budget.py`静态AST/策略/预算/非法基点检查通过，不等于SGD验证。新增独立完整入口从原warm4开始，不续接短程pilot。总budget原4warm+66adaptation=70，新增924次更新，末计数980/GRL1960；fixed final，所有逐轮target指标仅诊断，不做checkpoint选择。新增source/target list SHA记录，保留全部strict初始化/有限性/拒绝覆盖门槛。原pilot完全不改。
+
+规则文件SHA e764da6a387160c5c98d906c1e9aed0dbd1afafb2e70458a443fe072c80852e3，full入口SHA 0d351d40b13bbe021754c1271dfea33de3788cc64fca7c9ccca81c1829ef3826；generated代码SHA在config内保存。exec112 fresh subprocess依次验证off/on完整初始化，strict模型/momentum/RNG检查通过，各计数56/GRL112，0SGD/0训练目录。
+
+exec113启动唯一seed1 structure_off完整arm；运行目录/content/imp-runs/matched-structure-full-a2w-seed1-v1/structure_off，console/content/matched-full-a2w-seed1-off-console-v1.log，L4 endpoint gpu-l4-s-kkb-ass1a1-13n8bs33o8id1。此处仅启动，不宣称完成或收益；正常期间只attach观察，必要时独立shell，不在kernel队列追加诊断。失败保留证据，不自动调参/重跑。seed2/3必须各自导出warm/cache、估先验和strict handoff后才训练；当前未完成此准备，不能复用seed1 proposal冒充三种子矩阵。OfficeHome/VisDA仍在完整范围内。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
