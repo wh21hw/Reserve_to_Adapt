@@ -27,6 +27,8 @@ best.pt已通过13个小分块下载并合并保存到本地 `pipeline-results/r
 3. 原版RTA同seed3，双方共享上述source初始化，固定K=2 vs估计K。这个固定K对照应单独训练，不能拿前面的ImageNet初始化baseline直接冒充纯K对照。
 4. 后续加入分段交替版本，K可增可减，总RTA训练预算一致。暂不加入层次未知合并、Dirichlet分类权重或结构KL。
 
+交替实现准备中（未正式运行）：预先固定在完成20/40/60轮后重新提取当前source/target表示并推断K，仍用source距离99%分位数/方差/先验5/5轮。新增类头按随机方向和RTA式权重范数尺度初始化，不安装IMP原型方向。旧未知头通过当前未知预测与新责任矩阵的重叠做匈牙利对应；保留匹配头和其SGD动量，已知头不动，调度器不归零。K不变时不重新排列任何头。CPU实际CLS接口一次检查已通过3→5→2→2；这不是完整交替训练通过，更不是效果结论。先完成固定一次K的两臂，再启动此版本。
+
 exec139完成首次移动已知中心的估计，K=9（总19原型），5次迭代都为19。阈值0.5108345，方差0.0009093746；新增簇有约1个样本的簇，未事后过滤，也不能解释为已经恢复9个未知语义类。本地结果 `pipeline-results/konly-seed3-estimate-v1.json`。
 
 exec141已启动同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。最新检查已完成15epoch，损失有限，尚未完成。估计K=9的RTA训练还未启动，不能报告收益。下一臂入口 `scripts/run_konly_estimated_seed3.py` 只在固定K完成后启动；结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
