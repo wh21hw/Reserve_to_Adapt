@@ -35,9 +35,9 @@ exec141已完成同source初始化固定K=2的70epoch对照，目录 `/content/i
 
 exec143已完成估计K=9的同source初始化70epoch臂，目录 `/content/imp-runs/konly-rta-v1/estimated/a2w_seed3`。best第17轮OS*=96.9797%、UNK=81.5706%、HOS=88.6103%；final OS*=95.9017%、UNK=77.7575%、HOS=85.8817%。对照K2，best差+5.1210/−14.0259/−5.0801pp，final差+4.0430/−17.8390/−7.8086pp（OS*/UNK/HOS）。这是完整预算的单seed负结果，不能把已知类提升写成总体方法提升。普通日志/配置/指标已下载ZIP并解压；汇总 `pipeline-results/konly-seed3-comparison-v1.json`。没有独立重算checkpoint或hash审计。
 
-exec145已启动交替K版本，目录 `/content/imp-runs/konly-alternating-v1/seed3/a2w_seed3`，初始K9、共享source模型、seed3、总70epoch、固定20/40/60轮后刷新。模型初始阶段正常；未观察到第一次刷新，也不能报告交替收益。此次不根据上述负结果重新挑阈值/seed/刷新频率。
+exec145正在运行交替K版本，目录 `/content/imp-runs/konly-alternating-v1/seed3/a2w_seed3`，初始K9、共享source模型、seed3、总70epoch、固定20/40/60轮后刷新。已完成前42轮，loss有限。20轮刷新K9→9，不改头；40轮刷新K9→11，保留9个匹配未知头及其SGD动量，新增2个随机方向头，已知头保持，调度器不重置。阈值分别1.0746273/0.9701381，均由当前source特征重新校准，未用target标签。完整收益尚待70轮结果，不依据中途成绩改阈值/seed/刷新频率。
 
-共享source-final已完整保存到本地 `pipeline-results/konly-source-prior-seed3.pt`；source配置/3轮日志/冻结特征也已存 `pipeline-results/konly-source-prior-seed3-features.tar.gz`。固定K对照best权重已完整保存 `pipeline-results/konly-fixed2-seed3-best.pt`，原云端文件保持不动。交替完整入口的源代码拼接/编译已通过，启动脚本在一次性K两臂都完成70轮后执行。
+共享source-final已完整保存到本地 `pipeline-results/konly-source-prior-seed3.pt`；source配置/3轮日志/冻结特征也已存 `pipeline-results/konly-source-prior-seed3-features.tar.gz`。固定K对照best权重已完整保存 `pipeline-results/konly-fixed2-seed3-best.pt`，估计K9的best已保存 `pipeline-results/konly-estimated-seed3-best.pt`，原云端文件保持不动。交替完整入口的源代码拼接/编译已通过，启动脚本在一次性K两臂都完成70轮后执行。
 
 baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/download_selected_baseline.ps1` 13片下载并合并完成。未改动云端原权重，也不使用hash检查。
 
@@ -59,3 +59,5 @@ baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/do
 跨任务准备：新增旧环境任务入口 `scripts/train_legacy_task_entry.py`，不替换现有A→W训练；类别映射/目标训练标签sentinel/宏平均UNK按任务适配，virtual Q必须显式给出，不伪称未知的作者设置。`task_protocol.py`改为Python3.8可用的relative_to路径检查，去掉例行list hash，5个协议测试通过。VisDA官方原ID已确认0..11，RTA已知六类为1/2/3/6/10/11；train.tar官方HEAD200、7698031104字节，现通过独立shell下载到/content/osda-visda-syn2real-v1（未解包/未训练）。来源见experiments/visda_protocol_v1/README.md；仅非商业研究教育，不发布图像。
 
 OfficeHome旧环境实际CPU数据入口检查通过，source1785/target4357、source头29维、target训练sentinel25、评价65原始类别，未创建模型/SGD。Q29是预先声明的C+baselineK选择，不是作者已确认配置；不是完整聚类/训练通过。结果已下载 `pipeline-results/legacy-officehome-loader-check-v1.json`。
+
+VisDA数据阶段已完成：官方train/validation下载并解包所需图片，source已知六类79765张，target55388张。原始类别ID和无标签路径分开保留，准备报告已下载 `pipeline-results/visda-data-preparation-v1.json`。这不解决backbone或论文训练预算，不代表开始正式训练。
