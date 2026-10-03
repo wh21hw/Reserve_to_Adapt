@@ -79,13 +79,18 @@ def main():
     proposal = np.load(proposal_path, allow_pickle=False)
     counts = proposal['responsibilities'].sum(0)[10:]
     selected = sorted(np.flatnonzero(counts >= 5), key=lambda i: (-counts[i], i))
-    centers = torch.from_numpy(proposal['candidates'][selected]).cuda()
-    prior = dirichlet_log_prior(torch.from_numpy(counts[selected]).cuda(), concentration=1.)
+    # Construct on the same CPU surface as the audited fingerprint, then transfer.
+    # Do not weaken exact state checks for CUDA reduction roundoff.
+    cpu_centers = torch.from_numpy(proposal['candidates'][selected])
+    centers = cpu_centers.cuda()
+    prior = dirichlet_log_prior(torch.from_numpy(counts[selected]), concentration=1.).cuda()
     net = torch.nn.Sequential(networks.ResNetFc(model_path='/content/osda-datasets/resnet50-19c8e357.pth'), networks.CLS(2048, 12)).cuda()
     net.load_state_dict(checkpoint['model'], strict=True)
     signatures = [[(n, tuple(p.shape)) for n, p in module.named_parameters()] for module in net]
     known = net[1].fc.weight[:10].detach().clone()
-    net[1].fc.weight = torch.nn.Parameter(torch.cat([known, F.normalize(centers, dim=1) * known.norm(dim=1).mean()]))
+    cpu_known = checkpoint['model']['1.fc.weight'][:10]
+    cpu_weights = torch.cat([cpu_known, F.normalize(cpu_centers, dim=1) * cpu_known.norm(dim=1).mean()])
+    net[1].fc.weight = torch.nn.Parameter(cpu_weights.cuda())
     net[1].fc.out_features = 10 + len(selected)
     net[1].register_buffer('unknown_log_weights', prior)
     assert net[1].main[1][2] is net[1].fc

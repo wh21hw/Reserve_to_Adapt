@@ -555,6 +555,12 @@ exec98真实固定warm checkpoint审计通过：两个独立构造的结构off/o
 exec100无更新AST诊断只执行实际worker初始化prefix，截断在失败assert之前。仅不同keys是unknown_log_weights与fc.weight及其main别名；CPU/GPU候选构造最大abs差4.47035e−8，prior差2.38419e−7，known权重exact。相同公式在CPU构造的head/prior SHA与既有CPU审计指纹匹配，证明是本次跨设备构造的数值差异而非checkpoint/cache替换。诊断确认训练目录仍不存在、optimizer step0、batch0。报告 `pipeline-results/matched-init-parity-diagnostic-v1.json` 已下载。
 拟修复：head/prior统一CPU构造后转GPU，维持严格指纹，不改算法或系数；先独立初始化验证，再获得继续训练方向，暂不自动重跑失败入口。本次失败不是NaN训练，短程结果尚无。
 
+### CPU统一构造修复：初始化验证通过，尚未重跑训练（2026-10-03）
+
+失败代码已提交32a6f444，失败remote worker保留；修复版上传新路径 `/content/train_matched_structure_pilot_fixed_v2.py`，SHA `bf5babdecdcd0e07c8ea2e6f553a07442009101d08565566a5bbdf208f02d75b`。只把candidate head/Dirichlet prior构造移至CPU后转GPU，公式、λ、batch、预算、严格model/momentum指纹检查都不变。
+exec101 fresh worker用AST截断修复入口在output.mkdir之前，分别执行off/on初始化，全部严格model/momentum/Torch RNG fingerprint通过，计数56/56/56与GRL112一致。SGD0、batch0、实验目录创建0、training_restart_performed=False。报告 `pipeline-results/matched-init-fixed-verification-v2.json` 已下载。未自动重跑失败训练，也未运行结构on训练。后续需确认继续训练，另用新console文件以保留原失败日志，不复用原v1包装。
+GitHub推送32a6f444连接重置未确认成功；本地代码与证据保留。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
