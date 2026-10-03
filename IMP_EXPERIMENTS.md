@@ -540,6 +540,14 @@ seed3 GPU训练和collector结束后，在独立shell1 fresh Python运行真实b
 控制loss2.75755、structure KL1.32553；所有model/discriminator梯度有限。全参数梯度norm8.81804/5.78914（structure/base≈.6565）；分类头norm2.15707/1.39431；known-head结构梯度严格零。峰值GPU allocated11,880,482,816字节≈11.06GiB，SGD step0。报告 `pipeline-results/matched-structure-realbatch-v1.json` 已下载。
 这是单增强batch的层次化control+结构项连接/梯度检查，不是原flat RTA公式，不证明多batch稳定、optimizer迁移、恢复轨迹、epoch完整或模块收益。下一步需实现并验证统一状态交接、固定λ0对照与预声明非零结构系数的训练，三任务完整baseline/IMP仍未完成。
 
+### 匹配候选头SGD交接审计通过（2026-10-03）
+
+新增独立 `matched_handoff.py`，仅SGD momentum迁移；按照固定原模型named-parameter signature核验参数顺序/组分区/shape/state种类。未变化参数和known行momentum逐项保留，替换的unknown行全部置零，off/on完全同政策，restore_rng放在构造与resize之后。不是unknown头改变前的精确连续baseline恢复，不声称dataloader轨迹已重放。
+exec97 CPU合成测试通过：一个合成optimizer step建立momentum，known/非头保留、unknown零、两次迁移状态相等、错误顺序/未知状态类型/shape三种case拒绝；数据集训练step0。
+exec98真实固定warm checkpoint审计通过：两个独立构造的结构off/on模型全部state tensor、classifier质量prior buffer、全参数momentum、discriminator状态、Torch RNG fingerprint逐项一致；scheduler计数56/56/56与GRL112保留，known momentum及非头SGD state与原checkpoint逐项相等，unknown momentum零。保存的source/target bank、virtual和mixture不重建；两个arm未执行训练step。报告 `pipeline-results/matched-real-handoff-v1.json` 已下载，本地再次核验fingerprint/step相等。
+下一结构消融预声明λ0与λ.1：其余head容量支持规则、α1质量prior、teacher/gate、初始化、交接、种子和预算一致，λ.1是无目标标签梯度检查后的保守起点（realbatch加权结构梯度约占base6.6%），不是目标HOS搜索。先做固定warm4→6的短程稳定性检查，未取得收益结论；随后仍需完整70预算和seed1/2/3及三任务对照，不能用短程替代。
+仍缺实际训练入口接入/多batch/交接后真实SGD和恢复重放验证；仅已保存状态一致不等于训练轨迹证明。GitHub旧提交随后push成功到67293af9；本节和新模块另行提交。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
