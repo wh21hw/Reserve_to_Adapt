@@ -311,3 +311,45 @@ exec37结果归档 `pipeline-results/rta-capacity-pilot-v1-results.zip` 已下�
 
 正式目标仍包括Office31 A→W、OfficeHome Pr→Rw、VisDA Synthetic→Real，各一任务，同协议baseline/IMP完整训练，seed1/2/3全部报告。尚未完成三任务，不能用此pilot替代。
 没有重启或销毁runtime，没有恢复已暂停的baseline自动检查。研究目标仍未完成。
+
+### Stage 5c：容量组先验机制对照 — 已完成，负结果保留
+
+固定上一stage的候选十八槽、warm epoch4 checkpoint及两epoch预算、seed1。
+新增一个uniform-reference2组：已知logit不变，每个未知logit加 `log(2/K)`，K=18时为`-log(9)`。
+reference2来自原控制头槽数，不是目标标签调出的阈值；没有搜索偏置强度或重选候选。
+假设检验：复制同一未知logit不应该凭槽数量改变未知组总概率；不假设此控制必然提升OSDA。
+先做K=2零修正、重复槽组概率/已知概率及梯度不变、极端logit有限等检查，再启动训练。
+**局限预先声明**：此修正仅控制group softmax先验总量；flat entropy和伪标签CE仍随槽拆分变化，最大单槽argmax也不具有组重复不变性。
+这不是完整DPMM，也不是已证明正确的未知判别规则。不能把这个单变量机制控制当最终模型；保留无修正结果，无论其性能高低。
+
+同L4执行exec45解包（代码包SHA256 `bba3a5861e0541b4102db61f442162852bb39e955cd336fa33c7f43e5e8f261b`），exec46代数测试通过。
+K=2零修正逐元素不变；两未知槽各复制9次后，修正保持已知概率、未知组概率及组概率梯度不变；极端logit梯度有限，4个非法计数输入被拒绝。
+同时实证验证flat entropy仍增加 `P(U)*log(9)`；因此这不是整个训练目标的槽重复不变修复。
+
+exec47首次notebook预检在checkpoint prior持久化断言处失败，**没有执行训练或optimizer.step**。
+exec48核实Python缓存实际来自旧`rta-l4-control-v1/networks.py`和旧pilot_state：旧CLS没有注册buffer，虽然临时赋予prior属性，state_dict不保存它。
+没有放松断言、重启runtime或调参。改用独立Python worker并断言模块路径；exec49实际新版模型的同状态交接、真实source前反向、prior buffer持久化及重载logit精确相同均通过，未step。
+exec50只释放失败预检临时对象。此后训练与收集均在独立子进程执行。
+此前Stage5b训练本来就是独立子进程，不因本轮notebook验证缓存问题而自动重跑。
+
+exec51执行唯一预先声明的uniform18两epoch适应，exit0；无非有限loss/gradient，不自动延长或偏置搜索。exec52固定final收集成功。
+
+| 容量18设置 | 固定final OS* (%) | UNK (%) | HOS (%) | 硬预测未知数 | 有硬归属未知槽 | 平均未知组soft概率 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 原始候选头，无先验修正 | 89.78 | 78.90 | 83.99 | 229 | 18 | 0.4497 |
+| uniform-reference2修正 | 95.20 | 37.30 | 53.60 | 95 | 13 | 0.2098 |
+
+修正组epoch5/6 HOS为39.76/53.60%，oracle-best为最后一轮，仍只把固定final作为主比较。
+最终HOS下降30.38百分点；source CE约0.225、unknown伪标签CE约2.307（未修正组约0.397/1.418）。
+解释限于本次短程机制对照：直接把组质量归一化放进原RTA平坦分类/最大单槽决策，会更难预测未知，不能作为当前最终方案。
+不能由此推断所有Bayesian先验无效、原始18槽正确或13个占用槽就是13个语义类。
+
+**下一阶段原则**：将“是否未知”的组级判别与“未知内部哪个原型”的条件分配分开；在先验加权原型混合中边缘化未知组件，不能把潜在槽直接等同监督语义类别。
+先验证拆分/重复组件后的组级输出与组级loss不变，再做同checkpoint、同预算对照。
+保留RTA关系判别/空间预留控制，逐项区分判别、原型结构loss和先验权重；不通过扫目标HOS补偿失败偏置。
+正式三个数据集各一任务及多seed完整对照仍是最终要求，此单seed pilot不代替。
+
+结果和checkpoint已生成独立归档：results SHA256 `a63b92d07cf0b5454c90167535d359c5619fce261e6f7b1dd0d4dcf01820e3fb`；checkpoint archive SHA256 `e8326b0f697659a7d5daa8be16cbb8ad57c6190b14150875fe5a23e0dc6f4c9c`。
+checkpoint内部last.pt SHA256 `e96827ab4d55eaa8d997379a78c929a52709f61d31af09847c920e033ec205c2`。
+两个归档均已下载到pipeline-results，结果归档SHA256已校验并解压；checkpoint归档SHA256及内部last.pt SHA256也已本地核验匹配。
+结果包包含失败缓存诊断、独立预检日志、worker源文件、模型快照、逐轮指标、配置和无标签final logits。
