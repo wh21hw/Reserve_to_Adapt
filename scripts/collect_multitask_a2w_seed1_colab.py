@@ -1,4 +1,5 @@
-"""Audit full seed1 and independently evaluate fixed-last; no training or tuning."""
+"""Audit a declared full A2W seed; independently evaluate fixed-last, never train."""
+import argparse
 import hashlib
 import json
 import math
@@ -10,22 +11,26 @@ from PIL import Image
 import torch
 from torchvision import transforms
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--seed', type=int, choices=(1, 2, 3), default=1)
+seed = parser.parse_args().seed
+prefix = f'rta-multitask-a2w-seed{seed}'
 code = Path('/content/rta_multitask_baseline_v1')
 sys.path.insert(0, str(code))
 import networks
 from task_protocol import OFFICE31_A2W, macro_open_set_metrics
 assert Path(networks.__file__).resolve() == code / 'networks.py'
-run = Path('/content/imp-runs/rta-multitask-baseline-v1/office31-a2w_seed1')
-launch = json.loads(Path('/content/rta-multitask-a2w-seed1-launch-v1.json').read_text())
+run = Path(f'/content/imp-runs/rta-multitask-baseline-v1/office31-a2w_seed{seed}')
+launch = json.loads(Path(f'/content/{prefix}-launch-v1.json').read_text())
 config = json.loads((run / 'config.json').read_text())
-assert launch['epochs'] == 70 and launch['seed'] == config['seed'] == 1
+assert launch['epochs'] == 70 and launch['seed'] == config['seed'] == seed
 assert config['shared_classes'] == 10 and config['all_classes'] == 12 and config['virtual_clusters'] == 20
 for name, digest in launch['code_sha256'].items():
     assert hashlib.sha256((code / name).read_bytes()).hexdigest() == digest
 history = [json.loads(line) for line in (run / 'history.jsonl').read_text().splitlines()]
 assert [row['epoch'] for row in history] == list(range(1, 71))
 for row in history:
-    assert row['seed'] == 1
+    assert row['seed'] == seed
     assert all(math.isfinite(row[key]) and 0 <= row[key] <= 1
                for key in ('OS', 'OS_star', 'unknown', 'HOS'))
 last = torch.load(run / 'last.pt', map_location='cpu', weights_only=False)
@@ -72,7 +77,8 @@ for key, logged in (('OS_star', 'OS_star'), ('UNK', 'unknown'), ('HOS', 'HOS')):
     assert abs(recomputed[key] - history[-1][logged]) < 1e-12
 np.savez_compressed(run / 'fixed-final-evaluation.npz', raw_logits=logits.numpy(),
                     raw_evaluation_labels=np.array(raw_labels), semantic_predictions=np.array(predictions))
-report = dict(task='office31-a2w', seed=1, epochs_verified=70, completed_seed1=True,
+report = dict(task='office31-a2w', seed=seed, epochs_verified=70, completed_seed=True,
+              completed_seed1=(seed == 1),
               completed_three_seed_matrix=False, fixed_final=history[-1],
               oracle_best=history[oracle_index], oracle_best_uses_target_labels=True,
               independent_fixed_final_metrics=recomputed, resume_state_fields_verified=list(resume_keys),
@@ -86,20 +92,20 @@ archives = []
 definitions = [('results', [path for path in run.iterdir() if path.is_file() and path.suffix != '.pt']),
                ('warmup', [run / 'warmup-complete.pt']), ('checkpoints', [run / 'last.pt', run / 'best.pt'])]
 for label, paths in definitions:
-    archive_path = Path('/content') / f'rta-multitask-a2w-seed1-{label}-v1.zip'
+    archive_path = Path('/content') / f'{prefix}-{label}-v1.zip'
     with zipfile.ZipFile(archive_path, 'x', zipfile.ZIP_DEFLATED) as archive:
         for path in paths:
             archive.write(path, path.name)
         if label == 'results':
             for path in code.glob('*.py'):
                 archive.write(path, 'code/' + path.name)
-            archive.write('/content/rta-multitask-a2w-seed1-console-v1.log', 'console.log')
-            archive.write('/content/rta-multitask-a2w-seed1-launch-v1.json', 'launch.json')
+            archive.write(f'/content/{prefix}-console-v1.log', 'console.log')
+            archive.write(f'/content/{prefix}-launch-v1.json', 'launch.json')
     assert archive_path.stat().st_size <= 500 * 1024**2
     item = dict(file=archive_path.name, bytes=archive_path.stat().st_size,
                 sha256=hashlib.sha256(archive_path.read_bytes()).hexdigest())
     archives.append(item)
     print('BASELINE_ARCHIVE', json.dumps(item), flush=True)
-with Path('/content/rta-multitask-a2w-seed1-archives-v1.json').open('x') as stream:
+with Path(f'/content/{prefix}-archives-v1.json').open('x') as stream:
     json.dump(archives, stream, indent=2)
-print('BASELINE_SEED1_AUDIT_PASS', json.dumps(report), flush=True)
+print(f'BASELINE_SEED{seed}_AUDIT_PASS', json.dumps(report), flush=True)

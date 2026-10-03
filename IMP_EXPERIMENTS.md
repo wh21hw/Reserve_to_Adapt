@@ -481,6 +481,10 @@ seed2在seed1完整审计/本地保存后按原计划启动：exec84，同目录
 独立CPU shell比较旧Stage4预热checkpoint与本次固定第4轮checkpoint，两者epoch均4，但model/discriminator tensor state不相等；最大绝对差分别0.00218248/0.000459805。报告已下载至 `pipeline-results/warm-checkpoint-compatibility-v1.json`。
 因此旧冻结features及候选proposal不能直接作为新完整baseline匹配的IMP输入，须从本次固定warm checkpoint重新导出并重建候选。未确认差异的具体成因，不将其直接归因GPU、随机种子或某项代码修改。已有Stage5/6a旧缓存诊断仍保留其原scope，不追溯声称对齐本次完整baseline。已保存状态字段也不等于已经证明resume轨迹一致，下一步还需独立恢复/重放检查。
 
+### A→W seed2 收集器准备（2026-10-03）
+
+exec84已重新确认running，最近日志epoch60（0-based），即完成61轮；尚未声称70轮完成。种子1独立collector参数化为显式seed1/2/3，所有run、launch、console、归档及审计seed校验随同一参数变化；新增固定seed2的fresh-process包装，仍为评价/归档而非训练。两个文件本地语法检查通过并上传现有L4 `/content`，尚未执行collector，不能把语法检查当实际审计通过。未修改正在训练的main/utilities、损失、预算或选取规则。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
