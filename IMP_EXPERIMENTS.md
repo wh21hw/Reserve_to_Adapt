@@ -595,6 +595,14 @@ exec113启动唯一seed1 structure_off完整arm；运行目录/content/imp-runs/
 
 完整off训练最近完成epoch16、epoch17 batch1仍running，已跨过epoch12选样转换；后期一个batch选20未知样本（不再误用top16截断）。早期完整run与旧pilot同配置/初始化但数值并非逐元素轨迹重放，未承诺GPU确定性。新增完整日志审计`matched_full_audit.py`及合成测试：66epoch/924batch、公式/有限性/计数/后期选样范围/固定final与禁止标签选取；两组正例和9类负例通过。合成日志不是完整训练完成证据，仍需实际history和独立checkpoint collector。GitHub本轮两次push均网络失败，76045cee尚未确认同步。
 
+### 完整预算独立审计与后续种子准备（2026-10-03）
+
+exec113已完成epoch34、epoch35 batch1仍running，无NaN，尚未完成70epoch。新增独立`collect_matched_full_a2w_seed1.py`：准备核验66适应epoch/924新更新、warm4/56与final70/980/GRL1960、checkpoint及代码/generated recipe/输入列表SHA、有限状态/teacher归一化/gate范围/末轮mixture2、严格加载与顺序center-crop final重算后归档。语法通过但尚未上传/执行，不把准备当实际完整审计证据。
+
+新增单arm on入口，必须off独立full审计通过才允许启动，当前未运行；新增off collector包装，未运行。准备seed2/3 own warm4 feature exporter，分别固定各自checkpoint SHA、baseline seed/70epoch审计、source/target列表、标签隔离schema及输出拒绝覆盖，GPU空闲后单独运行；当前仅语法通过，无新增cache/聚类/训练结果。
+
+GitHub本轮push成功并ls-remote核实53d17ea8；此前本地pilot、full入口和日志审计已同步。此次新增collector/exporter另行提交，不将上次push当本次新增文件同步证据。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
