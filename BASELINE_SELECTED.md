@@ -31,7 +31,9 @@ best.pt已通过13个小分块下载并合并保存到本地 `pipeline-results/r
 
 exec139完成首次移动已知中心的估计，K=9（总19原型），5次迭代都为19。阈值0.5108345，方差0.0009093746；新增簇有约1个样本的簇，未事后过滤，也不能解释为已经恢复9个未知语义类。本地结果 `pipeline-results/konly-seed3-estimate-v1.json`。
 
-exec141已启动同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。最新检查已完成15epoch，损失有限，尚未完成。估计K=9的RTA训练还未启动，不能报告收益。下一臂入口 `scripts/run_konly_estimated_seed3.py` 只在固定K完成后启动；结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
+exec141已完成同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。best第66轮与final第70轮指标相同：OS*=91.8587%、UNK=95.5965%、HOS=93.6903%。相对论文HOS+0.6903pp；相对原ImageNet初始化baseline，best HOS−1.7458pp、final−1.3822pp，说明额外source预训练不能忽略。普通配置/70轮日志/指标已打包下载至 `pipeline-results/konly-rta-v1-fixed2-results.zip` 并解压；云端best/last权重保留。
+
+exec143已启动估计K=9的同source初始化70epoch臂，目录 `/content/imp-runs/konly-rta-v1/estimated/a2w_seed3`；初始类头19维和RTA初始化正常。尚未完成，不报告收益。结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
 
 baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/download_selected_baseline.ps1` 13片下载并合并完成。未改动云端原权重，也不使用hash检查。
 

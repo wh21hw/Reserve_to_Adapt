@@ -4,6 +4,10 @@
 
 ### 当前执行：baseline 环境桥接与 K-only 新主线
 
+固定K同初始化对照已完成：exec141 done、70轮，best第66轮和final均OS*=91.8587%、UNK=95.5965%、HOS=93.6903%。对比原ImageNet启动baseline，best HOS降低1.7458pp、final降低1.3822pp；这明确揭示source预训练本身的变化，后续纯K效果以该对照为准，不混用95.44%。普通日志/配置/指标10.1KiB ZIP已下载解压。exec143已启动K=9同设置臂，19维输出初始化正常，未得到完整结果。
+
+交替K接口已准备但未正式训练：固定完成20/40/60轮后重提当前source/target特征，估K可增减；已知头保持，未知头按当前预测/新责任重叠匹配并保留对应SGD动量，K不变不改头。实际原CLS的CPU接口一次3→5→2→2检查通过，非完整训练验证。最新代码79b65e54已成功推送GitHub；此前连接失败后的旧WSL推送客户端是冗余等待，取消只针对已确认Git客户端PID，不涉及Colab daemon/runtime。source特征1.4MiB已保存本地，source-final权重正分块下载。
+
 最新补充：选定baseline的best权重13片下载/合并完成，本地 `pipeline-results/rta-legacy-l4-seed3-best.pt`；云端best/last不删。固定已知中心的无标签CPU估计完成，也是K=9；移动/固定已知质量397.7448/140.8716，新增质量166.2552/423.1284。因仅传K，两个估计的下游设置相同，无须重复相同RTA臂，不以这些无标签质量声称准确率。exec141最新完成29/70轮，训练正常。Git最新本地提交4eb9cc83的push两次连接重置，尚未确认同步；此前3431e7e4已推送。
 
 最新进度：exec138已完成seed3纯source 3epoch（958个source、564个无标签target，256维特征）；exec139完成source-anchor推断，K=9，5次迭代总原型数均为19。阈值由source距离99%分位数给出0.5108345；没有target标签、relation gate或小簇过滤，其中一个新增簇约1个样本，不能声称9个真实未知类。exec141已启动同source初始化的固定K=2、70epoch原版RTA对照，前2epoch正常；估计K=9臂尚未启动。后面的“尚未启动”等段落是历史阶段。
