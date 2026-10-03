@@ -2,6 +2,16 @@
 
 ## 当前阶段索引（2026-10-03）
 
+### 当前执行：baseline 环境桥接与 K-only 新主线
+
+用户确认 source C 类监督→冻结特征→source-anchor IMP→原版RTA只改变K；并授权其后的分段交替版本，K允许增减。此前18/6原型和结构KL结果不是这个新方案的结果。
+
+旧baseline未与论文精确对齐，不能把差异直接归因GPU。先做旧软件环境的L4桥接：exec132安装独立Python3.8/torch1.7.1+cu110/torchvision0.8.2/numpy1.23.4/sklearn1.1.2/faiss1.7.4；exec133真实图像batch8前反向通过（无SGD）；exec134启动原T4工程代码的A→W seed3、70epoch、K2、virtual20。选择seed3是因为历史T4/L4差异最大，是环境诊断，不作为挑最好seed的新成绩。运行目录 `/content/imp-runs/rta-legacy-l4-bridge-v1/a2w_seed3`；正常只读日志，不排队启动另一GPU训练。
+
+`scripts/train_source_prior_konly.py` 已准备：原RTA网络架构、纯C输出source CE、预先固定3epoch、冻结source/target特征及source中心，不读取target训练标签，不做SHA审计；尚未启动。baseline桥接结束后进行这一前置阶段，两组共用其模型。单次K方案后再交替K，不额外添加Dirichlet分类权重/层次合并/结构KL。
+
+对齐路径：先区分旧/新软件影响；再补足同环境seed统计。发布代码与论文系数/KL/虚拟数差异已经记录，不能为了凑93.0%悄悄改代码。若桥接仍不足，后续论文公式版本需单独配置，与published-code baseline分开报告；作者随机seed/选模规则尚未确认，不能保证得到完全相同数字。
+
 **最新方向纠偏**：用户明确要求在原版RTA上仅将人工K改为预先数据驱动估计K；原层次未知合并/Dirichlet权重/结构KL矩阵不再继续扩展，已完成结果保留为探索。项目级AGENTS.md取消例行SHA/重复审计门槛。新方案见brainstorm.md顶部，本轮不启动训练。
 
 seed2旧旁支的隔离CPU交接(exec128)和真实batch梯度(exec129)通过。exec130的off初始化实际成功，检查器因56.0/112.0与整数字符串不匹配停止，on未验证、没有SGD。这个工程问题不影响新主线的理论讨论，不再为继续旧矩阵反复审计。
