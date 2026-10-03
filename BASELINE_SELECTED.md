@@ -35,6 +35,8 @@ exec141已完成同source初始化固定K=2的70epoch对照，目录 `/content/i
 
 exec143已启动估计K=9的同source初始化70epoch臂，目录 `/content/imp-runs/konly-rta-v1/estimated/a2w_seed3`；初始类头19维和RTA初始化正常。尚未完成，不报告收益。结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
 
+共享source-final已完整保存到本地 `pipeline-results/konly-source-prior-seed3.pt`；source配置/3轮日志/冻结特征也已存 `pipeline-results/konly-source-prior-seed3-features.tar.gz`。固定K对照best权重正下载，原云端文件保持不动。交替完整入口的源代码拼接/编译已通过，未执行模型/训练；启动脚本要求一次性K两臂都完成70轮，避免提前串联未结束阶段。
+
 baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/download_selected_baseline.ps1` 13片下载并合并完成。未改动云端原权重，也不使用hash检查。
 
 ### 已知中心固定/移动：冻结特征层消融
@@ -51,3 +53,5 @@ baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/do
 该估计器是source校准的DP-means/IMP-inspired版本，不是IMP原论文的端到端方差学习，也不是完整DP后验。source阈值校准与先验强度是明确的建模选择，不按targetHOS调整。
 
 另外两个任务OfficeHome Pr→Rw、VisDA Synthetic→Real仍属于项目范围，尚未完成正式baseline/模块对照；VisDA backbone口径待确认。
+
+跨任务准备：新增旧环境任务入口 `scripts/train_legacy_task_entry.py`，不替换现有A→W训练；类别映射/目标训练标签sentinel/宏平均UNK按任务适配，virtual Q必须显式给出，不伪称未知的作者设置。`task_protocol.py`改为Python3.8可用的relative_to路径检查，去掉例行list hash，5个协议测试通过。VisDA官方原ID已确认0..11，RTA已知六类为1/2/3/6/10/11；train.tar官方HEAD200、7698031104字节，现通过独立shell下载到/content/osda-visda-syn2real-v1（未解包/未训练）。来源见experiments/visda_protocol_v1/README.md；仅非商业研究教育，不发布图像。

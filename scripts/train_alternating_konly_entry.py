@@ -29,4 +29,8 @@ anchor = 'elapsed_seconds=time.time()-started_at, seed=seed)'
 if source.count(anchor) != 1:
     raise RuntimeError('Unexpected metrics writer')
 source = source.replace(anchor, 'elapsed_seconds=time.time()-started_at, seed=seed, K=args.all_classes-args.shared_classes)')
-exec(compile(source, '/content/rta-legacy-l4-bridge-v1/main.py', 'exec'), namespace)
+compiled = compile(source, '/content/rta-legacy-l4-bridge-v1/main.py', 'exec')
+if namespace['os'].environ.get('KONLY_BUILD_ONLY') == '1':
+    print('ALTERNATING_SOURCE_BUILD_COMPLETE: no model or training executed', flush=True)
+else:
+    exec(compiled, namespace)

@@ -5,7 +5,6 @@ unsupervised prototype estimator. VisDA requires an explicit original-id mapping
 """
 from dataclasses import dataclass
 from pathlib import Path
-import hashlib
 
 
 @dataclass(frozen=True)
@@ -105,7 +104,9 @@ def read_list(list_path, image_root):
         except ValueError as error:
             raise ValueError(f"Malformed list row {line_number}") from error
         path = (root / relative).resolve()
-        if not path.is_relative_to(root):
+        try:
+            path.relative_to(root)
+        except ValueError:
             raise ValueError(f"Image path escapes root at row {line_number}")
         if not path.is_file():
             raise FileNotFoundError(path)
@@ -140,6 +141,5 @@ def audit_lists(protocol, source_list, target_list, image_root):
         counts = {}
         for _, label in rows:
             counts[label] = counts.get(label, 0) + 1
-        report[key] = {"samples": len(rows), "class_counts": counts,
-                       "list_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+        report[key] = {"samples": len(rows), "class_counts": counts}
     return report
