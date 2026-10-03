@@ -6,7 +6,7 @@
 
 - A→W L4原版published-code baseline：seed1/2/3各70轮完成、独立审计和本地归档完成；主final HOS 90.3031±0.6068%，未超过论文93.0%。
 - 新方法匹配两轮pilot：seed1、λ0/.1两组完成并审计；final HOS77.0076/77.0230%，不作完整预算收益结论。
-- 新方法完整预算：seed1 λ0/.1各70完整预算完成，exec114/118独立审计及完整pair审计通过；final HOS84.2858/86.1119%，单seed结构项差+1.8260pp，仍低于同seed原版90.0401%。其余seed未启动，不能宣称稳定增益；on checkpoint本地归档正在保存。
+- 新方法完整预算：seed1 λ0/.1各70完整预算完成，exec114/118独立审计及完整pair审计通过，两组完整本地归档均验证通过；final HOS84.2858/86.1119%，单seed结构项差+1.8260pp，仍低于同seed原版90.0401%。其余seed训练未启动，不能宣称稳定增益；seed2固定warm特征已导出并本地验证。
 - OfficeHome Pr→Rw：数据和真实batch预检就绪，正式baseline/IMP未完成。VisDA Synthetic→Real：数据与backbone口径仍待落实。
 - 用户允许最好seed补充展示；三个seed均值/样本标准差保留，事后选择及目标标签使用需披露。
 
@@ -643,6 +643,14 @@ exec117正常done，epoch5..70共66完整adaptation、924次新增更新，末98
 结构teacher KL末轮batch平均off2.31511/on.85192，teacher目标被更好拟合但不等于语义正确。单seed对照有正向UNK/HOS信号，仍低于原版同seed HOS约3.9282pp；新增整个框架尚未超越原版，也不能从单seed断言稳定收益。保持λ.1及source-only校准/support规则，不根据这些target结果调参，后续做seed2/3相同策略，再完成OfficeHome/VisDA。
 
 on last.pt SHA92c3f12f69a8141506287f36d063aea77a6ce91a3d7b1658ae212d245c0e1beb；results包147240字节 SHA2df36e13d723d0645ad4b7d6547b1c7a912e8281f515ed52f4153b7d75d4ef8c；checkpoint包196341681字节 SHAa4bf5e5f622dea9f9d1750603bc037c7a3473053d05c843863188d2ba3de990c。manifest和results已下载，checkpoint正在下载，尚未声称本地验证完成。
+
+on归档随后全部下载，本地完整验证器实际通过：size/SHA/zipCRC、内部last.pt SHA、实际66epoch/924update日志、独立评价与summary一致。至此seed1两组完整结果/checkpoint均有已验证本地副本。实验记录随后GitHub成功推送19750138，当前新增记录另行提交。
+
+### seed2 own warm特征导出完成（2026-10-03）
+
+seed1 GPU训练/collector均结束后，exec122 fresh worker导出seed2固定warm4，非best；checkpoint SHA e16e895e1bdaec17f14dd4eda7cc81f8b05ad1c1c6d76145bbd3088aa1d2fea0、epoch4/SGD56/GRL112及该seed原版70epoch审计通过后严格model加载、center-crop顺序extract。source958×256/target564×256/logits958×12/564×12，有限；NPZ严格source/target/source_labels/source_logits/target_logits，无target标签。SGD0。
+
+features SHA37972fed3fb89f8418e38186b050e3f525ab25f6515faf2a38a00c6172889f14；独立eval-only SHA91f15e0a3243c4361c7e58d0d5cc60944b35eaa7fe44eaa45dc22aa3b535ed47；export zip SHA20262a5a1b7de41aac664ca4becd98691bc3a3115e06a59bec4ecf3a9919b04a。zip已下载，本地hash/schema/shape/finite/source标签集合及manifest固定seed/warm检查通过。seed2候选推断/状态交接/训练尚未执行；不复用seed1候选或根据seed1成绩改超参数。
 
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
