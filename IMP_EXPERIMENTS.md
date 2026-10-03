@@ -1,0 +1,221 @@
+# IMP / 未知空间建模：分阶段实验记录
+
+## 研究目标与实验边界
+
+利用 source 已知类别结构作为先验，推断 target 原型结构，再配置未知分类空间容量。
+原型数量不预设等于真实语义类别数。target 标签只用于离线评价，不用于先验、聚类或容量选择。
+现有用户训练代码及已完成 RTA baseline 保留；每一阶段独立执行、检查结果，再进入下一阶段。
+
+### 三个数据集各一个任务（2026-10-03 固定计划）
+
+按用户要求，正式对比覆盖 Office-31、Office-Home、VisDA，各一个任务。
+项目 PDF 为 TIP 2025 扩展版，实际还包含 ImageCLEF；第四个数据集不擅自加入本轮范围。
+任务在 IMP 成绩产生前选定，不根据结果换任务：
+
+| 数据集 | 任务 | 已知/目标未知语义类 | RTA 未知槽 K | 论文单任务 OS*/UNK/HOS (%) |
+| --- | --- | --- | --- | --- |
+| Office-31 | A→W | 10/11，沿用官方列表 | 2 | 92.2/93.8/93.0（Table I） |
+| Office-Home | Pr→Rw | 25/40，具体类别列表须审核 | 4 | 82.1/77.2/79.5（Table II） |
+| VisDA | Synthetic→Real | 6/6，具体类别映射须审核 | 2 | 73.6/83.7/78.3（Table III） |
+
+Office-Home 选择 Table II 的首个任务，不按最优成绩筛选。VisDA Table III 的已知类别列为 Bicycle、Bus、Car、M-cycle、Train、Truck，不能简单假定为数字标签 0–5。
+**协议疑点**：正文实现段落写 ResNet-50，但 Table III 标题写 VGGNet。VisDA 复现前必须确定 backbone 和原始代码设置；若不能确认，只能报告同环境受控比较，不能声称精确复现该表。
+三个任务均要求同数据列表、同环境、同训练预算的 baseline/IMP 对照；报告 seed 1/2/3 的均值和样本标准差，固定 final 与目标标签 oracle-best 分开。仅有 Office-31 旧 T4 baseline 不满足三任务完成条件。
+类别数仅为评价协议，不参与 IMP 容量推断。目标标签及论文真实未知类数不用于选阈值、先验强度、容量或任务。
+
+## Stage 0：当前实现数值审计 — 已完成
+
+- 日期：2026-10-02。
+- 通过 MurphyLo/colab-cli 执行，Colab exec ID 23，状态 done。
+- 端点：`gpu-t4-s-kkb-ass1c2-g6yzd4pmjjf0`。
+- 会话硬件：Tesla T4，15360 MiB；本次实际计算设备 **CPU**，未进行 GPU 训练。
+- 环境：原 baseline 的 `/content/rta-py38/bin/python`，torch 1.7.1+cu110。
+- 审计对象：未修改的 `IMPClusterer.py`。
+- 输入 SHA256：`e25d76ae5cff8ed6927573b534cc5f666d781e10cfd8534b2bea00e704fbf4ba`。
+- 合成数据：seed 1，256 维，14 个分离方向，每个方向 5 个扰动样本，总计 70 个；另含退化和下溢压力输入。
+- 不涉及 Office-31 特征、准确率或真实未知类别数估计，不是正式 IMP 实验成绩。
+
+| 检查 | 实际结果 | 判断 |
+| --- | --- | --- |
+| 14 个分离方向 | 返回 14 个簇，中心有限，软分配行和为 1 | 基础建簇在此合成案例可用 |
+| `max_clusters=1` | 仍返回 14 个簇 | 上限未执行 |
+| 倒序、打乱顺序 | 此案例均为 14 个簇 | 此例稳定，不证明一般顺序不敏感 |
+| 20 个相同特征 | sigma=0，阈值、中心及软分配产生 NaN | 零方差处理失败 |
+| 单样本 | 返回 1 个有限中心 | 此退化案例通过 |
+| 远距离＋窄尺度 | 软分配三行的概率和均为 0 | 指数下溢，归一化失败 |
+| α=.01/.05/.1 | 阈值约 1.4686/1.2737/1.1898 | α 越小创建阈值越大；与代码注释相反 |
+
+结论：当前实现不能直接用于可靠的容量推断。先修复数值与容量约束，再审计 source 先验接入。
+普通合成案例通过不能抵消退化输入失败，也不能证明已恢复未知语义类别数。
+
+### 证据与复现
+
+- 审计脚本：`scripts/audit_imp_stage0.py`。
+- Colab 单阶段执行器：`scripts/run_imp_stage0_colab.py`。
+- 本地结果：`pipeline-results/imp-stage0/audit.json`、`console.log`。
+- Drive 持久化：`/content/drive/MyDrive/OSDA/runs/imp-stage0-audit-v1/`。
+- 执行器拒绝覆盖已有结果目录；重复实验应另设版本，不删除旧记录。
+
+## 分阶段进展与后续顺序
+
+### 方差下界补丁 — 已完成并验证
+
+按用户要求直接在 `IMPClusterer.py` 添加可配置的 `min_variance=1e-8`。
+在阈值估计中对 rho 截断，在软分配中对 sigma² 截断；下界同时不低于当前 dtype 的最小正规正数。
+这是数值保护，不是对原 IMP 方差理论的重新对齐，也不处理非法 alpha 或非有限输入。
+
+Colab exec 24 已完成，沿用 Stage 0 同一测试协议、同一 CPU 环境。
+补丁 SHA256：`3afabbf3b47423342e6076b86aa15ec039543345a683dbe04b0aed5946cd0015`。
+全同特征测试：sigma≈1e-4，阈值≈0.0006017，返回 1 个有限中心，软分配行和为 1，无 NaN。
+普通 14 簇、倒序、乱序及单样本测试的簇数与原审计相同；普通案例的中心误差指标未变。
+本轮仅修复零方差除零：簇数上限仍不生效，远距离窄尺度压力测试仍可能下溢。
+
+结果保留在 Drive `OSDA/runs/imp-variance-floor-v1/`，本地 `pipeline-results/imp-variance-floor/`。
+结果 JSON 的 stage 字段沿用旧审计脚本名称，应根据目录和模块 SHA256 区分补丁版与原版。
+旧 Stage 0 和 baseline 结果均未覆盖；没有启动训练。
+
+### Stage 1：稳定归一化与容量保护 — 已验证
+
+Colab exec 25：先单独改为距离平移后的 softmax。下溢压力测试行和变为 `[1,1,1]`，有限值成立；普通 14 簇案例及退化案例通过。版本 SHA256 `cc842184ec55a0a07503839ad4e42e50d6a0e8fea5cac946a8bc6b920234dd7f`。
+
+Colab exec 26：再加入容量及输入检查。`max_clusters=1` 时显式报错，不静默返回被截断的簇数；普通案例仍返回 14 个簇。版本 SHA256 `ee30950a06655d99ab9a826effbf7adf807718a9f24f9bb1ee1a5c57f81335b4`。这不是自动选择容量，上限饱和代表无法可靠报告数量。
+
+分别持久化到 Drive `OSDA/runs/imp-stable-normalization-v1/` 与 `imp-capacity-guard-v1/`；本地结果为 `pipeline-results/imp-stable/` 与 `imp-capacity/`。未修复版和各补丁版的 runtime 文件均保留。
+
+### Stage 2：source 锚定原型机制 — 合成测试通过，尚未接入训练
+
+新增独立模块 `source_anchored_imp.py`，保留已知原型身份，按固定软归属的 Gaussian MAP 形式更新已知中心；候选原型由目标数据建立。返回软归属、有效支持量及候选数，明确不返回真实未知语义类别数。
+
+这是阈值式 IMP-inspired 模块，不是完整 DP 后验；观测方差与阈值在机制测试中显式固定。没有修改 RTA 训练入口，也没有将候选数直接映射到未知输出槽。
+
+Colab exec 27 完成 5 项 CPU 合成测试：
+
+1. source 中心为 0，20 个 target 点位于 .4。先验强度 0 的中心为 .4；强度 100 的中心约 .06667，与解析更新值相符。
+2. 两个已知中心轻度偏移，加一个新结构：保留两个已知身份，生成一个候选；软归属正确归一化，此例倒序结果相同。
+3. 相同输入无 NaN，未生成候选。
+4. **反例**：真实仍是一个已知类，但偏移到距离较远的位置时，产生一个候选。因此新增候选不等于未知类。
+5. 容量饱和显式报错。
+
+测试使用 2 维可解释合成数据，不能据此声称 Office-31 有效，也不能证明任意多模态场景已解决。
+测试脚本 `scripts/audit_source_anchored_imp.py`；模块 SHA256 `3f29c03de9e1979eb4ffbccaadfad1430bdb84f689b156b83e584715e59c2087`。
+Drive `OSDA/runs/source-anchored-synthetic-v1/` 保存模块、测试源码、日志和 JSON；本地 `pipeline-results/source-anchored/audit.json`。
+
+**下一行动**：真实 source 预热和冻结特征提取；比较阈值、先验强度、域偏移与候选归属。已观察到的偏移反例要求增加已知结构解释能力/关系诊断，而非直接动态扩头。
+
+三项实验日志及各阶段模块快照已打包下载到 `pipeline-results/imp-mechanism-results-v1.zip`，并解压到 `pipeline-results/imp-mechanism-v1/`。
+归档 SHA256：`eb25b4d824b31123c87e634afa34a56504f89c974416c712151abf4b112099b2`，已与远端核对。
+Drive 同时保存 `OSDA/runs/imp-mechanism-results-v1.zip`。个别单文件下载出现临时网络失败，通过完整归档补齐证据，未重跑实验。
+
+### 尚待执行
+
+3. Stage 3：L4 上进行源域预热，冻结模型，提取 Office-31 source/target 特征。不得使用适应后的 best checkpoint 代替干净的预热表示。
+4. Stage 4：推断目标结构、分析稳定性、支持量及未知归属；明确容量选择规则后，接入一次性未知分类头配置。
+5. Stage 5：短程功能测试通过后，做同环境 RTA / 仅虚拟原型自适应 / 未知容量自适应的完整多 seed 对比。软原型监督另做消融。
+
+### Stage 3：L4 预热已完成，但产物未持久化，需显式恢复
+
+通过 colab-cli 创建 L4 High-RAM 会话，端点 `gpu-l4-s-kkb-ass1a0-3repicqqt39xy`。
+L4 exec 1 已完成 GPU 矩阵计算预检：NVIDIA L4，23034 MiB，计算能力 8.9，有限结果成立。
+环境是 Python 3.13.15、torch 2.11.0+cu130、torchvision 0.26.0+cu130、CUDA 13.0。
+与 T4 baseline 旧环境不同，不能用于将跨环境差异归因于 IMP；后续对照须使用同一环境。
+
+源域预热/特征提取脚本 `scripts/source_warmup_features.py` 已在 L4 exec 11 执行成功。
+采用 ResNet-50 ImageNet 权重、256 维归一化瓶颈、12 输出，source CE 单独训练 3 轮，batch64，seed1。
+特征提取使用确定性中心裁剪及 eval/no_grad；target 标签不进入训练 loader，单独保存评价文件。
+记录配置、输入列表与权重哈希、逐轮 source 指标、冻结特征、checkpoint 和产物哈希。
+这不是官方 RTA warmup 的精确复现：没有虚拟损失、DomainBus 或 target 训练，workers=0，新框架环境也不同。
+
+数据准备 exec 8 完成；模型 smoke exec 9 因历史权重格式失败，校验固定权重哈希后允许加载可信 legacy 文件，exec 10 前向/反向成功。exec 11 完成 3 个 epoch、42 个 step，冻结 source 准确率 95.6159%，特征 source `[958,256]`、target `[564,256]`，全部有限。该 source 指标不是 OSDA 成绩。
+
+L4 exec 2 的 Drive 挂载授权已经确认超时，错误证据保留。
+L4 exec 3 也已授权超时。Drive API 出现配额错误，因此通过 fs 上传已有且校验过的本地数据/权重，在 `/content/imp-runs/source-warmup-l4-seed1-v1` 运行。
+
+2026-10-03 两次 runtime list 确认 **No active runtimes**；本地 CLI 执行历史止于 exec 11，没有归档收集或冻结结构实验的执行记录。本地未发现 features/checkpoint 归档，因此不能继续使用上一运行时产物。已将原始完成日志保存到 `pipeline-results/source-warmup-l4-seed1-v1/exec11.ndjson`，保留日志中的配置及产物哈希；不把它当成完整产物可用的证明。
+
+日志 SHA256：`00c495150c50f8bddcaeb92442acebbcb6eca59260139fa84352bf80f47da920`。
+下一轮必须使用新版本目录显式重跑，并在每个阶段完成后立即下载、校验特征及 checkpoint；不是复用旧完成记录。冻结结构 grid 尚未执行，未知槽配置及三数据集对照均未完成。
+
+恢复执行：已新建 L4 `gpu-l4-s-kkb-ass1a1-13n8bs33o8id1`，exec 1 计算预检通过，Python/torch/torchvision/CUDA 与上一轮相同。Drive API 再次返回配额错误，故使用已校验的本地输入经 fs 传输。恢复版 runner 默认目录为 `source-warmup-l4-seed1-v2`；归档器和结构 runner 同步指定该版本，不覆盖 v1。允许通过经 basename 检查的 `IMP_WARMUP_RUN` 指定其他显式版本。
+
+#### v2 恢复及持久化 — 已核验
+
+新 L4 exec 4 数据校验/解包完成，exec 5 forward/backward smoke 通过，exec 6 source-only 预热完成，exec 7 归档审计通过。配置及训练脚本与 v1 相同，特征、评价文件、checkpoint 哈希均逐字节一致；这次是恢复输入，不新增统计种子。
+本地特征包 `pipeline-results/source-warmup-l4-seed1-v2-features.zip` SHA256 `078a9deed0eebbf06b5246031c74d67c0a8dc32e7c23b6126dafa94928512495`；完整包 `source-warmup-l4-seed1-v2-complete.zip` SHA256 `8547c163f9cd473bfab4a5a3e3f42348b038633f061f1f4f079cc3604156b83f`，均与远端核对并解压。
+解压 checkpoint SHA256 `fbbd30a2284750ab5707766c16d032ccbdefb324694e0ca5943131511de0798c`。因此后续不依赖临时运行时找回特征。下载曾出现 fetch failed，仅重试传输，没有重跑训练。
+
+### Stage 4a：冻结真实特征的阈值/先验敏感性 — 已完成
+
+新 L4 exec 8 完成预先声明的 3×3 grid，exec 11 收集归档。推断仅读取 features.npz 中 source/target features 与 source 标签，不读取 evaluation-only.npz；未使用目标标签评分或选参。
+source 类内平方半径 99% 分位数为 `0.535741209983826`，各维平均残差方差 `0.000875418540090322`。这是 in-sample calibration，不是独立验证集校准；不能宣称校准了目标未知类覆盖概率。
+
+| 阈值倍数 | 先验强度 κ=0/5/20 的候选数量 | 观察 |
+| --- | --- | --- |
+| 0.5 | 三次均显式容量报错 | 达到总原型上限100，数量不可报告为90未知类 |
+| 1 | 7/7/7 | 三次均只有5个候选有效质量≥5，候选软概率均值约0.11–0.12 |
+| 2 | 0/0/0 | 所有 target 被当前已知原型结构解释，不能据此断言没有未知类 |
+
+六个成功 trial 的软归属行和均为1，未出现 NaN。**数值稳定不等于数量推断可靠**：当前阈值敏感，且先验强度未改变候选数。7是候选几何结构数，不是未知语义类数；这轮不据此设置未知槽，不选表现最好的阈值。
+报告 `pipeline-results/source-anchored-frozen-grid-v2-report.json`。完整归档 `source-anchored-frozen-grid-v2.zip` 已下载、核对 SHA256 `7b4106fd70fcbdef61efe1d3a160a59f45485e5d108839ebcd797635f8be66b1` 并解压，含每次软分配、支持量、原型、完整失败记录及代码快照。
+
+下一步：在同一冻结特征上先固定规则检查样本顺序/子采样稳定性，再分析新增候选是否来自已知域偏移。进一步加入 source 持出校准/已知关系诊断时，要单独留版本与对照，不把新增原型自动全部认作未知类。完成这些 gate 后才进入未知容量头的短程功能测试；三个数据集各一任务的完整 baseline/IMP 实验仍未完成。
+
+### Stage 4b：顺序/子采样及离线语义归属 — 已完成
+
+沿用新 L4；exec 12 执行固定阈值1×、κ=5、steps=5、总容量100的12项检查。原序、倒序及5次固定seed打乱使用全部564样本拟合；另5次用451样本拟合，所有trial都在完整564样本上输出软分配。没有改训练、读目标标签或挑选trial。
+
+| 输入顺序/子采样 | 候选数 |
+| --- | --- |
+| 原序/倒序 | 7/5 |
+| shuffle seeds 1–5 | 5/6/5/7/6 |
+| 80% subset seeds 1–5 | 5/5/4/7/5 |
+
+候选样本集合相对原序 Jaccard 为0.9385–1.0；全部结果有限且软分配行和为1。这证明当前样本级候选区域比组件个数更稳定，而非证明任意换序均可靠。不能用稳定候选区域替代数量稳定性 gate。
+代码 `scripts/audit_frozen_structure_stability.py`，结果 `pipeline-results/source-anchored-stability-v1/`，归档 SHA256 `aa7303c4ccd3b2b4f89159ac5f27214a662adde09956c4f416a08081955ddeb8` 已核对。
+
+随后单独运行离线评价：exec 13 因 notebook argv 带 -f 参数退出；没有结果产生。修复执行方式，exec 14 用独立 Python subprocess 运行 `evaluate_frozen_candidates.py`，推断文件保持不变，真实target标签只进入该评价脚本。没有重新推断或利用标签修改参数。
+固定原序结果：295个已知、269个未知样本；64个样本硬分到候选，其中56个未知、8个已知。候选precision=87.5%，unknown recall=20.8178%，已知误入率=2.7119%。这些不是训练后OSDA成绩。
+7个候选中两个完全由已知样本组成（2个与6个样本）。其余候选包括未知标签20和25的混合，以及同一未知标签25的碎片化；不能视为7个未知语义类。
+评价归档 `pipeline-results/source-anchored-attribution-v1.zip` SHA256 `935eebcd5732cdd33bbad8e7a1c84f184113a5b49d52df64d40ddcc89e185a03` 已核对并解压；包含固定推断输入哈希、标签文件哈希、逐候选构成及评价源码。
+
+#### 观察后的下一项调整
+
+不将当前7个候选接入未知头。将“未知倾向判别”与“候选内部结构发现”拆开：先审计官方 RTA 的 source class soft-label prototype / KL / mixture 判别，再考虑以连续未知倾向约束新组件，避免远离source均值就被自动认作未知。
+对齐依据：官方代码用 `F.kl_div(log(p_target), source_soft_prototype[pseudo_class])`，即 source-prototype||target 方向；训练早期 batch GMM=3，epoch末 BGMM最多4/2组件。该一维mixture组件并不是未知语义类数量。冻结特征上若实现全量fixed BGMM审计，须明确它不是官方逐轮RTA训练，也不能替代原warmup。
+未知结构数量规则还需source持出校准、顺序稳定性/支持量机制及受控消融。上述target标签归属是探索性分析；任何受其启发的改动不能再把当前特征上的表现称为独立验证成绩。阈值/先验参数须由source或预先声明规则决定，最终三任务baseline/IMP仍按固定协议报告所有seed，不根据目标标签挑最好设置或最好seed。
+
+### Stage 4c：RTA 类间关系信号审计 — 已完成
+
+新增独立 `relation_gate.py`，按官方代码方向计算 source-soft-prototype||target-probability 的 KL。source原型由source标签对应的已知类条件softmax均值构成，target仅用已知类logits的argmax选对应原型。不读target标签；每个source已知类必须有样本，输入有限且类型/device匹配。
+数值上使用float64和log_softmax代替log(softmax)，保持KL方向，避免极端logits下溢。相同关系分布KL≈0及极端logits有限性两项测试通过。这不是证明未知语义能被KL准确识别。
+
+新L4 exec 15完成 `audit_relation_gate_colab.py`，复用固定source-only checkpoint logits。预先固定 BGMM最多4组件、max_iter=800、random_state=1/2/3，三个trial全部报告，不以目标标签选seed。结果：
+
+| mixture 初始化seed | 收敛步数 | 最低KL组硬样本数 | 最高KL组硬样本数 | 非最低KL组硬样本数 |
+| --- | --- | --- | --- | --- |
+| 1 | 285 | 196 | 27 | 368 |
+| 2 | 286 | 196 | 27 | 368 |
+| 3 | 170 | 195 | 37 | 369 |
+
+三次均收敛且无warning。每次都有一个无硬归属的低权重组件，因此组件上限4不能解释为4类或4个有效语义结构。非最低KL组规模近似稳定，而最高KL组受初始化影响；规模相似本身不证明样本集合完全相同。
+这是全量冻结 logits 上的诊断，区别于官方初始化batch GMM3/逐轮BGMM4→2训练：source-only表示没有虚拟空间预留损失，不能据此推断官方RTA判别性能。该诊断未读取目标标签或计算目标准确率。
+完整归档 `pipeline-results/relation-gate-frozen-v1.zip` SHA256 `ce610f980eed7e5b0f06bbb2d488cb23e21ec8f1af140a4185804effbedd800c` 已下载校验并解压；包含source/target KL、soft原型、每seed后验、连续最低/最高组概率及报告。三个mixture seed是初始化敏感性测试，不是三个模型训练seed。
+
+下一实施方向：保留原RTA未知判别/空间预留路径，以连续已知兼容度约束候选组件，而非用最高KL组硬标签替代全部未知样本；候选支持量及容量决定必须另有稳定性规则。先建立与RTA空间预留预热对齐的同环境控制，不能只在当前source-only表示上筛选出最有利的gate再声称IMP有效。尚未集成未知头，三个数据集各一任务的完整对照仍待完成。
+
+### Stage 4d：官方空间预留路径的 L4 预热参考 — 训练/特征完成
+
+继续使用同一L4。native环境缺少FAISS，exec17只安装 `faiss-cpu==1.12.0 --no-deps`，K-means预检通过；torch2.11.0+cu130、numpy2.1.3未升级。该FAISS版本与旧T4环境不同。
+从已经审计的 `artifacts/rta-baseline` 复制6个代码文件到隔离 `artifacts/rta-l4-control-v1`，没有编辑用户root训练代码或旧baseline。与该基点比较，只有main训练轮数的env开关以及networks固定权重哈希校验/可信legacy加载两个新增变动；其余4文件保持不变。代码包SHA256 `5e14fa31467b1eb8d2a960273994bf48f7a9edeac03b081bc0738cb4a923ba58`；exec18完成原CLS前向/虚拟CE反向预检。
+
+exec20用官方流程执行固定4个完整epoch（索引0–3），seed1，batch64，source/target增广及DomainBus沿用原代码，K_cluster=20、K=2、faiss niter800保持不变。`warmiter=3` 与 `epoch<=warmiter` 实际意味着4轮source CE+virtual CE，而不是3轮。训练中仍计算但不优化adv/entropy/unknown CE；这些代码未删除。保留原epoch3未知头初始化。
+四轮source CE均值为2.003/0.730/0.382/0.267；virtual CE为2.739/1.186/0.632/0.430；无训练错误。这是空间预留预热参考，不是70轮完整baseline，不是论文成绩复现。
+训练日志仍包含官方目标标签评价和best.pt，但后续推断明确只读取预先固定的 `last.pt`（epoch=4），不使用oracle-best权重。只读评价没有用于参数或checkpoint选择。
+
+exec21完成固定last的确定性中心裁剪特征：source[958,256]、target[564,256]，特征和logits全部有限，source accuracy96.1378%。目标标签单独放evaluation-only.npz，不进入features.npz。与此前3轮source-only预热在轮数、初始化/数据迭代、BN更新与损失等方面有差异，不能据二者对比声称已验证virtual CE的因果作用；消融必须另做匹配控制。
+特征包 `pipeline-results/rta-space-warmup-l4-features-v1.zip` 已下载核对SHA256 `9a817caba3a044b96b9ad4b8d601888c56ff8cf3b97d7fb5af7e9c254d937155` 并解压，含6份完整代码快照、训练audit/config/history/console和feature manifest。
+feature SHA256 `75cabbddd74d812dd9780b95248e1cc7dc8147d82ac336659162a2f642241823`；固定checkpoint SHA256 `0631572940759e0677632a1eadeb5bb4748912fa071e706a508df23411e03cd3`。
+exec22已生成checkpoint归档（不含best.pt）196215458字节，SHA256 `c5a59216baa56552efcbb5ce197f2d1c64083925c89e769f69ee54258d706507`；已下载、校验、解压，固定last.pt哈希与提取manifest一致。完整代码另保存于 `experiments/rta_l4_control_v1/`，便于Git管理，且不覆盖用户root代码。
+
+下一步在此固定空间预留表示上复用预先声明的关系/结构规则，不以目标成绩选参；再建立完全匹配的loss控制与IMP模块消融。未知容量头、完整70轮对照及三个数据集各一个任务均未完成。
+
+没有重启或销毁现有 T4，没有恢复已暂停的 baseline 自动检查。研究目标仍未完成。
