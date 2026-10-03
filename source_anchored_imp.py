@@ -12,7 +12,8 @@ import torch
 
 class SourceAnchoredIMP:
     def __init__(self, threshold, observation_variance, prior_strength=5.0,
-                 steps=5, max_prototypes=100, min_variance=1e-8):
+                 steps=5, max_prototypes=100, min_variance=1e-8,
+                 known_centers_fixed=False):
         for name, value in [('threshold', threshold), ('observation_variance', observation_variance),
                             ('min_variance', min_variance)]:
             if not math.isfinite(value) or value <= 0:
@@ -27,6 +28,7 @@ class SourceAnchoredIMP:
         self.steps = steps
         self.max_prototypes = max_prototypes
         self.min_variance = min_variance
+        self.known_centers_fixed = bool(known_centers_fixed)
 
     def _assign(self, features, centers, known_count=None, known_compatibility=None):
         distances = (features[:, None] - centers[None]).square().sum(dim=-1)
@@ -116,6 +118,8 @@ class SourceAnchoredIMP:
             supported = denom > 0
             known_update = (sums[:known_count] + self.prior_strength * anchors)
             updated[:known_count][supported] = known_update[supported] / denom[supported, None]
+            if self.known_centers_fixed:
+                updated[:known_count] = anchors
             if len(centers) > known_count:
                 keep = mass[known_count:] >= 1e-8
                 candidates = sums[known_count:][keep] / mass[known_count:][keep, None]
@@ -134,6 +138,7 @@ class SourceAnchoredIMP:
                     history=history, known_count=known_count,
                     candidate_count=len(centers) - known_count,
                     relation_constrained=known_compatibility is not None,
+                    known_centers_fixed=self.known_centers_fixed,
                     birth_strategy=birth_strategy,
                     compatibility_ignored_without_candidates=known_compatibility is not None and len(centers) == known_count,
                     semantic_unknown_count=None)

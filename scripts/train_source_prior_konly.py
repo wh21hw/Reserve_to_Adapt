@@ -72,7 +72,7 @@ def main():
     loader = DataLoader(Images(source_names, root, augment, labels), batch_size=64,
                         shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
     net = torch.nn.Sequential(ResNetFc(model_path=args.weights), CLS(2048, C)).cuda()
-    schedule = lambda step, lr: inverseDecaySheduler(step, lr, gamma=10, power=.75, max_iter=10000)
+    schedule = lambda step, initial_lr: inverseDecaySheduler(step, initial_lr, gamma=10, power=.75, max_iter=10000)
     optimizers = [OptimWithSheduler(torch.optim.SGD(module.parameters(), lr=lr,
                   momentum=.9, nesterov=True, weight_decay=5e-4), schedule)
                   for module, lr in zip(net, (5e-5, 5e-4))]

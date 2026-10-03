@@ -4,6 +4,14 @@
 
 ### 当前执行：baseline 环境桥接与 K-only 新主线
 
+最新进度：exec138已完成seed3纯source 3epoch（958个source、564个无标签target，256维特征）；exec139完成source-anchor推断，K=9，5次迭代总原型数均为19。阈值由source距离99%分位数给出0.5108345；没有target标签、relation gate或小簇过滤，其中一个新增簇约1个样本，不能声称9个真实未知类。exec141已启动同source初始化的固定K=2、70epoch原版RTA对照，前2epoch正常；估计K=9臂尚未启动。后面的“尚未启动”等段落是历史阶段。
+
+**桥接完成 / 选定seed（最新）**：exec134状态done，70epoch完成，L4旧环境seed3 best OS*=95.1705%、UNK=95.7032%、HOS=95.4361%，best epoch49（0-based，即第50轮）；final OS*=94.7472%、UNK=95.4002%、HOS=95.0726%。相对论文92.2/93.8/93.0，best分别+2.9705/+1.9032/+2.4361pp。原L4新环境seed3 best HOS90.0455%；这提供软件/实现版本影响的实测线索，不是GPU差异的严格因果证明。baseline已有可对标的选定seed3，后续主模块同环境/同seed。目标标签oracle-best及事后seed选择明确披露，不宣称三seed稳定超过论文。
+
+按用户新目标，原准备seed1的source前置阶段改为执行seed3；先固定3epoch的纯C类source监督，再IMP估K。source-pretrained固定K对照需要单独跑：它与上述从ImageNet启动的baseline初始化不同，不能直接混成纯K消融。模块阶段不加载目标标签选出来的best checkpoint去估K。
+
+exec137启动seed3 source前置训练后，在首个optimizer.step的scheduler回调报TypeError：形参lr不接受关键字initial_lr。尚未执行SGD，v1失败目录和console保留。只修正形参名，在konly-source-prior-v2/seed3新目录同设置运行；不改学习率/预算/seed。训练文件上传在等待后成功完成，实际仍通过正常文件入口启动，不需要替代内核执行。baseline指标已下载；best权重大文件下载暂未完成，仅取消本地CLI传输客户端，云端文件保留。最新baseline选择与固定模块设置见BASELINE_SELECTED.md。
+
 用户确认 source C 类监督→冻结特征→source-anchor IMP→原版RTA只改变K；并授权其后的分段交替版本，K允许增减。此前18/6原型和结构KL结果不是这个新方案的结果。
 
 旧baseline未与论文精确对齐，不能把差异直接归因GPU。先做旧软件环境的L4桥接：exec132安装独立Python3.8/torch1.7.1+cu110/torchvision0.8.2/numpy1.23.4/sklearn1.1.2/faiss1.7.4；exec133真实图像batch8前反向通过（无SGD）；exec134启动原T4工程代码的A→W seed3、70epoch、K2、virtual20。选择seed3是因为历史T4/L4差异最大，是环境诊断，不作为挑最好seed的新成绩。运行目录 `/content/imp-runs/rta-legacy-l4-bridge-v1/a2w_seed3`；正常只读日志，不排队启动另一GPU训练。
