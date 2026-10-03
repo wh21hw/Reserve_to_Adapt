@@ -548,6 +548,13 @@ exec98真实固定warm checkpoint审计通过：两个独立构造的结构off/o
 下一结构消融预声明λ0与λ.1：其余head容量支持规则、α1质量prior、teacher/gate、初始化、交接、种子和预算一致，λ.1是无目标标签梯度检查后的保守起点（realbatch加权结构梯度约占base6.6%），不是目标HOS搜索。先做固定warm4→6的短程稳定性检查，未取得收益结论；随后仍需完整70预算和seed1/2/3及三任务对照，不能用短程替代。
 仍缺实际训练入口接入/多batch/交接后真实SGD和恢复重放验证；仅已保存状态一致不等于训练轨迹证明。GitHub旧提交随后push成功到67293af9；本节和新模块另行提交。
 
+### 结构off训练初始化失败与无更新诊断（2026-10-03）
+
+新增独立 `scripts/train_matched_structure_pilot.py`，准备固定warm4→6单arm、每epoch14 batch、same RNG/state交接、层次化质量先验、冻结teacher/gate、每轮RTA bank/mixture/virtual刷新，按预声明λ0/.1，不修改用户根训练文件。语法通过；exec99以fresh worker运行structure_off，但在首次模型fingerprint校验处assert失败，状态error。
+没有训练batch读取、没有SGD、没有创建实验目录；失败console已下载 `pipeline-results/matched-structure-off-failed-init-v1.log`。未调参、未减batch、未重启runtime、未放宽哈希或自动重跑训练。
+exec100无更新AST诊断只执行实际worker初始化prefix，截断在失败assert之前。仅不同keys是unknown_log_weights与fc.weight及其main别名；CPU/GPU候选构造最大abs差4.47035e−8，prior差2.38419e−7，known权重exact。相同公式在CPU构造的head/prior SHA与既有CPU审计指纹匹配，证明是本次跨设备构造的数值差异而非checkpoint/cache替换。诊断确认训练目录仍不存在、optimizer step0、batch0。报告 `pipeline-results/matched-init-parity-diagnostic-v1.json` 已下载。
+拟修复：head/prior统一CPU构造后转GPU，维持严格指纹，不改算法或系数；先独立初始化验证，再获得继续训练方向，暂不自动重跑失败入口。本次失败不是NaN训练，短程结果尚无。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
