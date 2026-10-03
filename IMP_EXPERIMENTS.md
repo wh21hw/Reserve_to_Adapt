@@ -252,4 +252,54 @@ exec30比较max_slots=2与不截断候选提案，在固定epoch4原RTA网络上
 完整归档 `pipeline-results/candidate-head-smoke-v1.zip` SHA256 `1c721b3790321e5805e73e8df855578fa4a666f41d99150a9c4ec8b22a65323c` 已下载、核验、解压；helper SHA256 `dd64dea98138b29f88ffcccf520d4a45c92983d0b22385595ab8b5dcd9cce601`。容量提案文件哈希 `5bfd8dd4e51d0f7a818fa240b526ed942c3f61ebb63fca48f3bc4a4145aff9c2`。
 任何完整控制实验都必须同样重建/迁移优化器状态；当前helper替换Parameter会使旧优化器引用失效，不能直接在已有optimizer上调用然后继续训练。下一阶段是同checkpoint、同预算的2槽/数据提案容量短程适应pilot，另保留原RTA初始化对照，避免把容量与初始化方法的联合变化误归因于容量。此pilot只检验潜在容量假设，不宣称恢复真实未知类数。正式三数据集各一任务对照仍未完成。
 
-没有重启或销毁现有 T4，没有恢复已暂停的 baseline 自动检查。研究目标仍未完成。
+### Stage 5b：同预热 checkpoint 的短程容量对照 — 已完成
+
+2026-10-03，通过 colab-cli 在 `gpu-l4-s-kkb-ass1a1-13n8bs33o8id1` 的 L4 上完成。
+隔离代码 `experiments/rta_capacity_pilot_v1`，未编辑用户root训练文件。
+exec31解包，代码包SHA256 `e27ed37fb53a8b23f15ed81019e8d1b19894fb54760aa04fe2e9064579eb5dd9`。
+exec32三组状态交接通过，exec33/34/35分别执行original2/proto2/proto18；均exit0。
+
+预先固定seed1、warm epoch4 checkpoint、2个完整adaptation epoch（循环索引4/5，保存epoch5/6）、batch64、RTA原损失及学习率。
+原两槽head保留warm权重；候选两槽按有效质量选top2，十八槽保留全部质量≥5候选。
+不按目标标签选容量、seed、checkpoint或延长表现较好的组。
+
+**不是精确无缝续训**：warm checkpoint没有source soft bank、GMM、virtual templates、RNG、scheduler/GRL计数。
+三组统一用固定center-crop特征重建soft bank、BGMM4（random_state1、max_iter800）及FAISS20虚拟模板。
+恢复feature/discriminator SGD；分类头已知行及其他参数动量保留，所有组未知行动量统一清零；scheduler step56、GRL step112，初始化后统一reset seed1。
+已知权重/动量、bank、GMM、virtual模板的交接哈希或数值逐组完全一致。
+因此original2是**受控交接后的原头控制**，不是已验证的完整官方baseline续训。
+增加有限loss/gradient检查，隔离OptimizerManager遇异常不step；两轮内没有触发异常。
+
+以下均为固定final epoch6百分比，不选best seed：
+
+| 实验组 | OS* | UNK | HOS | 相对original2 HOS（百分点） |
+| --- | --- | --- | --- | --- |
+| 原RTA两槽初始化 | 85.99 | 76.73 | 81.10 | — |
+| 候选原型两槽 | 86.47 | 69.37 | 76.98 | -4.12 |
+| 候选原型十八槽 | 89.78 | 78.90 | 83.99 | +2.89 |
+
+本pilot三个组的目标标签oracle-best恰为最后一轮，与final数值相同；这个巧合不使oracle选择成为无标签方法。
+单seed、仅两个适应epoch，无均值/标准差或显著性结论，不与论文70轮结果直接比较。
+十八槽相对候选两槽高7.01 HOS百分点，但不能据此证明真实未知类数为18、IMP理论正确或最终训练更好。
+候选两槽低于原两槽也说明初始化效应不能省略。
+
+exec36完成固定final无目标标签的槽占用诊断：
+
+| 组 | 硬预测未知样本数（总564） | 有硬归属未知槽数 | 平均未知组soft概率 |
+| --- | --- | --- | --- |
+| original2 | 244 | 2 | 0.3108 |
+| proto2 | 225 | 2 | 0.2915 |
+| proto18 | 229 | 18 | 0.4497 |
+
+十八槽每槽硬归属5–23样本，没有完全闲置槽；这不证明语义纯度、跨采样稳定性或应有18类。
+未知组soft质量更大但硬未知预测少于原头，不能简单归因于“预测更多未知”。
+新增槽改变softmax分母/组总先验，是潜在混杂；下一合理机制对照是保持候选方向及训练预算，检查组容量先验归一化/关系先验，不能根据HOS调一个最优偏置。
+候选支持阈值、几何半径、子采样13–18的不确定性仍待解决；现在仍不是完整DPMM后验推断。
+
+exec37结果归档 `pipeline-results/rta-capacity-pilot-v1-results.zip` 已下载、核验、解压，SHA256
+`3cab5cf49a10765557c49828b3b21fce65b960d2b7029697e1be0c945c5e291c`。
+包含三组逐轮指标、配置、状态审计、console、固定final target logits（无标签）、占用报告和代码快照。
+三组checkpoint另由exec38分开归档（每个约211MB），因Drive挂载/API不可用使用直接FS传输；下载状态另核验，不把runtime临时文件称为已持久化。
+
+正式目标仍包括Office31 A→W、OfficeHome Pr→Rw、VisDA Synthetic→Real，各一任务，同协议baseline/IMP完整训练，seed1/2/3全部报告。尚未完成三任务，不能用此pilot替代。
+没有重启或销毁runtime，没有恢复已暂停的baseline自动检查。研究目标仍未完成。
