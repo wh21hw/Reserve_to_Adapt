@@ -10,6 +10,15 @@
 - OfficeHome Pr→Rw：数据和真实batch预检就绪，正式baseline/IMP未完成。VisDA Synthetic→Real：数据与backbone口径仍待落实。
 - 用户允许最好seed补充展示；三个seed均值/样本标准差保留，事后选择及目标标签使用需披露。
 
+### seed2 候选推断与预检中断（2026-10-03）
+
+- exec123 CPU 无标签候选推断完成：原始/逆序/打乱均为6个候选且6个支持质量≥5，责任矩阵完全相同；80%子样本为6/5/5。不等于6个未知语义类，也不构成跨seed稳定性证据（seed1支持原型18个）。规则及λ未调整。
+- 本地候选ZIP通过SHA256、CRC、责任矩阵564×16及有限/归一化检查。ZIP SHA256 `1958f2b27abc82b6535b5a0b314a9bc4dafa1bcc7d7e4ba08f6fb05e4f817f9f`；original.npz SHA256 `16db9d30eb56d3899c148b1482a3da7c4a1800cdf1769073e3fa4781d00f1e8b`。
+- exec124 CPU交接数值检查通过，但随后发现内核缓存了旧目录的networks/utilities导入；其报告保留为诊断证据，**不作为正式启动条件**。networks文件内容相同；utilities仅优化器context异常退出保护不同，仍不能跳过导入路径约束。
+- exec125真实batch预检在 `assert Path(networks.__file__).resolve() == code / 'networks.py'` 失败；尚未载入checkpoint、前向、反向或SGD，未产生新训练结果。实际缓存路径 `/content/rta-l4-control-v1`，预期 `/content/rta_multitask_baseline_v1`。不是NaN/OOM。
+- 已修复两个seed2执行器：使用独立Python子进程隔离sys.modules，交接增加导入路径检查；修复尚未重新执行。未重启runtime、调参、更换GPU或重跑训练。旧报告必须保留，再以新文件名做独立验证，避免覆盖。
+- 下一步：重新验证隔离后的交接和真实batch预检，再构建并严格初始化seed2完整预算off/on；本阶段仍未启动seed2训练。
+
 ## 研究目标与实验边界
 
 利用 source 已知类别结构作为先验，推断 target 原型结构，再配置未知分类空间容量。
