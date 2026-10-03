@@ -499,6 +499,15 @@ seed2 last/best归档随后串行下载成功，整包SHA与审计一致；已�
 exec90 fresh subprocess退出0。归档已下载，本地独立检查全部内部文件SHA、features字段严格为source/target/source_labels/source_logits/target_logits、958×256/564×256形状及所有数组有限，均通过。target标签只在独立evaluation-only.npz，不进入IMP features；本步没有SGD或目标标签选checkpoint。
 归档 `pipeline-results/multitask-a2w-seed1-warm-features-v1.zip` SHA `a206836cf6fcb40e735c1bf08fb05c9e2c20c5128c20f1a44ba51d3cede0b1cb`；features SHA `a9d1a40aeb863b72aafefaed965d22d8eb3b3099516aee117f1897bdb4fb5459`，固定warm checkpoint ff88bd...与已审计seed1一致。这是新的IMP输入，旧features/proposal不与它混用；候选推断和结构梯度诊断仍待重新执行，尚未产生新的IMP训练成绩。
 
+### A→W seed3启动与匹配特征候选审计（2026-10-03）
+
+exec91按预声明seed3启动，同L4、70epoch、batch64、未知槽2、virtual20、main/utilities hash与seed1/2一致。seed1/2审计及本地checkpoint保护先完成；fresh worker单组运行、不串联矩阵，未根据先前成绩调整参数。最近日志epoch13（0-based）且running，仍待70轮及独立collector；不能报告三seed统计。
+
+独立shell1 CPU执行 `scripts/infer_matched_warm_candidates.py`，不占训练kernel队列或GPU。新features SHA a9d1a4...、推断模块SHA ec38a017...、relation模块SHA 1556c60c...均锁定；仅source/target特征和source标签、logits输入，不读evaluation-only标签。复用既定source99%残差半径、方差下界1e-8、κ5、5步、容量上限100、unknown birth≥.5、固定BGMM4 seed1以及farthest canonical birth，没有HOS选参。
+新source threshold=.94904130697、variance=.00105985650，BGMM收敛。全量original/reverse/shuffle1均20候选、支持量≥5的18组件，责任矩阵逐元素相等且有限/归一化；80%子采样seed1/2/3的候选数18/16/13，支持组件数15/15/12。子采样沿用full-target gate，非端到端bootstrap；source校准仍in-sample。数量明显不稳定，不将18认作语义未知类别，不把有限组件和plug-in gate声称为完整DP后验。
+归档 `pipeline-results/matched-warm-candidates-v1.zip` 已下载，SHA `9fc6189d59270189ff2b96e6b19c7360f574d3a7002589818869a2a17ac970b5` 匹配；本地复查original矩阵564行、有限、归一化及全量三顺序相等通过。后续仍需先验/结构梯度诊断和匹配训练；未产生新IMP收益结论。
+GitHub push随后成功且ls-remote独立核验 `ba65efe42815cca23743484b2a590655fa71897f`；本节和新脚本将另行提交，不混淆此前失败与本次同步。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
