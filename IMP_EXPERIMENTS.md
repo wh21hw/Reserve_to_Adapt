@@ -561,6 +561,12 @@ exec100无更新AST诊断只执行实际worker初始化prefix，截断在失败a
 exec101 fresh worker用AST截断修复入口在output.mkdir之前，分别执行off/on初始化，全部严格model/momentum/Torch RNG fingerprint通过，计数56/56/56与GRL112一致。SGD0、batch0、实验目录创建0、training_restart_performed=False。报告 `pipeline-results/matched-init-fixed-verification-v2.json` 已下载。未自动重跑失败训练，也未运行结构on训练。后续需确认继续训练，另用新console文件以保留原失败日志，不复用原v1包装。
 GitHub推送32a6f444连接重置未确认成功；本地代码与证据保留。
 
+### 等待重跑确认期间：结果审计补齐（2026-10-03）
+
+当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
+新增 `matched_pilot_audit.py` 和本地stdlib测试：完整epoch5/6、逐epoch14batch共28、预声明λ0/.1、损失组合公式、有限性、指标范围/HOS公式、loss逐batch均值、scheduler70/84与GRL140/168、fixed final summary及禁止target-label checkpoint选择。pair要求所有共同配置/input/module/worker hash、每轮样本batch order hash相同。3项测试（含7种错误case：缺batch/NaN/formula/order/input/counter/target selection）通过。合成测试不是实际训练完成证据；batch metadata一致不证明增强图像逐元素一致，报告显式标记未验证。
+新增独立checkpoint collector，准备严格加载最后epoch6、model/discriminator/优化器及bank/virtual/teacher/gate有限性、56+28计数、顺序center-crop语义组预测重算与final日志误差<1e−12，再分离结果和checkpoint归档。语法通过，未上传或实际运行；没有可审计的训练结果，不能宣称collector验证已通过。训练确认与VisDA backbone选择仍待用户方向，三任务范围未缩小。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
