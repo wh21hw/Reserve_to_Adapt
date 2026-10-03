@@ -6,7 +6,7 @@
 
 - A→W L4原版published-code baseline：seed1/2/3各70轮完成、独立审计和本地归档完成；主final HOS 90.3031±0.6068%，未超过论文93.0%。
 - 新方法匹配两轮pilot：seed1、λ0/.1两组完成并审计；final HOS77.0076/77.0230%，不作完整预算收益结论。
-- 新方法完整预算：exec113仅seed1、λ0，最新核查epoch44训练batch完成仍running；目标warm4+adapt66共70，未完成。λ.1及其余seed尚未启动。
+- 新方法完整预算：exec113 seed1、λ0已正常完成warm4+adapt66共70，exec114独立审计通过且本地完整归档验证通过；final OS*/UNK/HOS95.6787/75.3175/84.2858%。exec117启动seed1 λ.1完整组，尚未完成；其余seed未启动，不能从控制结果宣称结构项收益。
 - OfficeHome Pr→Rw：数据和真实batch预检就绪，正式baseline/IMP未完成。VisDA Synthetic→Real：数据与backbone口径仍待落实。
 - 用户允许最好seed补充展示；三个seed均值/样本标准差保留，事后选择及目标标签使用需披露。
 
@@ -612,6 +612,16 @@ exec113已完成epoch34、epoch35 batch1仍running，无NaN，尚未完成70epoc
 新增单arm on入口，必须off独立full审计通过才允许启动，当前未运行；新增off collector包装，未运行。准备seed2/3 own warm4 feature exporter，分别固定各自checkpoint SHA、baseline seed/70epoch审计、source/target列表、标签隔离schema及输出拒绝覆盖，GPU空闲后单独运行；当前仅语法通过，无新增cache/聚类/训练结果。
 
 GitHub本轮push成功并ls-remote核实53d17ea8；此前本地pilot、full入口和日志审计已同步。此次新增collector/exporter另行提交，不将上次push当本次新增文件同步证据。
+
+### 完整seed1 structure_off完成并独立审计（2026-10-03）
+
+exec113正常done，各epoch5..70共66条history、每epoch14batch共924次新增更新；warm4加完整adapt预算70，末计数980/GRL1960。exec114 fresh collector通过日志budget/公式/有限性/配置及输入/code/generated SHA、warm checkpoint epoch4/56/112、末模型/discriminator/SGD/banks/virtual/teacher/gate有限性、末mixture2、teacher行归一化、严格model加载、顺序center-crop final重算误差<1e−12。
+
+固定final OS*/UNK/HOS95.6787/75.3175/84.2858%。仅seed1且λ0，新层次化控制不是原flat RTA；未知类表现仍偏弱，不作为结构项收益证明或直接因果解释。预声明λ.1保持不变，待保存后启动on，不调λ/容量/seed。
+
+last.pt SHA4ed238a8ff5b301da677369a3ea4f55f2df7321f99c71168122395faf9cae2b3；results包147625字节 SHA db81e9d11010802eb4f1d49e05cbf5d9fe71b233dc6901f045fb5100211a93e0；checkpoint包196345436字节 SHA1db6c9e0eb24dbd418ad83efdd9bdb5bf14018daf4f6c85811878d7b2991f908。manifest和results已下载；checkpoint正在下载，未宣称本地验证完成。新增本地完整归档验证器，实际文件齐全后检查size/SHA/zipCRC、真实full日志及独立report/summary一致与内部pt SHA。
+
+off manifest/results/checkpoint随后全部下载，本地verify_matched_full_archives实际通过：两归档size/SHA/CRC、内部last.pt SHA、真实66epoch/924update日志与独立重算报告/summary一致。exec117随后启动唯一seed1 on完整arm，固定λ.1/相同warm/proposal/prior/seed/budget、同后期策略，未改参数，run /content/imp-runs/matched-structure-full-a2w-seed1-v1/structure_on，console /content/matched-full-a2w-seed1-on-console-v1.log。新run不是失败重跑；off完整结果已保存后才启动，on尚未完成，最终差值仍待观察。
 
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
