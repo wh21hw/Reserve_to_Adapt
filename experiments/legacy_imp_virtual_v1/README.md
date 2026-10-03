@@ -1,0 +1,71 @@
+# 旧方案：IMP 自适应虚拟原型，固定未知分类槽
+
+记录日期：2026-10-03。依据用户本次提供的旧 main.py 附件与聊天中贴出的 IMPClusterer。此目录是历史方案记录，不是当前训练入口，不表示已经跑过本快照，也不覆盖根目录用户代码。
+
+代码快照：`main_user_snapshot.py` 保存附件正文；`IMPClusterer_user_snapshot.py` 保存本次粘贴的聚类逻辑（排版整理，不修复行为）。原附件来源：`C:/Users/46025/.codex/attachments/4e022986-cb0a-4862-998e-341f95fa4dd4/已粘贴的文本.txt`。依赖仍引用项目 data/utilities/networks/centroid/domain_bus 等；这些依赖的历史版本未随附件提供，不能据此宣称完整可复现实验环境。
+
+## 研究直觉与实际作用
+
+原始直觉：先用 source 已知类监督改善特征，再以 source 类中心初始化 target 聚类；距离超过阈值则新增原型，通过每轮聚类自适应建模 target 结构。
+
+实际实现是 **IMP 替代 RTA 的目标虚拟聚类，更新虚拟损失中的原型集合**，并未让分类器未知输出槽数自适应。记：C为已知类数，K_out为分类器未知槽数，Q_imp为IMP总原型数，V为未匹配虚拟原型数。
+
+- 默认 `shared_classes=10`、`all_classes=12`，因此 K_out=2；分类器在IMP之前已经建立，后续未扩展。
+- `K_cluster=len(t_centroids)` 是Q_imp，不是K_out。已知中心固定保留且匹配成功时，V通常为Q_imp−C。
+- `nomatch` 传入 `cls.virt_forward(...)`，因此改变虚拟方向及虚拟损失，而不是分类器输出维度。
+- 初始化的匈牙利匹配选择/排列现有分类头权重，不把IMP中心直接安装成更大分类器。
+- 预热结束的未知权重初始化仍用 `faiss.Kmeans(..., args.all_classes)`，固定C+2，而不是IMP数量。
+
+## 原代码流程与设置
+
+1. 默认任务W→D（不是当前A→W）；ResNet50、256维瓶颈、12维分类头。batch64，骨干学习率5e-5、分类器5e-4。
+2. source微调5轮：只取前C维logits计算已知类CE；SGD momentum .9、nesterov、weight decay5e-4，固定学习率。之后复用这些优化器及其动量进入RTA。
+3. 在训练模式下用source/target训练loader和DomainBus提取特征（随机裁剪/翻转、drop_last）；`no_grad`不等于`eval`，BN仍可能更新。
+4. 计算source类中心，调用IMP：alpha=.05、5次迭代、已知中心固定。阈值和分配尺度由target全局方差计算。
+5. source/target中心做匈牙利匹配，未匹配target中心构成nomatch；原型引导已有头的排列，并供虚拟损失使用。
+6. RTA训练70轮；warmiter=3，`epoch<=3`即前4轮CE+virtual。随后CE+.01virtual+.3adv+1entropy+1unknown（命令行lambda可改）。
+7. 每轮结束，对训练期间累积的source/target表示再次IMP聚类，重置source中心为当轮中心并固定，更新nomatch。不保留跨轮未知组件身份，不改变分类头维度。
+8. 保留RTA GMM关系判别、未知槽argmax伪标签、最终C+2 argmax后合并未知的评价。best按目标标签HOS选epoch。
+
+## IMP 具体规则（照录行为，不称论文忠实实现）
+
+设target特征维度D，`rho=features.var(dim=0).mean()`、`sigma=sqrt(rho)`；alpha=None时实际回退.05，而不是自动估计alpha。
+
+```text
+lambda = -2*sigma*log(alpha) + D*sigma*log(1 + rho/sigma)
+最近中心的平方距离 > lambda → 将当前样本作为新中心
+p_ik = exp(-||z_i-mu_k||²/(2*sigma²)) / (sum_j exp(...) + 1e-8)
+已知中心固定；其他中心用target软分配加权均值更新
+责任质量 < 1e-8 的非固定中心删除；重复5次
+```
+
+若`fix_source_centroids=False`，已知中心也直接用target加权均值更新；没有持续source锚点/伪计数约束。此过程没有随机采样，是确定性扫描与软更新，不是Gibbs采样，也没有5次必然收敛的证明。顺序改变可能改变建簇结果。
+
+## 与当前 K-only 方案的边界
+
+| 项目 | 本旧方案 | 当前已执行方案 |
+| --- | --- | --- |
+| IMP对RTA的主要作用 | 改虚拟原型集合V/Q，未知槽固定2 | 将新增原型数作为K_out，保留原RTA虚拟聚类Q20 |
+| source前置阶段 | 5轮、C+2头只用前C维CE、固定LR | 3轮纯C输出CE，共享checkpoint与source调度 |
+| 阈值/尺度 | target全局方差+alpha公式 | source类内距离99%分位数/类内残差方差 |
+| 已知中心 | main中固定 | 默认可移动，source锚点伪计数κ=5；另做固定消融 |
+| 特征提取 | 训练增强/BN模式，逐batch变化的特征 | eval固定裁剪、完整数据、同一网络坐标 |
+| 建簇顺序 | 输入顺序逐样本扫描 | 确定性最远点优先 |
+| 更新时机 | 每epoch更新虚拟原型 | 一次估K固定；交替版20/40/60轮更新分类头K |
+
+当前方案仅传整数K，不传IMP中心方向或责任矩阵作为RTA损失监督。因此两条路线检验不同假设，不能用当前K-only结果替代旧方案实验结果。记录旧方案不等于授权重启旧实验。
+
+## 保留的已知问题（未在快照修复）
+
+- `max_clusters`参数未被使用，没有实际容量上限。
+- 按所写公式，其他量固定时alpha越小，lambda越大，建簇越难；“越小聚类越多”的注释与实现相反。
+- 指数可能全下溢为0；分母+1e-8得到全0责任，不是合法归一化概率。没有rho/sigma正数下界，退化特征可能产生NaN。
+- source中心数量/空类、N=0等缺少输入保护；`nomatch`为空时`np.stack`报错。
+- 原型匹配已有头不能扩容；原型总数少于头行数时，copy存在维度不匹配风险。
+- main部分强制`.cuda()`，虽有use_cuda分支，仍不是真正支持CPU。
+- main使用Office31类别与评价硬编码，不能原样用于OfficeHome/VisDA。
+- 文件没有可归属本快照的seed、配置/checkpoint和完整实验指标；不把其他版本的成绩归到这里。
+
+## 后续若比较这条路线
+
+应独立命名“adaptive virtual prototypes”，与“adaptive unknown slots”分开。控制任务、seed、source预训练、特征提取、优化器及预算，才能区分改变虚拟原型与改变未知容量的效果。当前仅归档，不启动新训练，不替换现有主线。
