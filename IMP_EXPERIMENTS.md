@@ -299,7 +299,15 @@ exec36完成固定final无目标标签的槽占用诊断：
 exec37结果归档 `pipeline-results/rta-capacity-pilot-v1-results.zip` 已下载、核验、解压，SHA256
 `3cab5cf49a10765557c49828b3b21fce65b960d2b7029697e1be0c945c5e291c`。
 包含三组逐轮指标、配置、状态审计、console、固定final target logits（无标签）、占用报告和代码快照。
-三组checkpoint另由exec38分开归档（每个约211MB），因Drive挂载/API不可用使用直接FS传输；下载状态另核验，不把runtime临时文件称为已持久化。
+三组checkpoint另由exec38分开归档（每个约211MB），因Drive挂载/API不可用使用直接FS传输；三组均已下载到pipeline-results。归档SHA256及内部last.pt SHA256均本地核验匹配，未只依赖传输成功提示：
+
+| 组 | checkpoint归档 SHA256 |
+| --- | --- |
+| original2 | `593b758a8a0e35e0d7398f680e082834f19f6f6418579c30ee1d419d77fa15a5` |
+| proto2 | `b55825410614ccb452cec78531ddb9786a6508c443c1eb8cac985cdbc8858c6e` |
+| proto18 | `27c89949e1b87d5fc37e67cd26c1a25583874021c912deae5b7cb1cfaf5c6b08` |
+
+实现及pilot记录已本地提交 `d5c3cce3`。本轮origin/module_imp push仍失败（Connection was reset），不宣称GitHub已更新；用户root修改未纳入提交。
 
 正式目标仍包括Office31 A→W、OfficeHome Pr→Rw、VisDA Synthetic→Real，各一任务，同协议baseline/IMP完整训练，seed1/2/3全部报告。尚未完成三任务，不能用此pilot替代。
 没有重启或销毁runtime，没有恢复已暂停的baseline自动检查。研究目标仍未完成。
