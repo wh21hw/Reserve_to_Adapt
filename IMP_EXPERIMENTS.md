@@ -520,6 +520,26 @@ v2 unknown gate总质量346.3237，权重≥.5有334样本；加权teacher熵.00
 新增 `scripts/preflight_matched_structure_colab.py`：锁定新warm/features/proposal/module hash，准备source/target各64张随机抽样和RandomCrop/Flip，恢复model/discriminator、GRL计数、实际warm关系bank、mixture和virtual模板，替换unknown组件头并同步其main别名。层次化组CE/entropy/virtual/adversarial控制与结构KL分别求model/discriminator梯度，检查有限性、known-head结构梯度零、显存。它不是原flat RTA损失，teacher及structure gate仍取固定center-crop缓存；没有optimizer step或state replay。脚本语法通过、已上传，但等待seed3释放GPU后才运行，不把准备写成实际验证通过。
 新增固定seed3 collector包装并上传；新增 `scripts/summarize_l4_a2w_matrix.py`，必须三seed各70完整epoch、独立final评价一致、同L4/代码hash，才汇总均值和样本标准差，fixed final主结果、oracle-best分列。尚未运行汇总，seed3最近epoch66仍running。此次GitHub push再次连接重置，15bde268未确认远端同步；本地提交和报告均保留。
 
+### A→W L4 published-code baseline三种子完成（2026-10-03）
+
+exec91正常done，exec92 seed3独立审计done：70条history/末轮70/固定warm4与计数、有限性、顺序center-crop final重算通过。seed3 final 93.4944/86.5201/89.8721%，oracle-best第45完整轮94.0495/86.3686/90.0455%。结果包SHA `793d0142a7fd39d61885e23a64724ea491b14b1c39346b3991f94e4eec5052ea`、warm包SHA `b8fa334eb75d136e180f8b11e8218575502df52ea5b11367fc6d4ff512eedf0c` 已下载校验解压，warm checkpoint SHA f74f473b...一致；last/best包正在下载。
+本地三seed汇总器实际运行通过：三组各70轮、seed/同L4/同codehash/独立final与history验证后才输出 `pipeline-results/rta-multitask-a2w-three-seed-summary-v1.json`。统计为各seed宏指标的均值和样本标准差，不挑最好seed、不混旧T4。
+
+| 规则 | OS* (%) | UNK (%) | HOS (%) | HOS比论文93.0的差(pp) |
+| --- | ---: | ---: | ---: | ---: |
+| 固定final（主结果） | 93.2736±1.6276 | 87.5357±1.0313 | 90.3031±0.6068 | -2.6969 |
+| 目标标签oracle-best（仅诊断） | 94.7104±0.6951 | 87.2019±0.7306 | 90.8007±0.6649 | -2.1993 |
+
+final OS*/UNK相对论文92.2/93.8分别+1.0736/−6.2643pp。仍未精确复现论文A→W结果；硬件L4非作者3090Ti，损失等已审计为published-code非论文公式忠实重实现，不将差异直接归因某单项。三数据集范围仍未完成：本节仅A→W baseline，无完整IMP对照，Pr→Rw/VisDA formal仍待推进。
+
+seed3 last/best包随后下载成功，归档SHA `b31b3287a06366400a61350f914ada9493d1617e0c317d80f2bec9a08f2668d1`、内部last SHA `96d902f6255d14b161060610969a4d31f684623a8fdd34a562c96db2d8973c43`、best SHA `3982fd70a89489f7fd1448db29976efca3143b954519fb4581ff8ab1e1e00163` 均本地核验一致并解压。至此A→W三seed baseline每组结果/warm/last+best均有本地副本。
+
+### 匹配结构项真实GPU batch预检通过（2026-10-03）
+
+seed3 GPU训练和collector结束后，在独立shell1 fresh Python运行真实batch worker；没有与训练并行占GPU。随机种子101，source/target各64张RandomCrop/Flip，实际train BN、保存的source关系bank/mixture/virtual/discriminator和GRL计数、层次化组件头18、质量先验α1。unknown实际选16，known gate24，冻结structure gate质量43.0531；teacher按相同图片索引取固定center-crop几何，不读target语义标签。
+控制loss2.75755、structure KL1.32553；所有model/discriminator梯度有限。全参数梯度norm8.81804/5.78914（structure/base≈.6565）；分类头norm2.15707/1.39431；known-head结构梯度严格零。峰值GPU allocated11,880,482,816字节≈11.06GiB，SGD step0。报告 `pipeline-results/matched-structure-realbatch-v1.json` 已下载。
+这是单增强batch的层次化control+结构项连接/梯度检查，不是原flat RTA公式，不证明多batch稳定、optimizer迁移、恢复轨迹、epoch完整或模块收益。下一步需实现并验证统一状态交接、固定λ0对照与预声明非零结构系数的训练，三任务完整baseline/IMP仍未完成。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
