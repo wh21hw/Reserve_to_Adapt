@@ -515,6 +515,11 @@ GitHub push随后成功且ls-remote独立核验 `ba65efe42815cca23743484b2a59065
 v2 unknown gate总质量346.3237，权重≥.5有334样本；加权teacher熵.00385855，仍近乎硬分配。结构loss1.05086，分类头gradient norm .93136、known rows严格0；source CE norm .25058，连续unknown组proxy norm1.28965，semantic entropy proxy norm.48292，结构相对比分别3.71675/.72218/1.92861。对应梯度cos −.02362/.19160/−.02571，不能理解为自动协同或语义正确。
 这是full-feature eval-BN诊断，尚无train-BN更新、图像增强、backbone梯度、RTA实际top16选样、virtual/adversarial项或SGD；不依据该报告声称完整训练梯度通过或IMP收益。尚未选λ；下一步必须真实batch检查并冻结带λ0的消融，防止硬teacher强梯度支配。seed3 exec91最近epoch39（0-based）仍running，未完成三seed审计。
 
+### 真实batch结构预检与三seed汇总准备（2026-10-03）
+
+新增 `scripts/preflight_matched_structure_colab.py`：锁定新warm/features/proposal/module hash，准备source/target各64张随机抽样和RandomCrop/Flip，恢复model/discriminator、GRL计数、实际warm关系bank、mixture和virtual模板，替换unknown组件头并同步其main别名。层次化组CE/entropy/virtual/adversarial控制与结构KL分别求model/discriminator梯度，检查有限性、known-head结构梯度零、显存。它不是原flat RTA损失，teacher及structure gate仍取固定center-crop缓存；没有optimizer step或state replay。脚本语法通过、已上传，但等待seed3释放GPU后才运行，不把准备写成实际验证通过。
+新增固定seed3 collector包装并上传；新增 `scripts/summarize_l4_a2w_matrix.py`，必须三seed各70完整epoch、独立final评价一致、同L4/代码hash，才汇总均值和样本标准差，fixed final主结果、oracle-best分列。尚未运行汇总，seed3最近epoch66仍running。此次GitHub push再次连接重置，15bde268未确认远端同步；本地提交和报告均保留。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
