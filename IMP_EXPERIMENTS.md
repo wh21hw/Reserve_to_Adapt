@@ -4,6 +4,8 @@
 
 ### 当前执行：baseline 环境桥接与 K-only 新主线
 
+最新完整K-only结果：exec143 done、K9/seed3/70轮，best OS*=96.9797%、UNK=81.5706%、HOS=88.6103%，final95.9017/77.7575/85.8817。相对同source初始化K2，best HOS−5.0801pp，final−7.8086pp；已知提升但未知明显下降，不能报告总体收益。ZIP/70轮日志/配置/指标与三臂汇总已保存本地。exec145已启动预先约定的交替版本（初始K9，总70轮，20/40/60轮后刷新），未改阈值/seed来追测试成绩。固定K2/source-prior权重均已完整保存，baseline best也已保存。其他两个任务仍未完成正式训练。
+
 固定K同初始化对照已完成：exec141 done、70轮，best第66轮和final均OS*=91.8587%、UNK=95.5965%、HOS=93.6903%。对比原ImageNet启动baseline，best HOS降低1.7458pp、final降低1.3822pp；这明确揭示source预训练本身的变化，后续纯K效果以该对照为准，不混用95.44%。普通日志/配置/指标10.1KiB ZIP已下载解压。exec143已启动K=9同设置臂，19维输出初始化正常，未得到完整结果。
 
 交替K接口已准备但未正式训练：固定完成20/40/60轮后重提当前source/target特征，估K可增减；已知头保持，未知头按当前预测/新责任重叠匹配并保留对应SGD动量，K不变不改头。实际原CLS的CPU接口一次3→5→2→2检查通过，非完整训练验证。最新代码79b65e54已成功推送GitHub；此前连接失败后的旧WSL推送客户端是冗余等待，取消只针对已确认Git客户端PID，不涉及Colab daemon/runtime。source特征1.4MiB已保存本地，source-final权重正分块下载。
