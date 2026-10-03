@@ -410,6 +410,27 @@ exec66复用Stage5c uniform18固定final logits，原始logits已经带log(2/K)�
 在加入新loss前核实其源先验、无标签责任分配和条件结构约束，并冻结方案后开展完整预算对照，避免长期停留在两epoch pilot。
 最终三数据集各一任务及seed1/2/3范围不变，当前仍未完成。
 
+### 三任务协议补充审计（2026-10-03）
+
+详见 `RTA_PROTOCOL_AUDIT.md`。已核验 Pr→Rw 官方列表在本地可用：源1785张/25类，目标4357张/65类；相对 `data/` 所有图像路径存在，已知类别名称一致。尚未完成 Colab 传输与通用训练入口。
+同时确认发布代码的损失系数、熵输出空间、加权归一化、KL方向、虚拟模板数与论文公式有差异。既有结果标注为发布代码口径；论文公式忠实实现必须另立基线，不能静默替换。VisDA backbone 仍需澄清。此次没有启动新训练。
+
+新增独立 `task_protocol.py`，提供 Office31/OfficeHome 明确类别集合、VisDA 经外部原始ID映射构造的协议、严格路径/类别/重复样本检查，以及保留原始未知类别的宏平均评价函数。`scripts/test_task_protocol.py` 的 VisDA 映射仅为单元测试 fixture，不是已下载/核实的真实 VisDA 文件列表。
+本地五项测试及真实 Pr→Rw 输入审计通过；各类样本数和列表SHA已输出核验。未知类别预测虽合并成语义unknown，UNK仍按原始未知类别准确率平均，不能用合并样本准确率替代。该模块尚未接入训练入口，不宣称已经实现三任务训练。
+
+### 多任务 baseline 入口 v1（2026-10-03，尚未训练）
+
+新增独立快照 `experiments/rta_multitask_baseline_v1`，复制已冻结 L4 published-code control 后接入任务协议，不修改根目录用户训练代码或旧实验快照。源标签按已知集合映射；target_train 标签替换为常量unknown sentinel（原记录lt不被loss/聚类使用）；target_test 保留原始标签用于逐类宏平均。损失系数、预处理、优化器、预热与mixture schedule不变。
+新增任务专属日志目录且拒绝覆盖；virtual cluster数必须显式声明，不能把Office31原20静默套到OfficeHome。VisDA要求完整class-map和显式接受尚未解决的ResNet比较口径；未实现VGG且拒绝假VGG开关。
+七个Python文件语法检查通过；`scripts/test_multitask_entry.py` 三项测试通过，直接抽取实际入口transform执行（mock图像预处理），验证两Office任务source映射、目标训练label恒定、目标评价raw label保留，以及原Office31宏平均公式一致。它不是实际图像batch/GPU前反向检查；尚未运行训练、传输OfficeHome或验证VisDA真实列表。下一步真实batch preflight通过后才能启动新训练。
+
+### 多任务入口实际 A→W batch 预检（2026-10-03）
+
+colab-cli exec69在现有L4端点完成，状态done。独立worker执行实际main.py中的参数/文件审计/三个DataLoader定义，停在模型和聚类初始化之前；再用该快照模型与真实source/target各64张224×224图像前反向。入口SHA256 `89ae1377f4d852b96eb2fe6f2d2786928dbe2a8fde0e4d015cf86701c8a755f4` 与本地一致。
+损失7.816242218，所有梯度有限，峰值已分配GPU显存11,307,886,592字节（约10.53GiB），optimizer step=0。target_train label恒为unknown sentinel，target_test保留原始31类one-hot标签。
+这是损失连接预检：virtual使用固定随机方向、gate使用全1权重、unknown selection使用前16样本；没有验证完整GMM、虚拟聚类刷新、真实未知选样、整轮训练与长期显存。不将它写成完整训练通过；Pr→Rw和VisDA尚未做真实batch检查。
+报告及console已下载至 `pipeline-results/multitask-preflight-v1.json` 和 `multitask-preflight-console-v1.log`；报告SHA256 `64f8e338b96a3985566d745fb207f37f0fd8010f5047dd8152c83b19dc23231d`。未重启runtime、未修改既有模型checkpoint。
+
 Stage5d结果包SHA256 `8ac6452bd6b96c7ddaa16629b3d2721bcc1adf77a2954065dfc3fa1149478d6c` 已下载、校验、解压。
 三组checkpoint均已下载，本地归档哈希及内部last.pt哈希全部核验匹配：
 
