@@ -581,6 +581,8 @@ exec103 off与exec105 on均正常done，各固定epoch5/6、28次SGD更新，sch
 
 两组results.zip和pair报告已下载；本地validate_pair再次通过，独立重算报告与summary一致。off checkpoint包187.2MiB已下载，内部last.pt SHA f742ff3839a9f9c1983278a102de717d91243d03fcc974e7d1867bec815d73a6通过；on checkpoint SHA应为4e942bfd47cade7401512e36671f0e66bcea0cb34a27ea80a3af246a140190e8，正在保存，尚未宣称本地验证。
 
+on checkpoint包随后下载完成（187.2MiB）；本地zip CRC及内部last.pt SHA 4e942bfd47cade7401512e36671f0e66bcea0cb34a27ea80a3af246a140190e8与summary匹配。两组结果与checkpoint均已本地保存。实验记录和入口已提交20d0148d，但此次GitHub push连接重置，未确认远端同步；不将本地commit当已推送。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
