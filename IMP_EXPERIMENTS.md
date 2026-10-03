@@ -623,6 +623,12 @@ last.pt SHA4ed238a8ff5b301da677369a3ea4f55f2df7321f99c71168122395faf9cae2b3；re
 
 off manifest/results/checkpoint随后全部下载，本地verify_matched_full_archives实际通过：两归档size/SHA/CRC、内部last.pt SHA、真实66epoch/924update日志与独立重算报告/summary一致。exec117随后启动唯一seed1 on完整arm，固定λ.1/相同warm/proposal/prior/seed/budget、同后期策略，未改参数，run /content/imp-runs/matched-structure-full-a2w-seed1-v1/structure_on，console /content/matched-full-a2w-seed1-on-console-v1.log。新run不是失败重跑；off完整结果已保存后才启动，on尚未完成，最终差值仍待观察。
 
+### 完整pair审计与own-seed候选入口准备（2026-10-03）
+
+exec117最新epoch27 batch1仍running，无NaN；仅观察，不按中途HOS调λ、容量或选seed。新增独立full pair审计模块，必须两组真实完整日志/独立checkpoint报告通过、全部共享config/input/code相等、66epoch样本顺序哈希相同才能输出final差值；报告明确不证明增强图片逐元素一致，也不把seed1说成三seed统计。合成正例及config/order/evaluation/metrics/checkpoint/collector六种坏case测试通过。新增on collector包装和pair Colab入口，语法通过，尚未上传/执行，不能宣称实际on或pair审计完成。
+
+新增seed2/3 own-cache无标签候选审计入口：要求显式feature SHA与各seed export manifest/固定warm checkpoint SHA一致，严格NPZ schema无target标签；source99%残差校准、variance floor1e−8、prior_strength5/steps5/max100/birth≥.5/support≥5与seed1相同。关系gate随机种子随实验seed变化，off/on将共享同一份proposal。保留原序/逆序/打乱与80%子样本几何检查，但下游只用original、不挑最优trial；组件数不当语义类数，有限先验不冒称DP posterior。仅语法通过，仍需GPU空闲后先各自feature export再逐步执行，当前未产生新seed候选或训练结果。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
