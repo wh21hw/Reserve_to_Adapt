@@ -15,7 +15,7 @@ replacements = {
     'a9d1a40aeb863b72aafefaed965d22d8eb3b3099516aee117f1897bdb4fb5459': '37972fed3fb89f8418e38186b050e3f525ab25f6515faf2a38a00c6172889f14',
     'matched-warm-candidates-v1/original.npz': 'matched-warm-candidates-seed2-v1/original.npz',
     '3d4b9fe2833e89f97863db3f718bcf00dd4899d1221c80393e1668c44883721b': '16db9d30eb56d3899c148b1482a3da7c4a1800cdf1769073e3fa4781d00f1e8b',
-    '/content/matched-structure-realbatch-v1.json': '/content/matched-structure-realbatch-seed2-v1.json',
+    '/content/matched-structure-realbatch-v1.json': '/content/matched-structure-realbatch-seed2-isolated-v2.json',
     "centers = torch.from_numpy(proposal['candidates'][indices]).cuda()": "centers = torch.from_numpy(proposal['candidates'][indices])",
     "torch.as_tensor(mass[indices], device='cuda')": 'torch.as_tensor(mass[indices])',
     'networks.CLS(2048, 12)).cuda()': 'networks.CLS(2048, 12))',

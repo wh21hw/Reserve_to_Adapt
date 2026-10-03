@@ -13,7 +13,7 @@ replacements = {
     'ff88bdc9d49a1a8c151baa8b4ca166549a2723195882ec37fe5056e0d91f1eb1': 'e16e895e1bdaec17f14dd4eda7cc81f8b05ad1c1c6d76145bbd3088aa1d2fea0',
     'matched-warm-candidates-v1/original.npz': 'matched-warm-candidates-seed2-v1/original.npz',
     '3d4b9fe2833e89f97863db3f718bcf00dd4899d1221c80393e1668c44883721b': '16db9d30eb56d3899c148b1482a3da7c4a1800cdf1769073e3fa4781d00f1e8b',
-    '/content/matched-real-handoff-v1.json': '/content/matched-real-handoff-seed2-v1.json',
+    '/content/matched-real-handoff-v1.json': '/content/matched-real-handoff-seed2-isolated-v2.json',
 }
 for old, new in replacements.items():
     assert source.count(old) == 1, old
