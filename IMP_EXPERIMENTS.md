@@ -6,7 +6,7 @@
 
 - A→W L4原版published-code baseline：seed1/2/3各70轮完成、独立审计和本地归档完成；主final HOS 90.3031±0.6068%，未超过论文93.0%。
 - 新方法匹配两轮pilot：seed1、λ0/.1两组完成并审计；final HOS77.0076/77.0230%，不作完整预算收益结论。
-- 新方法完整预算：exec113 seed1、λ0已正常完成warm4+adapt66共70，exec114独立审计通过且本地完整归档验证通过；final OS*/UNK/HOS95.6787/75.3175/84.2858%。exec117启动seed1 λ.1完整组，尚未完成；其余seed未启动，不能从控制结果宣称结构项收益。
+- 新方法完整预算：seed1 λ0/.1各70完整预算完成，exec114/118独立审计及完整pair审计通过；final HOS84.2858/86.1119%，单seed结构项差+1.8260pp，仍低于同seed原版90.0401%。其余seed未启动，不能宣称稳定增益；on checkpoint本地归档正在保存。
 - OfficeHome Pr→Rw：数据和真实batch预检就绪，正式baseline/IMP未完成。VisDA Synthetic→Real：数据与backbone口径仍待落实。
 - 用户允许最好seed补充展示；三个seed均值/样本标准差保留，事后选择及目标标签使用需披露。
 
@@ -628,6 +628,21 @@ off manifest/results/checkpoint随后全部下载，本地verify_matched_full_ar
 exec117最新epoch27 batch1仍running，无NaN；仅观察，不按中途HOS调λ、容量或选seed。新增独立full pair审计模块，必须两组真实完整日志/独立checkpoint报告通过、全部共享config/input/code相等、66epoch样本顺序哈希相同才能输出final差值；报告明确不证明增强图片逐元素一致，也不把seed1说成三seed统计。合成正例及config/order/evaluation/metrics/checkpoint/collector六种坏case测试通过。新增on collector包装和pair Colab入口，语法通过，尚未上传/执行，不能宣称实际on或pair审计完成。
 
 新增seed2/3 own-cache无标签候选审计入口：要求显式feature SHA与各seed export manifest/固定warm checkpoint SHA一致，严格NPZ schema无target标签；source99%残差校准、variance floor1e−8、prior_strength5/steps5/max100/birth≥.5/support≥5与seed1相同。关系gate随机种子随实验seed变化，off/on将共享同一份proposal。保留原序/逆序/打乱与80%子样本几何检查，但下游只用original、不挑最优trial；组件数不当语义类数，有限先验不冒称DP posterior。仅语法通过，仍需GPU空闲后先各自feature export再逐步执行，当前未产生新seed候选或训练结果。
+
+### 完整seed1 structure_on与pair审计通过（2026-10-03）
+
+exec117正常done，epoch5..70共66完整adaptation、924次新增更新，末980/GRL1960，无NaN。exec118 fresh collector验证所有完整预算/输入与code SHA/保存状态有限性/末mixture2/teacher归一化/独立顺序center-crop final重算通过，未执行SGD。pair实际执行通过：两组全部共享config/input/generated-code相等、66epoch样本batch order SHA一致；不证明增强图像逐元素或GPU轨迹确定性。pair报告已下载到pipeline-results/matched-full-a2w-seed1-pair-audit-v1.json。
+
+| seed1 fixed final，完整70预算 | OS* (%) | UNK (%) | HOS (%) |
+| --- | ---: | ---: | ---: |
+| 原版published-code baseline | 91.5469 | 88.5820 | 90.0401 |
+| 层次化组件控制 λ0 | 95.6787 | 75.3175 | 84.2858 |
+| 同设置+结构KL λ.1 | 95.1128 | 78.6673 | 86.1119 |
+| 结构on−off (pp) | -0.5659 | +3.3498 | +1.8260 |
+
+结构teacher KL末轮batch平均off2.31511/on.85192，teacher目标被更好拟合但不等于语义正确。单seed对照有正向UNK/HOS信号，仍低于原版同seed HOS约3.9282pp；新增整个框架尚未超越原版，也不能从单seed断言稳定收益。保持λ.1及source-only校准/support规则，不根据这些target结果调参，后续做seed2/3相同策略，再完成OfficeHome/VisDA。
+
+on last.pt SHA92c3f12f69a8141506287f36d063aea77a6ce91a3d7b1658ae212d245c0e1beb；results包147240字节 SHA2df36e13d723d0645ad4b7d6547b1c7a912e8281f515ed52f4153b7d75d4ef8c；checkpoint包196341681字节 SHAa4bf5e5f622dea9f9d1750603bc037c7a3473053d05c843863188d2ba3de990c。manifest和results已下载，checkpoint正在下载，尚未声称本地验证完成。
 
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
