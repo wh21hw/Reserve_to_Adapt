@@ -227,4 +227,29 @@ exec25执行 `run_rta_space_structure_colab.py`，复用原先声明的阈值倍
 
 Git：诊断及隔离预热代码已在module_imp本地提交 `d081f47e`，用户root六个已修改训练文件未进入该提交。两次origin/module_imp推送均网络失败（connection reset/443无法连接），不宣称GitHub同步成功；没有force push。最新诊断记录及runner另提交版本。运行产物保存在本地pipeline-results，不进入Git。
 
+### Stage 4f：关系约束原型模块 — 已实现并验证
+
+`SourceAnchoredIMP.fit` 新增可选 `known_compatibility`，默认None保持旧行为。固定关系兼容度p来自source-soft-prototype KL的BGMM最低均值组概率，是plug-in信号，不是校准的真实已知概率。
+候选出生同时要求几何距离超阈值和(1-p)≥0.5；软分配对已知每组件加log(p/C)，候选每组件加log((1-p)/M)。这样两个组的总先验权重不随组件个数自行增加。p=0/1由零组权重的负无穷logit表示；有候选时仍至少有一个有限组。无候选时只能在已知组归一化，返回 `compatibility_ignored_without_candidates=True` 明确该局限。
+source已知中心仍用κ=5的条件Gaussian MAP更新。该模型没有推断DP stick权重、浓度或未知语义类别后验，不能称为原IMP/DPMM精确实现。
+
+exec26四项合成检查通过：不传关系约束时与旧模块逐元素相同；给定完美关系的已知偏移案例不误生候选、真实新结构生一个候选；全已知无NaN；非法gate拒绝。完美gate是人工测试输入，不证明真实关系模型准确。
+exec27在固定RTA空间预留特征上对照未约束/三次BGMM初始化×原序/倒序，共8项；threshold=原source99%分位、κ=5、steps5、容量100固定，没有目标标签输入。三次BGMM均收敛，出生合格样本335/334/335。未约束为16/19候选；三种gate均仍16/19。关系约束改变软归属（约0.51/0.53候选概率均值），没有修复数量顺序敏感性，不据此宣称改善未知发现或OSDA。
+完整归档 `pipeline-results/relation-constrained-frozen-v1.zip` SHA256 `90f2a22614589f432c3df954bc3f92d79b99e75c0d8d404581aa5ffb0c8b7a96` 已下载、核验、解压，包含unit报告及固定模块快照（SHA256 `ec808408c570051a4cad50dbb5dc868f009fe87746b3c7c07ffcff29f83c7dd6`）。
+
+### Stage 4g：最远优先出生策略 — 消除换序误差，但数量仍不确定
+
+新增可选 `birth_strategy='farthest'`。先按特征坐标和兼容度规范化内部行序，每轮优先取距离现有中心最远且出生合格的点，直到覆盖阈值或显式容量报错。还原返回soft assignment的输入行对应。默认sequential保留旧算法。
+这是确定性的几何覆盖策略，不是原IMP的Bayesian后验或语义类数估计。规范排序也规范了MAP的浮点归约；消除计算顺序差异不能证明阈值/数据采样选择正确。
+exec28默认回归、已知身份/行对应及五次合成打乱精确相同均通过。exec29共24项真实检查（无gate/三种gate，各原序/倒序/打乱及三次80%子采样）。完整数据全部20个候选，每组内三种顺序的soft assignment逐元素相同。无gate有17个质量≥5的候选，带gate三组均18个；80%子采样候选18/16/13，带gate支持≥5的候选15/15/12。子采样继承全数据关系gate，不是重拟合整个模型的稳定性评价。
+24项归属有限且行和为1。完整归档 `pipeline-results/farthest-constrained-frozen-v1.zip` SHA256 `90e488373967a463bd2ca2cfb707ceb7afbf38c0f72cc2b79385d6fdd2d1feca` 已下载、核验、解压；模块SHA256 `ec38a017ae2b91755499e136d309fc2af10eff802aa7a114b12fa2cd51943a4f`。
+
+### Stage 5a：候选容量头功能验证 — 已通过，尚未适应训练
+
+新增 `candidate_head.py`，在创建优化器前按候选有效质量阈值5选出方向，保留已知fc权重，候选方向归一化并匹配已知权重平均范数。更新原fc对象的Parameter/out_features，保留CLS.main中的共享引用。空支持/零方向等输入显式失败，不偷偷回退到真实类数或固定2。
+质量≥5此前仅作为诊断；本次把它声明为**试验用潜在容量提案**，不是最终选择规则。完整gate-seed1为预先固定primary，不按目标标签选最佳seed；其18个支持候选不代表18个未知语义类。子采样不确定性已明确保留，不把该候选容量当作已验证数量推断。
+exec30比较max_slots=2与不截断候选提案，在固定epoch4原RTA网络上做source真实4样本前/反向检查，不执行optimizer.step或比较目标准确率。两组分别输出[4,12]与[4,28] logits，已知权重初始化保持逐元素不变，原fc/main共享引用保持一致，新优化器确实持有新Parameter。两组loss及所有梯度有限，未知权重梯度范数约0.815/0.867。单batch loss约2.763/3.433，仅作sanity日志，不能用作性能对比。
+完整归档 `pipeline-results/candidate-head-smoke-v1.zip` SHA256 `1c721b3790321e5805e73e8df855578fa4a666f41d99150a9c4ec8b22a65323c` 已下载、核验、解压；helper SHA256 `dd64dea98138b29f88ffcccf520d4a45c92983d0b22385595ab8b5dcd9cce601`。容量提案文件哈希 `5bfd8dd4e51d0f7a818fa240b526ed942c3f61ebb63fca48f3bc4a4145aff9c2`。
+任何完整控制实验都必须同样重建/迁移优化器状态；当前helper替换Parameter会使旧优化器引用失效，不能直接在已有optimizer上调用然后继续训练。下一阶段是同checkpoint、同预算的2槽/数据提案容量短程适应pilot，另保留原RTA初始化对照，避免把容量与初始化方法的联合变化误归因于容量。此pilot只检验潜在容量假设，不宣称恢复真实未知类数。正式三数据集各一任务对照仍未完成。
+
 没有重启或销毁现有 T4，没有恢复已暂停的 baseline 自动检查。研究目标仍未完成。
