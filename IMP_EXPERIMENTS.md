@@ -445,6 +445,26 @@ exec77实际入口DataLoader+模型前反向预检，source/target各64张224×2
 仍只是损失连接测试：virtual为随机10方向、gate=1、unknown选前16；传入virtual-clusters=35仅为了预检入口参数，未运行Kmeans，未把35定为正式OfficeHome配置。完整聚类刷新/选样/训练尚未验证，VisDA仍待真实列表与backbone选择。
 重组、输入校验、预检报告及两个console已下载到 `pipeline-results/officehome-*`。入口SHA与本地 `89ae1377f4d852b96eb2fe6f2d2786928dbe2a8fde0e4d015cf86701c8a755f4` 一致。本地完整数据包与逐文件manifest保留于 `artifacts/officehome-pr2rw-v1`；没有删除分片、旧实验或checkpoint。
 
+### L4 完整预算 published-code baseline：A→W seed1（进行中）
+
+colab-cli exec78，端点 `gpu-l4-s-kkb-ass1a1-13n8bs33o8id1`；独立worker仅运行本组，不串联实验矩阵。目录 `/content/imp-runs/rta-multitask-baseline-v1/office31-a2w_seed1`，seed1、70完整epoch、batch64、未知槽2、virtual Kmeans20，发布代码损失口径不变。没有IMP、没有调参、不是论文公式忠实重实现。
+启动前独立快照增加有限性检查（KL在原inf→10处理后检查NaN，loss/grad检查）及异常时OptimizerManager不step；两项fail-stop单测通过。正常数值时公式与更新不变。main SHA `683c35e76a89ad1588f35dea83e3ecbc6f9a8af5bb3250e9e3de1cbfc3c7a148`，utilities SHA `6ba276bb2d0076a4d64cde811496d2dfb71b330c8e1660add02d8fbd42e636e7`。
+checkpoint扩充实际source/target关系bank、virtual模板、sklearn mixture对象、优化器scheduler/GRL计数和Python/NumPy/Torch/CUDA RNG，固定第4个预热epoch另存 `warmup-complete.pt`。这为后续准确恢复状态准备，不把此前重建bank的pilot追溯改成精确resume。
+已观测完整预热、适应期真实GMM选择与每轮虚拟聚类刷新正常。最近检查日志epoch43（0-based）且exec仍running；中途指标不作最终成绩、不据此选checkpoint。以完整70条history及固定final报告为完成依据。Drive已满，输出目前在临时/content，完成后必须立即下载checkpoint/配置/history/audit。启动manifest已下载至 `pipeline-results/rta-multitask-a2w-seed1-launch-v1.json`。
+GitHub上次push返回RPC/curl55失败且同时打印Everything up-to-date，不能据后一句宣称同步成功；尚需核验远端ref。没有重启runtime。
+
+### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
+
+新增独立 `prototype_structure.py`，无target语义标签输入：
+
+- 冻结软责任质量n，有限Dirichlet总浓度α=1、默认均匀base b，posterior mean π=(n+αb)/(sum n+α)。不是每组件α=1，不是DP后验或语义类数推断。
+- 用冻结候选中心与source校准方差构造q(k|x,U)=softmax(log π-distance²/(2σ²))；teacher、先验及gate均detach，σ²正数下界1e-8。
+- 新结构项为unknown组内部KL(q_teacher || q_student)，与组级unknown证据分开，按unknown权重和归一化。零权重批次返回零loss/gradient；尚未选择训练系数或接入正在运行的baseline。
+
+通过独立shell1的CPU测试（不占用训练kernel队列）：posterior mean正确、只拆分部分组件时同步拆分count/base质量后loss及共享logit梯度不变、teacher/gate无梯度、zero-weight零梯度、zero-variance正数下界。第一次测试脚本因重复使用已释放计算图失败；只修测试图重建后通过，未改模块公式、未调参或重跑训练。报告 `pipeline-results/prototype-structure-unit-v1.json` 已下载。
+冻结真实feature/proposal哈希与Stage5固定输入一致；source方差由source类别残差重算；采用既定质量≥5的18个候选、α=1，没有标签或性能挑选。全部564目标的条件teacher有限且归一化，18组件均有硬归属；平均熵0.0131313，最大概率中位数=1，显示teacher几乎硬分配。报告 `pipeline-results/prototype-structure-frozen-v1.json` 已下载。
+这是全target几何诊断，不是训练未知选样或语义正确性证明。它提示不能将teacher高置信度当成可靠语义监督，也不能把18组件当18未知类。下一步需核验未知gate下的结构监督及梯度规模，再冻结消融设计；尚无结构模块训练收益结论。三任务、每任务seed1/2/3及完整baseline/IMP对照仍未完成。
+
 Stage5d结果包SHA256 `8ac6452bd6b96c7ddaa16629b3d2721bcc1adf77a2954065dfc3fa1149478d6c` 已下载、校验、解压。
 三组checkpoint均已下载，本地归档哈希及内部last.pt哈希全部核验匹配：
 

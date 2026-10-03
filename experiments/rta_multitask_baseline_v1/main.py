@@ -281,6 +281,8 @@ while epoch < run_epochs:
 
             kltarget = torch.nn.functional.kl_div( (nn.Softmax(-1)(fc_target[:,:args.shared_classes])).log(),   s_ctds[pseudo_t_label], reduction='none').sum(1).detach()
             kltarget = torch.where(torch.isinf(kltarget), torch.full_like(kltarget, 10), kltarget)
+            if not torch.isfinite(kltarget).all():
+                raise FloatingPointError('Nonfinite relation scores before mixture fit')
 
             if epoch<=1:
                 gmm = GaussianMixture(n_components=3, covariance_type='full').fit(to_np(kltarget)[:,None])
@@ -347,7 +349,12 @@ while epoch < run_epochs:
                 #     loss = 1 * ce + 0* virtual_ce + 0 * adv_loss + 0 * entropy + 0 * ce_ep         
                 # else:
                 #     loss = ce + 0 * virtual_ce + 0.3 * adv_loss + 1 * entropy + 1 * ce_ep 
+                if not torch.isfinite(loss):
+                    raise FloatingPointError('Nonfinite loss; no optimizer step')
                 loss.backward()
+                if any(parameter.grad is not None and not torch.isfinite(parameter.grad).all()
+                       for module in (net, discriminator) for parameter in module.parameters()):
+                    raise FloatingPointError('Nonfinite gradient; no optimizer step')
             losscounter.addOntBatch(ce, entropy, virtual_ce, ce_ep, adv_loss)
             k += 1
            
@@ -469,13 +476,23 @@ while epoch < run_epochs:
         history.write(json.dumps(metrics)+'\n')
     with open(os.path.join(args.log_dir, 'metrics.json'), 'w') as metrics_file:
         json.dump(metrics, metrics_file, indent=2)
-    torch.save(dict(model=net.state_dict(), discriminator=discriminator.state_dict(),
+    checkpoint_state = dict(model=net.state_dict(), discriminator=discriminator.state_dict(),
                     epoch=epoch, metrics=metrics,
                     optimizer_feature=optimizer_feature_extractor.optimizer.state_dict(),
                     optimizer_cls=optimizer_cls.optimizer.state_dict(),
-                    optimizer_discriminator=optimizer_discriminator.optimizer.state_dict()),
-               os.path.join(args.log_dir, 'last.tmp.pt'))
+                    optimizer_discriminator=optimizer_discriminator.optimizer.state_dict(),
+                    source_relation_bank=all_centroids.src_ctrs,
+                    target_relation_bank=all_centroids.tgt_ctrs,
+                    virtual_templates=nomatch, relation_mixture=gmm,
+                    optimizer_steps=[wrapper.global_step for wrapper in
+                                     (optimizer_feature_extractor, optimizer_cls, optimizer_discriminator)],
+                    grl_steps=discriminator.grl.global_step,
+                    rng_python=python_random.getstate(), rng_numpy=np.random.get_state(),
+                    rng_torch=torch.get_rng_state(), rng_cuda=torch.cuda.get_rng_state_all())
+    torch.save(checkpoint_state, os.path.join(args.log_dir, 'last.tmp.pt'))
     os.replace(os.path.join(args.log_dir, 'last.tmp.pt'), os.path.join(args.log_dir, 'last.pt'))
+    if epoch == warmiter + 1:
+        torch.save(checkpoint_state, os.path.join(args.log_dir, 'warmup-complete.pt'))
 
 
 

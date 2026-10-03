@@ -126,6 +126,9 @@ class OptimizerManager:
         for op in self.optims:
             op.zero_grad()
     def __exit__(self, exceptionType, exception, exceptionTraceback):
+        if exceptionType is not None:
+            self.optims = None
+            return False  # never update parameters while propagating a failure
         for op in self.optims:
             op.step()
         self.optims = None 
