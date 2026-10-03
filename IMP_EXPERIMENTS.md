@@ -1,5 +1,15 @@
 # IMP / 未知空间建模：分阶段实验记录
 
+## 当前阶段索引（2026-10-03）
+
+本文件为保留证据的分阶段记录；后文“尚未训练/等待授权”等表述属于相应历史阶段，不表示当前仍在等待同一授权。
+
+- A→W L4原版published-code baseline：seed1/2/3各70轮完成、独立审计和本地归档完成；主final HOS 90.3031±0.6068%，未超过论文93.0%。
+- 新方法匹配两轮pilot：seed1、λ0/.1两组完成并审计；final HOS77.0076/77.0230%，不作完整预算收益结论。
+- 新方法完整预算：exec113仅seed1、λ0，最新核查epoch44训练batch完成仍running；目标warm4+adapt66共70，未完成。λ.1及其余seed尚未启动。
+- OfficeHome Pr→Rw：数据和真实batch预检就绪，正式baseline/IMP未完成。VisDA Synthetic→Real：数据与backbone口径仍待落实。
+- 用户允许最好seed补充展示；三个seed均值/样本标准差保留，事后选择及目标标签使用需披露。
+
 ## 研究目标与实验边界
 
 利用 source 已知类别结构作为先验，推断 target 原型结构，再配置未知分类空间容量。

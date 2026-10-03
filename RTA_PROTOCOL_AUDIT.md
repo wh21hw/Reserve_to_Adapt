@@ -1,6 +1,6 @@
 # RTA 三任务协议与复现口径审计
 
-记录日期：2026-10-03。正式范围固定为 Office-31 A→W、Office-Home Pr→Rw、VisDA Synthetic→Real，每任务 baseline/IMP 同协议对照，训练 seeds 1/2/3 全部报告。不得以短程 pilot 替代完整实验，不得挑最好 seed。
+记录日期：2026-10-03。正式范围固定为 Office-31 A→W、Office-Home Pr→Rw、VisDA Synthetic→Real，每任务 baseline/IMP 同协议对照，训练 seeds 1/2/3 全部报告。不得以短程 pilot 替代完整实验。用户后来允许挑最好 seed：可作明确标注的事后选择补充结果，同时保留三种子统计；不得把补充结果写成无偏均值或据此调参。
 
 ## 复现口径
 
