@@ -485,6 +485,20 @@ seed2在seed1完整审计/本地保存后按原计划启动：exec84，同目录
 
 exec84已重新确认running，最近日志epoch60（0-based），即完成61轮；尚未声称70轮完成。种子1独立collector参数化为显式seed1/2/3，所有run、launch、console、归档及审计seed校验随同一参数变化；新增固定seed2的fresh-process包装，仍为评价/归档而非训练。两个文件本地语法检查通过并上传现有L4 `/content`，尚未执行collector，不能把语法检查当实际审计通过。未修改正在训练的main/utilities、损失、预算或选取规则。
 
+### A→W L4 seed2：70轮与独立评价通过（2026-10-03）
+
+exec84正常done，exec85独立collector done。history严格1–70、checkpoint epoch70/预热4、scheduler与GRL计数、模型/关系bank/virtual有限性通过；顺序center-crop重算final与日志误差<1e-12。
+固定final OS*=94.7794%、UNK=87.5049%、HOS=90.9970%；目标标签oracle-best为第43完整轮（日志42），95.4354%/87.5049%/91.2983%，仅诊断。final HOS比论文93.0低2.0030百分点。未做参数调整、未挑种子；三seed矩阵尚未完成。
+结果归档SHA `2dac5bee85bd98c2c4f9ad6045dc7db5ed571552bf547a549afe852fb8097da0`、预热归档SHA `04ec7b897f3f107bb4a4b6ccde373f47d18cc6bec2906cbdf4e98a1320bf0664` 已本地下载、校验、解压；内部warm checkpoint SHA `e16e895e1bdaec17f14dd4eda7cc81f8b05ad1c1c6d76145bbd3088aa1d2fea0` 一致。last/best归档SHA `ac269e7bb6782d98b87fa5d197e53ec67ae6ba45cab3bedbc7ec57e132d5af0b` 正在补传：并行fs请求曾被kernel占用拒绝，不是训练失败；改为串行，未中断会话。
+新增 `scripts/extract_multitask_a2w_warmup.py`，锁定新seed1固定预热checkpoint与代码hash，target标签单独evaluation-only文件，不进入features；语法检查通过、已上传，但尚未运行，不能宣称新特征已生成。GitHub此次push和ref查询网络连接失败，本地6bfb8654已保留，尚未确认同步。
+
+seed2 last/best归档随后串行下载成功，整包SHA与审计一致；已解压，内部last SHA `6d7b72668bb6c11b02003d9580ab6aa69b5ccc18682810f4593fc06ee6c48f17`、best SHA `aabfe5d11753055a536ee495e7cc0cb7f6c22e75bd5acc683def2b6e38b3a08f` 一致。seed2所有三包均已本地保护。
+
+### 新完整baseline匹配的固定预热特征（2026-10-03）
+
+exec90 fresh subprocess退出0。归档已下载，本地独立检查全部内部文件SHA、features字段严格为source/target/source_labels/source_logits/target_logits、958×256/564×256形状及所有数组有限，均通过。target标签只在独立evaluation-only.npz，不进入IMP features；本步没有SGD或目标标签选checkpoint。
+归档 `pipeline-results/multitask-a2w-seed1-warm-features-v1.zip` SHA `a206836cf6fcb40e735c1bf08fb05c9e2c20c5128c20f1a44ba51d3cede0b1cb`；features SHA `a9d1a40aeb863b72aafefaed965d22d8eb3b3099516aee117f1897bdb4fb5459`，固定warm checkpoint ff88bd...与已审计seed1一致。这是新的IMP输入，旧features/proposal不与它混用；候选推断和结构梯度诊断仍待重新执行，尚未产生新的IMP训练成绩。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
