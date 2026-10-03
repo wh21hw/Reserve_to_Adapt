@@ -508,6 +508,13 @@ exec91按预声明seed3启动，同L4、70epoch、batch64、未知槽2、virtual
 归档 `pipeline-results/matched-warm-candidates-v1.zip` 已下载，SHA `9fc6189d59270189ff2b96e6b19c7360f574d3a7002589818869a2a17ac970b5` 匹配；本地复查original矩阵564行、有限、归一化及全量三顺序相等通过。后续仍需先验/结构梯度诊断和匹配训练；未产生新IMP收益结论。
 GitHub push随后成功且ls-remote独立核验 `ba65efe42815cca23743484b2a590655fa71897f`；本节和新脚本将另行提交，不混淆此前失败与本次同步。
 
+### 匹配特征上的结构梯度诊断（2026-10-03）
+
+独立CPU shell执行 `scripts/audit_matched_structure_gradients.py`，新features a9d1a4...、候选original SHA `3d4b9fe2833e89f97863db3f718bcf00dd4899d1221c80393e1668c44883721b`、固定warm ff88bd...输入。支持≥5选18组件，α1有限Dirichlet质量先验；unknown权重1−固定关系compatibility，无target标签、无SGD。
+首份v1为冻结特征直接线性头proxy，省略实际CLS的BN/LeakyReLU，仍保留证据，不能用它选训练系数。发现这一差别后新增v2（不是训练失败重跑）：恢复checkpoint eval-BN参数/running stats及LeakyReLU，首先验证原12输出头能重现source/target缓存logits，最大误差1.87e−6/1.62e−6通过，再计算候选头梯度。报告 `pipeline-results/matched-structure-gradient-v1.json`、`matched-structure-gradient-v2.json` 均已下载，后续以v2为实际eval-head诊断。
+v2 unknown gate总质量346.3237，权重≥.5有334样本；加权teacher熵.00385855，仍近乎硬分配。结构loss1.05086，分类头gradient norm .93136、known rows严格0；source CE norm .25058，连续unknown组proxy norm1.28965，semantic entropy proxy norm.48292，结构相对比分别3.71675/.72218/1.92861。对应梯度cos −.02362/.19160/−.02571，不能理解为自动协同或语义正确。
+这是full-feature eval-BN诊断，尚无train-BN更新、图像增强、backbone梯度、RTA实际top16选样、virtual/adversarial项或SGD；不依据该报告声称完整训练梯度通过或IMP收益。尚未选λ；下一步必须真实batch检查并冻结带λ0的消融，防止硬teacher强梯度支配。seed3 exec91最近epoch39（0-based）仍running，未完成三seed审计。
+
 ### Stage 6a：有限Dirichlet组件先验与条件结构KL（模块测试完成，未接入训练）
 
 新增独立 `prototype_structure.py`，无target语义标签输入：
