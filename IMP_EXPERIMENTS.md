@@ -561,6 +561,26 @@ exec100无更新AST诊断只执行实际worker初始化prefix，截断在失败a
 exec101 fresh worker用AST截断修复入口在output.mkdir之前，分别执行off/on初始化，全部严格model/momentum/Torch RNG fingerprint通过，计数56/56/56与GRL112一致。SGD0、batch0、实验目录创建0、training_restart_performed=False。报告 `pipeline-results/matched-init-fixed-verification-v2.json` 已下载。未自动重跑失败训练，也未运行结构on训练。后续需确认继续训练，另用新console文件以保留原失败日志，不复用原v1包装。
 GitHub推送32a6f444连接重置未确认成功；本地代码与证据保留。
 
+### 用户确认后启动修复版结构对照（2026-10-03）
+
+用户明确回复“好，进行实验。可以挑最好的seed”，授权继续两轮对照。主矩阵仍报告seed1/2/3均值与样本标准差；最好seed可补充展示，标明事后选择，不能替代主结果或作为调参依据。本次固定seed1不是按性能挑选。
+
+使用现有L4 endpoint gpu-l4-s-kkb-ass1a1-13n8bs33o8id1及/content，未重启runtime。exec102在包装脚本读取残留PILOT_ARM变量处失败，尚未启动训练子进程/创建console/执行SGD；修正为显式arm后exec103完成structure_off。worker保持已验证bf5bab...，固定warm4→6、28次更新，末轮OS*/UNK/HOS为91.9917/66.2212/77.0076%，无NaN。独立collector exec104已启动；审计尚未完成，不宣称完整预算收益。原exec99失败文件与console保留。
+
+### 修复版匹配结构两轮对照完成（2026-10-03）
+
+exec103 off与exec105 on均正常done，各固定epoch5/6、28次SGD更新，scheduler末值84/GRL168，无NaN。exec104/106独立collector均returncode0；两组保存checkpoint所有模型/优化器/bank/virtual/teacher/gate有限性、计数及center-crop final重算通过。pair审计验证全部共享配置/输入/worker哈希一致、两轮样本batch顺序哈希一致；不声称增强图片逐元素一致。
+
+| 固定seed1、warm4→6 | OS* (%) | UNK (%) | HOS (%) |
+| --- | ---: | ---: | ---: |
+| λ0，关闭结构项 | 91.9917 | 66.2212 | 77.0076 |
+| λ.1，打开结构项 | 91.9917 | 66.2439 | 77.0230 |
+| on−off (pp) | 0.0000 | +0.0227 | +0.0154 |
+
+结构平均loss在off为1.19340→1.14259，在on为1.18995→1.12612；两组mixture两轮均converged。只有极小指标差，不能声称有明确收益，更不能直接和70轮原版baseline或论文比较。18是支持阈值筛出的潜在组件，不是推断出了18个未知语义类；本模块依然是有限Dirichlet先验，不是完整DP混合后验。下一步需完整预算对照与三seed，并完成另两数据集，不根据本短程target指标追调λ或挑seed。
+
+两组results.zip和pair报告已下载；本地validate_pair再次通过，独立重算报告与summary一致。off checkpoint包187.2MiB已下载，内部last.pt SHA f742ff3839a9f9c1983278a102de717d91243d03fcc974e7d1867bec815d73a6通过；on checkpoint SHA应为4e942bfd47cade7401512e36671f0e66bcea0cb34a27ea80a3af246a140190e8，正在保存，尚未宣称本地验证。
+
 ### 等待重跑确认期间：结果审计补齐（2026-10-03）
 
 当前用户尚未确认失败入口重跑，未把自动goal continuation当重跑授权。本轮没有新的Colab训练、SGD或GPU实验。
