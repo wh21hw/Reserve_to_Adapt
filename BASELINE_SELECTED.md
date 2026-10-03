@@ -29,7 +29,7 @@ best.pt和last.pt仍在runtime。本次best权重下载长时间无输出，取�
 
 exec139完成首次移动已知中心的估计，K=9（总19原型），5次迭代都为19。阈值0.5108345，方差0.0009093746；新增簇有约1个样本的簇，未事后过滤，也不能解释为已经恢复9个未知语义类。本地结果 `pipeline-results/konly-seed3-estimate-v1.json`。
 
-exec141已启动同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。初始化和前2epoch运行正常、损失有限，尚未完成。估计K=9的RTA训练还未启动，不能报告收益。
+exec141已启动同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。最新检查已完成15epoch，损失有限，尚未完成。估计K=9的RTA训练还未启动，不能报告收益。下一臂入口 `scripts/run_konly_estimated_seed3.py` 只在固定K完成后启动；结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
 
 为保存baseline权重，独立shell已将云端best.pt分为8MiB片段，本地 `scripts/download_selected_baseline.ps1` 正串行下载；完成前仍不声称权重已保存。未改动云端原权重，也不使用hash检查。
 
