@@ -18,7 +18,7 @@ best是目标标签HOS选epoch，seed3也是依据既有结果选出的种子。
 
 同L4新环境seed3 best HOS90.0455%，旧环境/旧工程代码桥接得到95.4361%；说明不能将此前差距直接归因GPU性能。它支持软件/实现版本的重要性，但没有单独分离每一个库及工程改动的因果贡献。
 
-best.pt和last.pt仍在runtime。本次best权重下载长时间无输出，取消的只是本地CLI下载客户端，云端文件没有删除；本地尚未保存该权重，后续仍需保存。没有SHA/重复checkpoint审计。
+best.pt已通过13个小分块下载并合并保存到本地 `pipeline-results/rta-legacy-l4-seed3-best.pt`，原best.pt和last.pt仍在runtime。此前整文件下载取消的只是本地CLI客户端，没有删除云端文件。last.pt尚未保存到本地。没有SHA/重复checkpoint审计。
 
 ## 同seed模块路线
 
@@ -31,7 +31,18 @@ exec139完成首次移动已知中心的估计，K=9（总19原型），5次迭�
 
 exec141已启动同source初始化固定K=2的70epoch对照，目录 `/content/imp-runs/konly-rta-v1/fixed2/a2w_seed3`，入口 `scripts/train_konly_rta_entry.py`。最新检查已完成15epoch，损失有限，尚未完成。估计K=9的RTA训练还未启动，不能报告收益。下一臂入口 `scripts/run_konly_estimated_seed3.py` 只在固定K完成后启动；结果保存/汇总用 `scripts/collect_konly_results_colab.py` / `scripts/summarize_konly_seed3.py`，不独立重算checkpoint或hash审计。
 
-为保存baseline权重，独立shell已将云端best.pt分为8MiB片段，本地 `scripts/download_selected_baseline.ps1` 正串行下载；完成前仍不声称权重已保存。未改动云端原权重，也不使用hash检查。
+baseline权重保存完成：独立shell将best.pt分为8MiB片段，`scripts/download_selected_baseline.ps1` 13片下载并合并完成。未改动云端原权重，也不使用hash检查。
+
+### 已知中心固定/移动：冻结特征层消融
+
+同一source初始化、同一阈值/方差/迭代数，只切换 `known_centers_fixed`，CPU推断已完成；移动/固定两组都得到K=9，总19个原型，5轮不变。原型责任质量如下（共564个target样本）：
+
+| 已知中心 | 已知原型总质量 | 新增原型总质量 | K |
+| --- | ---: | ---: | ---: |
+| 可移动，source锚点先验强度5 | 397.7448 | 166.2552 | 9 |
+| 完全固定 | 140.8716 | 423.1284 | 9 |
+
+这说明中心更新改变了责任分配，但当前只向RTA传K、不传原型/责任，两者下游设置相同，不重复训练相同K臂。质量不是语义准确率，也不能用其证明哪种更好。固定中心结果已存 `pipeline-results/konly-seed3-estimate-fixed-v1.json`，无target标签或优化器更新。
 
 该估计器是source校准的DP-means/IMP-inspired版本，不是IMP原论文的端到端方差学习，也不是完整DP后验。source阈值校准与先验强度是明确的建模选择，不按targetHOS调整。
 

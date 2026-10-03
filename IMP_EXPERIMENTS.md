@@ -4,6 +4,8 @@
 
 ### 当前执行：baseline 环境桥接与 K-only 新主线
 
+最新补充：选定baseline的best权重13片下载/合并完成，本地 `pipeline-results/rta-legacy-l4-seed3-best.pt`；云端best/last不删。固定已知中心的无标签CPU估计完成，也是K=9；移动/固定已知质量397.7448/140.8716，新增质量166.2552/423.1284。因仅传K，两个估计的下游设置相同，无须重复相同RTA臂，不以这些无标签质量声称准确率。exec141最新完成29/70轮，训练正常。Git最新本地提交4eb9cc83的push两次连接重置，尚未确认同步；此前3431e7e4已推送。
+
 最新进度：exec138已完成seed3纯source 3epoch（958个source、564个无标签target，256维特征）；exec139完成source-anchor推断，K=9，5次迭代总原型数均为19。阈值由source距离99%分位数给出0.5108345；没有target标签、relation gate或小簇过滤，其中一个新增簇约1个样本，不能声称9个真实未知类。exec141已启动同source初始化的固定K=2、70epoch原版RTA对照，前2epoch正常；估计K=9臂尚未启动。后面的“尚未启动”等段落是历史阶段。
 
 **桥接完成 / 选定seed（最新）**：exec134状态done，70epoch完成，L4旧环境seed3 best OS*=95.1705%、UNK=95.7032%、HOS=95.4361%，best epoch49（0-based，即第50轮）；final OS*=94.7472%、UNK=95.4002%、HOS=95.0726%。相对论文92.2/93.8/93.0，best分别+2.9705/+1.9032/+2.4361pp。原L4新环境seed3 best HOS90.0455%；这提供软件/实现版本影响的实测线索，不是GPU差异的严格因果证明。baseline已有可对标的选定seed3，后续主模块同环境/同seed。目标标签oracle-best及事后seed选择明确披露，不宣称三seed稳定超过论文。
