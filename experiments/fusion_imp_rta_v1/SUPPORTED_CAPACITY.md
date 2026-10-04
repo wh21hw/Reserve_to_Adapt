@@ -8,4 +8,8 @@
 
 预算：相同seed1 source checkpoint、A→W、L4，10轮。对照是raw K7自举版本的同预算结果，K2仅作容量背景。报告best/final和机制日志；seed1和best epoch选择均事后，短程结果不证明70轮/跨任务改善。
 
-状态：待启动。teacher与边缘化预测实验均保留，不混称本轮增量。
+状态：L4 exec32已完成10轮，K5固定，代码ab07d5b2。teacher与边缘化预测实验均保留，不混称本轮增量。
+
+best第9轮OS*89.3061%、UNK79.8145%、HOS84.2939%；final第10轮90.3061%、78.6484%、84.0751%。相比raw K7同预算best82.9817%只有+1.3123pp，不足以排除运行波动，也低于K2背景best86.9174%。不能宣称支持过滤已改善方法，不扩大支持阈值扫描。
+
+最终训练选样的未知槽次数[18,4,68,105,29]，仍不均匀；支持过滤没有解决原版自举的槽分工。结果保存pipeline-results/fusion-supported-capacity-v1-results.zip。下一步隔离每轮虚拟更新模块：Q20_VIRTUAL_CONTROL.md。各10轮best仅短程探索；三数据集验证仍未完成。
