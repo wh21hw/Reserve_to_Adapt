@@ -25,7 +25,8 @@ for name,directory in [('update',control),('hold',root)]:
     if not all(math.isfinite(row[key]) for row in h for key in ('OS_star','unknown','HOS')):
         raise ValueError('Nonfinite metrics')
     def metric(row):return dict(epoch=row['epoch'],OS_star=row['OS_star'],UNK=row['unknown'],HOS=row['HOS'])
-    report['arms'][name]=dict(best=metric(max(h,key=lambda row:row['HOS'])),final=metric(h[-1]))
+    report['arms'][name]=dict(best=metric(max(h,key=lambda row:row['HOS'])),final=metric(h[-1]),
+        observed_convergence_warning_messages=(directory/'console.log').read_text().count('ConvergenceWarning'))
     histories[name]=h
     files.extend((file,name+'/'+str(file.relative_to(directory))) for file in
         [directory/'launch.json',directory/'console.log',training/'history.jsonl',training/'config.json',training/'protocol.json',training/'metrics.json'])
@@ -35,6 +36,7 @@ final=torch.load(str(root/'officehome-pr2rw_seed1/last.pt'),map_location='cpu')[
 keys=[key for key in prior if key.startswith('0.') and key.endswith(('running_mean','running_var','num_batches_tracked'))]
 if not keys:raise ValueError('Missing encoder BN buffers')
 report['encoder_bn_buffer_paths']=len(keys)
+report['warning_count_caveat']='Observed console messages only; Python warning filtering can suppress repeated messages, so this is not the number of failed GMM fits.'
 report['held_buffers_unchanged']=all(torch.equal(prior[key],final[key]) for key in keys)
 if not report['held_buffers_unchanged']:raise RuntimeError('The hold-BN experimental factor was not maintained')
 report['hold_minus_update_pp']={which:{key:100*(report['arms']['hold'][which][key]-report['arms']['update'][which][key])
