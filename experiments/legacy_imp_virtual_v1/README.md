@@ -12,6 +12,8 @@
 
 必要的空集合处理：nomatch为空时使用shape(0,256)矩阵，允许虚拟原型为0，不强制新簇、不改alpha/阈值/分配规则。此时virt_forward没有额外方向，virtual CE退化为原分类CE。这是原代码未定义边界的工程补全，不称逐字原代码运行。修正版使用新目录`legacy-imp-virtual-v3/seed3`，保持5+70预算；由于v2无checkpoint，需同seed重放前置阶段，不挑其他seed。原快照与两次失败证据保留。
 
+当前正式进程exec7正在运行v3：source5轮完成，前3轮RTA完成，loss有限，无OOM/NaN；每轮结束Q_imp=10/12/13，V=0/2/3，分类器K_out仍为2。预热期UNK=0，不据此判定最终失败；未完成70轮，不报告最终效果。普通逐轮指标及best/last已由入口保存。完成后运行`collect_legacy_imp_virtual_colab.py`，下载v3结果ZIP，报告OS*/UNK/HOS的best/final以及Q/V范围，对比选定原版baseline95.4361/95.0726% HOS，并明确不是纯IMP消融。
+
 独立入口 `scripts/train_legacy_imp_virtual_entry.py` / `scripts/run_legacy_imp_virtual_colab.py`；仍依赖已选baseline工程归档的data/networks/utilities等。仅改路径、固定seed、防覆盖、普通逐轮指标/best+last保存、评价no_grad，以及移除浏览器自动下载。原快照保持不动，根目录用户修改不动。运行目录 `/content/imp-runs/legacy-imp-virtual-v1/seed3`，若失败先保留证据，再决定必要的工程修复，不自动调alpha/预算。
 
 记录日期：2026-10-03。依据用户本次提供的旧 main.py 附件与聊天中贴出的 IMPClusterer。此目录是历史方案记录，不是当前训练入口，不表示已经跑过本快照，也不覆盖根目录用户代码。

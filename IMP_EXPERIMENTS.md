@@ -2,6 +2,8 @@
 
 ## 当前阶段索引（2026-10-03）
 
+2026-10-04用户另行授权旧方案效果实验：A→W seed3，source5轮+RTA70轮，固定输出未知槽2、alpha.05、已知中心固定、每轮更新虚拟原型。旧L4已回收，新L4尾号2xg3a949wz74o重建旧环境；exec5配置记录Path错误在SGD前失败，exec6第1轮后nomatch为空报错，证据保留。仅补空矩阵边界后exec7/v3正常完成前3轮，Q10/12/13，未完成最终效果。详情及代码快照见`experiments/legacy_imp_virtual_v1/README.md`。这不替换K-only主线，也不把结果当纯K消融；此前OfficeHome运行因runtime消失无完整结果可确认。
+
 最新交替完整结果：exec145完成70轮，K9→9→11→11，best第17轮HOS88.3913%、final85.3669%；一次K9为88.6103/85.8817，同source固定K2为93.6903/93.6903。交替也未改善当前估计器，负结果保留，不修改阈值追分。exec147已开始OfficeHome Pr→Rw发布代码移植baseline，seed3/K4/Q29/70轮；Q与预算并非作者已确认配置。
 
 ### 当前执行：baseline 环境桥接与 K-only 新主线
