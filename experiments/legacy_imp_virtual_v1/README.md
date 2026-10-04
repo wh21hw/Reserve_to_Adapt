@@ -1,5 +1,13 @@
 # 旧方案：IMP 自适应虚拟原型，固定未知分类槽
 
+## 2026-10-04：用户授权独立效果实验
+
+计划A→W、此前选定seed3、旧Python3.8/torch1.7.1环境、L4，source微调5轮+RTA70轮；alpha=.05、已知中心固定、IMP5步、每轮更新虚拟原型、输出未知槽固定2。保留原粘贴IMP数值规则，暂不改成source分位数/稳定softmax或移动先验版本。此实验是旧方案整体配方对比，不是单因素模块消融（source前置阶段/优化器等也不同）。
+
+原runtime已被Colab回收，已创建新L4 `gpu-l4-s-kkb-ass1a1-2xg3a949wz74o`，准备恢复数据/环境。尚未启动训练，不把准备成功当效果结果。前次OfficeHome exec147因runtime消失，目前无完整结果可确认。
+
+独立入口 `scripts/train_legacy_imp_virtual_entry.py` / `scripts/run_legacy_imp_virtual_colab.py`；仍依赖已选baseline工程归档的data/networks/utilities等。仅改路径、固定seed、防覆盖、普通逐轮指标/best+last保存、评价no_grad，以及移除浏览器自动下载。原快照保持不动，根目录用户修改不动。运行目录 `/content/imp-runs/legacy-imp-virtual-v1/seed3`，若失败先保留证据，再决定必要的工程修复，不自动调alpha/预算。
+
 记录日期：2026-10-03。依据用户本次提供的旧 main.py 附件与聊天中贴出的 IMPClusterer。此目录是历史方案记录，不是当前训练入口，不表示已经跑过本快照，也不覆盖根目录用户代码。
 
 代码快照：`main_user_snapshot.py` 保存附件正文；`IMPClusterer_user_snapshot.py` 保存本次粘贴的聚类逻辑（排版整理，不修复行为）。原附件来源：`C:/Users/46025/.codex/attachments/4e022986-cb0a-4862-998e-341f95fa4dd4/已粘贴的文本.txt`。依赖仍引用项目 data/utilities/networks/centroid/domain_bus 等；这些依赖的历史版本未随附件提供，不能据此宣称完整可复现实验环境。
