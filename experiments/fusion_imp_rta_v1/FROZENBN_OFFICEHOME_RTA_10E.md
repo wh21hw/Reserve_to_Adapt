@@ -31,3 +31,23 @@ fixed4已启动，需确认TASK_KONLY_START与loss；estimated尚未启动，禁
 随后exec148正常done，wrapper输出FROZENBN_RTA_ARM_COMPLETE fixed4；history确认epoch1..10恰好10轮。fixed4的best和final均为第10轮：OS*=69.134668%、UNK=77.344037%、HOS=73.009306%。best使用target标签选epoch。
 
 已单独启动estimated K2（exec149），TASK_KONLY_START确认C25/K2/Q29与同一source-final.pt，当前running。保持10轮预算、原ResNet50与RTA目标，不传IMP中心初始化头。当前只完成一组，尚不能判断容量配对优劣；也不能以旧普通BN K1对比代替此配对。
+
+## 配对完成与结论
+
+exec149正常done，wrapper确认estimated恰好10轮；两组loss有限，无NaN/OOM。collector39368654已执行，只读取已有history/config/log，不重评价checkpoint。普通结果ZIP与summary已下载到pipeline-results。
+
+| arm / 选取 | epoch（1-based） | OS*% | UNK% | HOS% |
+| --- | ---: | ---: | ---: | ---: |
+| 固定K4 best/final | 10 | 69.1347 | 77.3440 | 73.0093 |
+| 估计K2 best | 7 | 70.8872 | 78.6246 | 74.5557 |
+| 估计K2 final | 10 | 73.2505 | 75.8897 | 74.5467 |
+
+best差值（各自oracle epoch）：OS*+1.7526pp、UNK+1.2806pp、HOS+1.5464pp。final同epoch差值：OS*+4.1158pp、UNK−1.4543pp、HOS+1.5374pp。第5–10轮同轮次HOS均高于固定K4，但第8–10轮UNK低于固定K4；final收益主要是已知类提升，不是所有指标都改善。K2从best7到final10，HOS几乎不变，但OS*上升、UNK下降，仍存在已知/未知取舍。
+
+这一结果支持当前同prior、seed1、短程设置下数据估计K2比固定K4更合适；不能证明估计了真实未知语义数、统计显著性或完整预算性能。target标签未进入K估计，best选epoch仍使用target标签。Q29/K4及论文预算未确认，不称严格论文对齐。
+
+旧普通BN配对的final HOS固定K4为74.0040%、估计K1为74.8793%。本次冻结BN后的fixedK4为73.0093%，较旧fixedK4低约0.9947pp；source-only新颖性诊断改善并没有直接转成这个短程fixed-arm的HOS改善。新K2与旧K1还同时改变了容量，不能把它们当作纯BN消融，也不能声称新方案已经超越既有OfficeHome探索结果。
+
+下一步应检验容量估计的跨任务稳定性，并定位source诊断改善未稳定传到RTA的原因；不依据target HOS调beta/lambda，不自动扩70轮或seed网格。正式RTA继续ResNet，DINO保持诊断用途。
+
+结果：`pipeline-results/officehome-frozenbn-capacity-10e-v1-results.zip`、`pipeline-results/officehome-frozenbn-capacity-10e-v1-summary.json`。训练与推断代码4fe8b704，source完成exec146、估计exec147、fixed4 exec148、estimated exec149；分块实现7ece9d34未用于本配对。
