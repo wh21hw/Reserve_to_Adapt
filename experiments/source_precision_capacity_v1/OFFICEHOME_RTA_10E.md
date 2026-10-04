@@ -92,3 +92,7 @@ K1去除62已知但同时去除331未知，显示几何互补而非无代价保�
 工程失败：exec103在编译阶段因日志换行字符串SyntaxError退出（v1目录保留）；exec106在初始DomainBus取样阶段因三元样本解包退出（v2目录保留），均未训练。已修复为chr(10)和(image,(label,bool))，未改研究设置。
 
 当前exec108 running，目录/content/imp-runs/officehome-imp-intersection-10e-v3，L4；日志确认C25/K1/Q29、共享source prior、初始几何unknown1229/noise89。实际训练已产生epoch0/batch1候选记录（before0/after0），接口通过，尚无首轮指标。不排队新kernel exec，不重启runtime。完成后比较相同10轮K1 baseline的best/final，同时汇总候选before/after；失败先定位直接原因。
+
+首轮已完成：OS*=80.63570%、UNK/HOS0，ce0.819/virtual0.912/adv0.798均有限；exec108仍running。后续epoch1/batch14已记录16→9候选，说明过滤生效。collector collect_imp_intersection_officehome_colab.py已准备（尚未部署执行），要求baseline和新组各完整10轮，汇总原零基epoch0..9候选保留量、best/final差值，仅打包普通日志配置指标，不传checkpoint。
+
+实现范围说明：与原版一样，warmup也计算ce_ep但系数为0。本版本过滤在所有轮次的ce_ep样本选取中生效；由于该分支重新经过训练模式分类器，候选变化还可能影响BatchNorm运行统计，不能声称两组warmup数值路径完全相同。这是样本选择实现的伴随效应，不是另加loss；本次保持已声明版本不在训练中改规则，结果解释时披露。
