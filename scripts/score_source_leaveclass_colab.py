@@ -1,15 +1,23 @@
 """Frozen source leave-class diagnostic; labels only from the source-domain list."""
 import json
+import argparse
 from pathlib import Path
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from robust_capacity import fit_robust_capacity
 
 root=Path('/content/imp-runs/source-leaveclass-officehome-v1/seed1')
-out=root/'capacity-controls.json'
+parser=argparse.ArgumentParser()
+parser.add_argument('--features',default='source/features.npz')
+parser.add_argument('--output',default='capacity-controls.json')
+args=parser.parse_args()
+feature_path=(root/args.features).resolve()
+out=(root/args.output).resolve()
+if root.resolve() not in feature_path.parents or root.resolve() not in out.parents:
+    raise ValueError('Feature and output paths must stay inside this experiment')
 if out.exists():
     raise FileExistsError('Preserve previous inference')
-f=np.load(root/'source/features.npz')
+f=np.load(feature_path)
 x=f['target'].astype(float) # This artifact contains all SOURCE-domain filenames.
 rows=[line.rsplit(None,1) for line in Path('/content/osda-officehome-pr2rw-v1/product_0-24_train_all.txt').read_text().splitlines() if line.strip()]
 y=np.asarray([int(row[1]) for row in rows])
@@ -32,6 +40,7 @@ def d(left,right):
 residual=np.minimum(d(x[cr],a).min(1),radius)
 beta=max(float((reference/len(cr)*np.maximum(residual[:,None]-d(x[cr],x[cr]),0.).sum(0)).max())*(1+1e-6),1e-8)
 report=dict(hidden_ids=hidden_ids,beta=beta,lambda_radius=radius,real_target_used=False,
+    feature_file=args.features,feature_dimension=x.shape[1],
     hidden_supervision=False,caveat='posthoc chosen block; known test images participated in known supervision',arms=[])
 for name,ids,cost in [('known-negative',test[np.isin(y[test],known)],beta),
                      ('original-cost',test,radius),('calibrated-cost',test,beta)]:
