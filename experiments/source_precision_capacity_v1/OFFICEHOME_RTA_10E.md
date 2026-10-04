@@ -13,3 +13,9 @@ K估计不使用target标签；指标使用target原标签做macro OS*/UNK/HOS�
 最新进度：exec90仍running；console已输出原训练epoch0（history记为完成epoch1），OS*=0.817、UNK/HOS=0，ce0.859、virtual0.944、ce_ep2.220、adv0.788，loss通过有限值保护。尚处warmup，不能以UNK0判失败或提前调整。collector collect_officehome_capacity_colab.py已准备，要求两组均完整10轮，仅打包普通日志/配置/指标，不传checkpoint或重评价；estimated尚未启动。
 
 后续检查：fixed4已完成4/10轮；发布代码warmiter3配合零基epoch<=3，实际前4轮warmup，第4轮末初始化未知头。console epoch3已得到OS*79.8%、UNK29.1%、HOS42.7%，先前三轮UNK0不代表失败。进程仍running，L4利用率100%，显存13440MiB，未见OOM或非有限loss。该值只是进行中指标，不是最终对照结论；estimated仍未启动。
+
+最新状态：exec90正常结束，returncode=0，history确认恰好epoch1..10。fixed4的best和final均为完成第10轮：OS*=70.58996%、UNK=77.76500%、HOS=74.00397%。best按target评测HOS选epoch，仅为单seed短程探索结果。
+
+已独立启动estimated，后台exec92，使用原先声明的同source prior/seed1/Q29/10轮设置，K从source-cost-target-capacity.json读取（既有估计为1），未调参或改变损失。需观察启动与首轮，再等待完整10轮，运行collector做配对汇总；目前尚不能判断估计K优劣。
+
+exec92启动日志确认C25/K1/Q29和共享source路径，现已完成2/10轮，history第2轮OS*=82.37572%、UNK/HOS=0，elapsed230.21秒。console前两轮loss项有限，训练仍处原版4轮warmup，暂不能把UNK0解释为K1失败。训练子进程与exec92均在运行，未重跑或排队新kernel exec。
