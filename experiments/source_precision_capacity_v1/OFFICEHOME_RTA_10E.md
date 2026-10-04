@@ -73,3 +73,14 @@ exec96因实际bridge checkpoint缺少source_relation_bank直接KeyError，在ta
 K4阈值0.47363888，1088候选全部保留，误选已知144不变；K1阈值0.50196202，保留1086候选，仅去掉1真实已知和1真实未知，误选已知128→127。结论是这个同关系分数的简单保护几乎冗余，不值得直接启动10轮训练；不是“所有source保护都无效”。source分数/阈值已缓存，结果source99-protection-probe.json已下载。
 
 优化方向需引入与关系分数不同的证据，而不是依target误选率提高阈值：例如IMP几何分配与RTA关系筛选的交叉一致性，或已知/未知的层级竞争结构。二者都属K-only之外独立版本，分别做单因素验证，不叠加。优先探究几何分配能否给未知筛选提供互补信息，再决定是否训练；不能把本探针当方法效果提升。
+
+### IMP几何与RTA筛选交叉探针（exec101完成）
+
+原推断未保存逐样本分配，因此用同features/source split2026/已有lambda、birth cost重建一次，收敛K1、noise89；保存initial-imp-assignments.npz含centers。原features提取和target snapshot均按同target list、shuffle=False，几何推断无target标签。固定交叉规则为selected & assignment>=25，排除noise；未扫描其他规则。使用初始source预训练几何和final重建gate，有阶段差异，不能冒充训练中同步结果。
+
+| 设置 | 原候选 | 交叉后 | 保留已知 | 保留未知 | 误选已知比例 | 真实未知候选保留率 |
+| --- | --- | --- | --- | --- | --- | --- |
+| K4 | 1088 | 676 | 67 | 609 | 9.91124%（原13.23529%） | 64.51271% |
+| K1 | 1088 | 695 | 66 | 629 | 9.49640%（原11.76471%） | 65.52083% |
+
+K1去除62已知但同时去除331未知，显示几何互补而非无代价保护。下一轮声明只增加此固定几何intersection到ce_ep候选，K1/source3/seed1/Q29/RTA10、损失系数/权重/argmax/warm-end头初始化不变；复用当前K1 baseline，不修改虚拟模板、判别器权重、entropy权重或新增监督损失。该版本明确不是K-only，独立输出目录。需实现sample-index映射、仅一次真实接口检查，记录每轮候选保留数量及指标，不能根据target反馈调intersection阈值或延长预算。当前只完成探针，训练未启动。
