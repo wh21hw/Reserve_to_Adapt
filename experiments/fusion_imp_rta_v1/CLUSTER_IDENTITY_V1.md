@@ -19,3 +19,7 @@ OfficeHome旧容量结果未保存assignments，因此需要从同一份已完�
 部署路径修正：隔离entry的PYTHONPATH包含/content，以加载既有task_protocol与encoder_bn_policy，不写原历史入口或改研究设置。训练仍未启动；等待exec164释放GPU。
 
 实际启动：exec164预热/特征提取完整结束后，结构版独立shell4启动scripts/run_officehome_cluster_identity_colab.py，输出/content/imp-runs/officehome-cluster-identity-10e-v1/rta。已观察训练入口进程及GPU99%工作，尚无完整epoch指标，不能提前判断改进。独立shell3可读日志/状态；VisDA容量exec166仅CPU，不抢GPU。失败先保留证据并诊断，不自动改簇标签或重跑。
+
+中途诊断（非选配置）：warm-end成功一对一匹配[26,25]。第5轮候选1088、覆盖728、槽计数64/1024，HOS73.815%（控制同轮71.843%），不是最终结论。第6轮覆盖717、槽计数0/1088，说明传身份不保证所有簇得到未知监督。
+
+为解释小簇未获监督，独立读取评测标签作事后组成诊断，未输入估计/训练/阈值选择：簇25支持1152，其中已知150、未知1002，混合许多语义类；簇26支持62，其中已知61（原类0有60）、未知1。保存posthoc-cluster-composition.json及本地pipeline-results/officehome-cluster-identity-posthoc-composition-v1.json。小簇未被RTA未知筛选接受，不能直接归咎筛选漏检；估计器将已知域偏移解释成新类的可能性得到直接支持。K2依然是容量，不是两个真实未知类别。此观察不授权按目标标签删除簇、强制小簇未知监督或中途改参数；当前10轮继续完成。
