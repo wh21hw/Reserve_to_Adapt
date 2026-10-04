@@ -85,6 +85,31 @@ replace_once('param = torch.from_numpy(v.cpu().numpy()[t_match]).cuda().detach()
                 remaining = [j for j in range(args.all_classes) if j not in t_match]
                 t_match = np.concatenate([t_match, np.asarray(remaining, dtype=np.int64)])
             param = torch.from_numpy(v.cpu().numpy()[t_match]).cuda().detach().clone()''')
+if os.environ.get('KONLY_SOURCE_PRIOR'):
+    replace_once('net = nn.Sequential(feature_extractor, cls).cuda()', '''net = nn.Sequential(feature_extractor, cls).cuda()
+source_state = torch.load(os.environ['KONLY_SOURCE_PRIOR'], map_location='cpu')
+if source_state['config']['known_classes'] != args.shared_classes:
+    raise ValueError('Shared source checkpoint has different C')
+with torch.no_grad():
+    for parameter_name, value in net.state_dict().items():
+        previous = source_state['model'][parameter_name]
+        if previous.shape == value.shape:
+            value.copy_(previous)
+        elif parameter_name in ('1.fc.weight', '1.main.1.2.weight'):
+            value[:args.shared_classes].copy_(previous)
+        else:
+            raise ValueError('Unexpected shared source shape: '+parameter_name)
+del source_state
+print('TASK_KONLY_START', dict(C=args.shared_classes, K=args.all_classes-args.shared_classes,
+    Q=args.virtual_clusters, source_prior=os.environ['KONLY_SOURCE_PRIOR']), flush=True)
+''')
+epochs = int(os.environ.get('RTA_EPOCHS', '70'))
+if epochs < 1:
+    raise ValueError('RTA_EPOCHS must be positive')
+replace_once('while epoch <70:', 'while epoch <'+str(epochs)+':')
+replace_once('                loss.backward()', '''                if not torch.isfinite(loss):
+                    raise RuntimeError('Nonfinite RTA loss; preserve evidence')
+                loss.backward()''')
 compiled = compile(source, str(root/'main.py'), 'exec')
 if os.environ.get('LEGACY_TASK_BUILD_ONLY') == '1':
     print('LEGACY_TASK_SOURCE_BUILD_COMPLETE: no model/training executed', flush=True)
