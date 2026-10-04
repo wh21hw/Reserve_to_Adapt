@@ -17,3 +17,5 @@ OfficeHome旧容量结果未保存assignments，因此需要从同一份已完�
 汇总入口scripts/collect_cluster_identity_colab.py已准备：读取两组现有日志，记录best/final与逐轮差值、映射/覆盖率/槽计数；不重新前向checkpoint。旧argmax控制没有槽计数，因此不可宣称结构组改善了相对槽均衡。报告前四轮warmup指标差异，以暴露新增模块生效前可能的控制偏差，不把未见偏差当确定性证明。训练未完成时不执行collector。
 
 部署路径修正：隔离entry的PYTHONPATH包含/content，以加载既有task_protocol与encoder_bn_policy，不写原历史入口或改研究设置。训练仍未启动；等待exec164释放GPU。
+
+实际启动：exec164预热/特征提取完整结束后，结构版独立shell4启动scripts/run_officehome_cluster_identity_colab.py，输出/content/imp-runs/officehome-cluster-identity-10e-v1/rta。已观察训练入口进程及GPU99%工作，尚无完整epoch指标，不能提前判断改进。独立shell3可读日志/状态；VisDA容量exec166仅CPU，不抢GPU。失败先保留证据并诊断，不自动改簇标签或重跑。
