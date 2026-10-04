@@ -36,7 +36,8 @@ with open(os.path.join(args.log_dir, 'config.json'), 'w') as stream:
     json.dump(dict(vars(args), seed=seed, source_pretrain_epochs=5, epochs=70,
         alpha=.05, cluster_steps=5, source_centers_fixed=True,
         classifier_unknown_slots=2, design='Adaptive virtual prototypes, NOT adaptive output K',
-        engineering_edits=['Paths, seed, no-overwrite, metrics/checkpoints, eval no_grad'],
+        engineering_edits=['Paths, seed, no-overwrite, metrics/checkpoints, eval no_grad',
+                           'Empty virtual collection uses shape(0,256); no forced births'],
         dependency_root='/content/rta-legacy-l4-bridge-v1',
         torch_version=torch.__version__, gpu=torch.cuda.get_device_name()), stream, indent=2)
 """)
@@ -57,5 +58,10 @@ replace_once('    epoch += 1', '''    record = dict(epoch=epoch+1, seed=seed, OS
         torch.save(checkpoint, os.path.join(args.log_dir, 'best.pt'))
     epoch += 1''')
 replace_once('    files.download(log_file)', '    pass # ordinary CLI collection, no browser download')
+empty_anchor = 'nomatch = np.stack(nomatch, axis=0)'
+if source.count(empty_anchor) != 2:
+    raise RuntimeError('Unexpected virtual-prototype stack anchors')
+source = source.replace(empty_anchor,
+    'nomatch = np.stack(nomatch, axis=0) if nomatch else np.empty((0, s_centroids.shape[1]), dtype=s_centroids.dtype)')
 exec(compile(source, '/content/legacy-imp-virtual-v1/main_user_snapshot.py', 'exec'),
      dict(__name__='__main__', __file__='/content/legacy-imp-virtual-v1/main_user_snapshot.py'))

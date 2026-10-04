@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 
-output = Path('/content/imp-runs/legacy-imp-virtual-v2/seed3')
+output = Path('/content/imp-runs/legacy-imp-virtual-v3/seed3')
 output.mkdir(parents=True, exist_ok=False)
 command = ['/content/rta-py38/bin/python', '-u', '/content/train_legacy_imp_virtual_entry.py',
     '--source', '/content/amazon_0-9_train_all.txt',

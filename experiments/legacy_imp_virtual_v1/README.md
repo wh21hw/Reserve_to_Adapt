@@ -8,6 +8,10 @@
 
 启动记录：环境/数据恢复完成。exec5在训练前因新增配置记录引用未导入Path而失败，未执行SGD；失败目录`/content/imp-runs/legacy-imp-virtual-v1/seed3`保留。仅将该记录改为路径字符串，新目录改为`legacy-imp-virtual-v2/seed3`，不修改旧IMP数值算法或超参数。
 
+修正后exec6完成source5轮，最后一轮loss0.3769；初始IMP总原型12（10已知+2新增），初始化通过。但第1轮RTA更新后IMP仅保留10个已知原型，nomatch空列表触发np.stack错误，未完成第1轮评价，无完整结果。v2失败目录保留。
+
+必要的空集合处理：nomatch为空时使用shape(0,256)矩阵，允许虚拟原型为0，不强制新簇、不改alpha/阈值/分配规则。此时virt_forward没有额外方向，virtual CE退化为原分类CE。这是原代码未定义边界的工程补全，不称逐字原代码运行。修正版使用新目录`legacy-imp-virtual-v3/seed3`，保持5+70预算；由于v2无checkpoint，需同seed重放前置阶段，不挑其他seed。原快照与两次失败证据保留。
+
 独立入口 `scripts/train_legacy_imp_virtual_entry.py` / `scripts/run_legacy_imp_virtual_colab.py`；仍依赖已选baseline工程归档的data/networks/utilities等。仅改路径、固定seed、防覆盖、普通逐轮指标/best+last保存、评价no_grad，以及移除浏览器自动下载。原快照保持不动，根目录用户修改不动。运行目录 `/content/imp-runs/legacy-imp-virtual-v1/seed3`，若失败先保留证据，再决定必要的工程修复，不自动调alpha/预算。
 
 记录日期：2026-10-03。依据用户本次提供的旧 main.py 附件与聊天中贴出的 IMPClusterer。此目录是历史方案记录，不是当前训练入口，不表示已经跑过本快照，也不覆盖根目录用户代码。
