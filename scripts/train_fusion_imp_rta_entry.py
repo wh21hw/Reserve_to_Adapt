@@ -60,6 +60,15 @@ del fusion_result
     metric_anchor = 'elapsed_seconds=time.time()-started_at, seed=seed)'
     if metric_anchor in source:
         replace_once(metric_anchor, 'elapsed_seconds=time.time()-started_at, seed=seed, K=fusion_K, V=int(nomatch.size(0)))')
+    if os.environ.get('FUSION_DIAGNOSTICS') == '1':
+        replace_once('\nepoch = 0\n', '\nfusion_diagnostics = FusionDiagnostics()\nepoch = 0\n')
+        replace_once('            ce = CrossEntropyLoss(label_source, nn.Softmax(-1)(fc_source))',
+                     '            fusion_diagnostics.add(fc_target, args.shared_classes, r, weight)\n'
+                     '            ce = CrossEntropyLoss(label_source, nn.Softmax(-1)(fc_source))')
+        replace_once('    nomatch = refresh_virtual(net, args, epoch + 1)',
+                     '    fusion_diagnostics.save(args.log_dir, epoch + 1)\n'
+                     '    nomatch = refresh_virtual(net, args, epoch + 1)')
+        source = 'from fusion_diagnostics import FusionDiagnostics\n' + source
     source = 'from fusion_imp_rta import initial_structure, save_structure, refresh_virtual\n' + source
     return source
 
