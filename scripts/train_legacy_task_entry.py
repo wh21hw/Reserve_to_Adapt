@@ -120,6 +120,9 @@ replace_once('while epoch <70:', 'while epoch <'+str(epochs)+':')
 replace_once('                loss.backward()', '''                if not torch.isfinite(loss):
                     raise RuntimeError('Nonfinite RTA loss; preserve evidence')
                 loss.backward()''')
+if os.environ.get('RTA_CLUSTER_LABELS'):
+    from cluster_identity_bridge import patch_identity_entry
+    source = patch_identity_entry(source)
 compiled = compile(source, str(root/'main.py'), 'exec')
 if os.environ.get('LEGACY_TASK_BUILD_ONLY') == '1':
     print('LEGACY_TASK_SOURCE_BUILD_COMPLETE: no model/training executed', flush=True)

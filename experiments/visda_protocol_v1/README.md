@@ -31,3 +31,5 @@ VisDA正式训练尚未启动：正文ResNet50/Table III VGGNet口径尚待确�
 恢复source archive为后台exec159，当前running。已部署1fd9885f的source launcher/带可选进度日志的trainer，尚未执行；具体预声明见FROZENBN_CAPACITY_V1.md。恢复完成前不排队执行source训练。
 
 后续进展（2026-10-04）：exec159已成功下载train.tar（HTTP200，7698031104字节）。独立检查确认官方训练列表152397行、已知六类合计79765图；exec161仅提取六类并生成source-known-6.txt，已成功完成。目标validation存档正在独立exec162下载，尚未解包。source监督、容量推断及RTA仍未启动。推断入口与已验证的分块核心已隔离部署至/content/visda-capacity-code-v1；不使用目标语义标签拟合K，不改变ResNet50主模型。
+
+随后exec162目标下载成功（HTTP200，1023758336字节），exec163准备validation全55388图，评测列表与无标签路径列表分开。source3已独立启动exec164，现有L4/ResNet50/C6，第一轮1246步完成：CE0.24425、source训练accuracy0.92029，第二轮正在正常训练。source训练accuracy不代表target成绩；无容量估计/目标成绩产生，不排队启动RTA或其他GPU实验。
