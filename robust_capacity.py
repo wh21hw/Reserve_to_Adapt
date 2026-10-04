@@ -1,7 +1,8 @@
 """Source-anchored capped penalized clustering; a proposed extension, not DP posterior.
 
 J = w * sum_i min(min_j squared_distance(x_i, mu_j), lambda)
-    + lambda * K_unknown + kappa * sum_known squared_distance(mu_c, anchor_c).
+    + beta * K_unknown + kappa * sum_known squared_distance(mu_c, anchor_c).
+beta defaults to lambda; an explicit birth_penalty separates the two costs.
 Default w=1 preserves the original probe. With reference_samples R, w=R/N.
 Noise has assignment -1 and is not counted as a semantic unknown component.
 """
@@ -10,7 +11,7 @@ import numpy as np
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
                         max_candidates=100, reference_samples=None, birth_order='after_update',
-                        known_centers_fixed=False):
+                        known_centers_fixed=False, birth_penalty=None):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -24,6 +25,9 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     if reference_samples is not None and (not np.isfinite(reference_samples) or reference_samples <= 0):
         raise ValueError('reference_samples must be finite and positive')
     weight = 1. if reference_samples is None else float(reference_samples)/len(x)
+    cost = float(penalty if birth_penalty is None else birth_penalty)
+    if not np.isfinite(cost) or cost <= 0:
+        raise ValueError('birth_penalty must be finite and positive')
     if birth_order not in ('before_update', 'after_update'):
         raise ValueError('Invalid birth_order')
     # Canonical ordering makes proposal ties independent of incoming row order.
@@ -38,7 +42,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
 
     def objective(mu):
         return float(weight*np.minimum(distances(x, mu).min(1), penalty).sum()
-                     + penalty*(len(mu)-c) + (prior*((mu[:c]-a)**2).sum(1)).sum())
+                     + cost*(len(mu)-c) + (prior*((mu[:c]-a)**2).sum(1)).sum())
 
     def assign(mu):
         d = distances(x, mu)
@@ -49,7 +53,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     pairwise = distances(x, x)
     def propose(mu):
         residual = np.minimum(distances(x, mu).min(1), penalty)
-        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
+        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-cost
         proposal = int(gain.argmax())
         if gain[proposal] > tolerance:
             if len(mu)-c >= max_candidates:
@@ -97,7 +101,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     return dict(centers=centers, assignments=original_ids, K=len(centers)-c,
                 counts=np.asarray([(ids == j).sum() for j in range(len(centers))]),
                 noise_count=int((ids == -1).sum()), converged=converged, history=history,
-                penalty=float(penalty), prior_strength=prior.tolist(),
+                penalty=float(penalty), birth_penalty=cost, prior_strength=prior.tolist(),
                 reference_samples=reference_samples, observation_weight=weight,
                 birth_order=birth_order,
                 known_centers_fixed=bool(known_centers_fixed),
