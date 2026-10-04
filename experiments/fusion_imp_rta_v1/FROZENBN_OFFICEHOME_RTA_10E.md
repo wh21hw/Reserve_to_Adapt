@@ -13,3 +13,15 @@ K0显式记录估计失败，不强制K1；K4则两组输入相同，无需重�
 报告各10轮内best和第10轮final OS*/UNK/HOS，best为target标签选epoch，单seed探索，不称三seed均值/显著提升。无70轮或参数扩网格授权；先判断同预算性能与已知/未知权衡。
 
 L4原Py3.8/Torch1.7环境，不重启runtime、不更新原RTA依赖。阶段独立运行并检查输出：source、infer、fixed4、estimated。脚本`scripts/run_frozenbn_officehome_colab.py`；输出`/content/imp-runs/officehome-frozenbn-capacity-10e-v1`。仅保存普通配置/history/log/checkpoint，不做hash或重复checkpoint评价。
+
+## Source与容量完成，RTA配对启动
+
+实现4fe8b704，collector1e224b57。exec146 source3轮正常完成、81次更新，CE2.71874/1.57049/1.04724，无NaN/OOM；source/target特征分别1785x256/4357x256，target标签不在特征中。
+
+exec147容量估计正常收敛K2，15步目标18.75601→17.88952；source anchors1236张、建簇成本校准267张，lambda=.5785163178、beta=.1281749691、R49.44。两个未知候选支持1152/62，噪声57；支持不均衡，不称真实未知类恢复。
+
+后续配对固定K4(C+K29) vs估计K2(C+K27)，Q29不变，两个arm都共享此新prior。旧普通BN下的估计K1不与新K2混成同K的BN消融。
+
+fixed4已启动，需确认TASK_KONLY_START与loss；estimated尚未启动，禁止排队kernel检查/训练。collector为`scripts/collect_frozenbn_officehome_colab.py`，完整配对后只读已有history收集best/final、普通日志，不重评价checkpoint。
+
+容量结果：`pipeline-results/officehome-frozenbn-capacity-10e-v1-estimate.json`。当前不具备最终RTA性能结论。
