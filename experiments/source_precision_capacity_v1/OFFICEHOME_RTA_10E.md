@@ -84,3 +84,11 @@ K4阈值0.47363888，1088候选全部保留，误选已知144不变；K1阈值0.
 | K1 | 1088 | 695 | 66 | 629 | 9.49640%（原11.76471%） | 65.52083% |
 
 K1去除62已知但同时去除331未知，显示几何互补而非无代价保护。下一轮声明只增加此固定几何intersection到ce_ep候选，K1/source3/seed1/Q29/RTA10、损失系数/权重/argmax/warm-end头初始化不变；复用当前K1 baseline，不修改虚拟模板、判别器权重、entropy权重或新增监督损失。该版本明确不是K-only，独立输出目录。需实现sample-index映射、仅一次真实接口检查，记录每轮候选保留数量及指标，不能根据target反馈调intersection阈值或延长预算。当前只完成探针，训练未启动。
+
+### 交叉筛选训练启动
+
+独立入口train_imp_intersection_entry.py，仅在原r构造后按样本对应的初始IMP未知标记过滤，再进入原ce_ep；噪声不作为未知。标签载荷带bool几何标记，不读target语义，target训练仍常量unknown标签。warmup和正式训练均保持DomainBus二元接口，日志记录每batch before/after。
+
+工程失败：exec103在编译阶段因日志换行字符串SyntaxError退出（v1目录保留）；exec106在初始DomainBus取样阶段因三元样本解包退出（v2目录保留），均未训练。已修复为chr(10)和(image,(label,bool))，未改研究设置。
+
+当前exec108 running，目录/content/imp-runs/officehome-imp-intersection-10e-v3，L4；日志确认C25/K1/Q29、共享source prior、初始几何unknown1229/noise89。实际训练已产生epoch0/batch1候选记录（before0/after0），接口通过，尚无首轮指标。不排队新kernel exec，不重启runtime。完成后比较相同10轮K1 baseline的best/final，同时汇总候选before/after；失败先定位直接原因。
