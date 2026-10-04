@@ -4,6 +4,7 @@ Uses the RTA network architecture, C outputs only. Target names are read for
 frozen feature extraction; target labels never enter training or the artifact.
 """
 import argparse
+import copy
 import json
 import random
 from pathlib import Path
@@ -31,6 +32,19 @@ class Images(Dataset):
         return value if self.labels is None else (value, int(self.labels[index]))
 
 
+def source_objective(net, teacher, images, truth, retention_weight):
+    backbone = net[0](images)
+    logits = net[1](backbone)[2]
+    ce = torch.nn.functional.cross_entropy(logits, truth)
+    retention = ce.new_zeros(())
+    if teacher is not None:
+        with torch.no_grad():
+            reference = torch.nn.functional.normalize(teacher(images), dim=1, eps=1e-8)
+        current = torch.nn.functional.normalize(backbone, dim=1, eps=1e-8)
+        retention = (1 - (reference * current).sum(1)).mean()
+    return ce + retention_weight * retention, ce, retention, logits
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--code-root', required=True)
@@ -41,12 +55,17 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--epochs', type=int, default=3)
+    parser.add_argument('--retention-weight', type=float, default=0)
+    parser.add_argument('--save-backbone', action='store_true')
+    parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     root, output = Path(args.data_root), Path(args.output)
     if output.exists():
         raise RuntimeError('Do not overwrite a previous experiment')
     if args.epochs < 1:
         raise ValueError('epochs must be positive')
+    if not np.isfinite(args.retention_weight) or args.retention_weight < 0:
+        raise ValueError('retention weight must be finite and nonnegative')
     if not torch.cuda.is_available() or 'L4' not in torch.cuda.get_device_name():
         raise RuntimeError('This run requires the existing L4 GPU')
     sys.path.insert(0, args.code_root)
@@ -72,6 +91,23 @@ def main():
     loader = DataLoader(Images(source_names, root, augment, labels), batch_size=64,
                         shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
     net = torch.nn.Sequential(ResNetFc(model_path=args.weights), CLS(2048, C)).cuda()
+    # Copy, rather than re-initialize, to avoid changing the student RNG stream.
+    teacher = copy.deepcopy(net[0]).eval() if args.retention_weight else None
+    if teacher is not None:
+        for parameter in teacher.parameters():
+            parameter.requires_grad_(False)
+    if args.check_only:
+        net.train()
+        images, truth = next(iter(loader))
+        loss, ce, retention, _ = source_objective(net, teacher, images.cuda(), truth.cuda(), args.retention_weight)
+        loss.backward()
+        if not torch.isfinite(loss) or not all(p.grad is None or torch.isfinite(p.grad).all() for p in net.parameters()):
+            raise RuntimeError('Nonfinite functional check')
+        if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
+            raise RuntimeError('Teacher received a gradient')
+        print('SOURCE_RETENTION_CHECK_OK', dict(loss=float(loss.detach()), ce=float(ce.detach()),
+            retention=float(retention.detach()), outputs=C, teacher_frozen=teacher is not None), flush=True)
+        return
     schedule = lambda step, initial_lr: inverseDecaySheduler(step, initial_lr, gamma=10, power=.75, max_iter=10000)
     optimizers = [OptimWithSheduler(torch.optim.SGD(module.parameters(), lr=lr,
                   momentum=.9, nesterov=True, weight_decay=5e-4), schedule)
@@ -85,19 +121,23 @@ def main():
                   environment=dict(python=sys.version, torch=torch.__version__,
                       torchvision=torchvision.__version__, cuda=torch.version.cuda,
                       gpu=torch.cuda.get_device_name()))
+    config.update(retention_weight=args.retention_weight, save_backbone=args.save_backbone,
+                  teacher='frozen initial ImageNet ResNet50, eval mode' if teacher is not None else None)
+    if teacher is not None:
+        config['stage'] = 'source feature-retention exploration, not K-only'
+        config['loss'] = 'source CE + weight * mean(1-cosine(backbone, frozen ImageNet teacher))'
     output.mkdir(parents=True)
     (output/'config.json').write_text(json.dumps(config, indent=2))
     print('SOURCE_PRIOR_START', json.dumps(config), flush=True)
     history = []
     for epoch in range(args.epochs):
         net.train()
-        losses, correct, total, start = [], 0, 0, time.time()
+        losses, ce_losses, retention_losses, correct, total, start = [], [], [], 0, 0, time.time()
         for images, truth in loader:
             images, truth = images.cuda(), truth.cuda()
             for optimizer in optimizers:
                 optimizer.zero_grad()
-            logits = net(images)[2]
-            loss = torch.nn.functional.cross_entropy(logits, truth)
+            loss, ce, retention, logits = source_objective(net, teacher, images, truth, args.retention_weight)
             if not torch.isfinite(loss):
                 raise RuntimeError('Nonfinite source loss; no update')
             loss.backward()
@@ -106,9 +146,12 @@ def main():
             for optimizer in optimizers:
                 optimizer.step()
             losses.append(float(loss.detach()))
+            ce_losses.append(float(ce.detach()))
+            retention_losses.append(float(retention.detach()))
             correct += int((logits.argmax(1) == truth).sum())
             total += len(truth)
         row = dict(epoch=epoch+1, loss=float(np.mean(losses)), accuracy=correct/total,
+                   ce=float(np.mean(ce_losses)), retention=float(np.mean(retention_losses)),
                    optimizer_steps=[o.global_step for o in optimizers], seconds=time.time()-start)
         history.append(row)
         with (output/'history.jsonl').open('a') as stream:
@@ -119,21 +162,28 @@ def main():
 
     @torch.no_grad()
     def extract(names):
-        features = []
+        features, backbones = [], []
         data = DataLoader(Images(names, root, fixed), batch_size=64, shuffle=False,
                           num_workers=4, pin_memory=True)
         for images in data:
-            features.append(net(images.cuda())[1].cpu().numpy())
+            backbone = net[0](images.cuda())
+            features.append(net[1](backbone)[1].cpu().numpy())
+            if args.save_backbone:
+                backbones.append(torch.nn.functional.normalize(backbone, dim=1, eps=1e-8).cpu().numpy())
         values = np.concatenate(features)
         if not np.isfinite(values).all():
             raise RuntimeError('Nonfinite frozen features')
-        return values
+        return values, np.concatenate(backbones) if backbones else None
 
-    source, target = extract(source_names), extract(target_names)
+    (source, _), (target, target_backbone) = extract(source_names), extract(target_names)
     centers = np.stack([source[labels == c].mean(0) for c in range(C)])
     residual = source - centers[labels]
     np.savez_compressed(output/'features.npz', source=source, target=target,
                         source_labels=labels, source_centers=centers)
+    if args.save_backbone:
+        if not np.isfinite(target_backbone).all():
+            raise RuntimeError('Nonfinite frozen backbone features')
+        np.savez_compressed(output/'backbone-features.npz', target=target_backbone)
     summary = dict(complete=True, known_classes=C, source_shape=list(source.shape),
                    target_shape=list(target.shape), epochs=args.epochs,
                    source_variance=max(float(np.mean(residual**2)), 1e-8),
