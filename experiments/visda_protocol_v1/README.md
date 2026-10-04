@@ -27,3 +27,5 @@ VisDA正式训练尚未启动：正文ResNet50/Table III VGGNet口径尚待确�
 官方train.tar HEAD返回200、Content-Length7698031104，与既有下载脚本一致；正在独立恢复source archive，不链式自动解包/训练。下载完成后核查列表与已知六类映射，再恢复真实target；目标语义标签只供协议/评测，source训练和K推断使用无标签路径列表。
 
 后续正式模型继续用户明确要求的ResNet50。计划冻结当前候选设置（source C6 CE3轮、source encoder BN统计冻结，容量规则与OfficeHome相同），全量特征推断使用已验证分块接口，不采样替代全量。source与RTA各阶段分开启动；训练和推断尚未开始，预算/表标题差异不伪称论文解决，也不直接复用OfficeHome监督模型。
+
+恢复source archive为后台exec159，当前running。已部署1fd9885f的source launcher/带可选进度日志的trainer，尚未执行；具体预声明见FROZENBN_CAPACITY_V1.md。恢复完成前不排队执行source训练。
