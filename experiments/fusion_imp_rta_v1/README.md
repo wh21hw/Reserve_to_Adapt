@@ -1,6 +1,12 @@
 # 融合版 v1：自适应未知容量 + 自适应虚拟方向
 
-2026-10-04 用户授权结合新旧方案。独立方法版本，不称 K-only，不覆盖历史实现或结果。当前已实现入口，尚未运行 GPU 实验。
+2026-10-04 用户授权结合新旧方案，并进一步要求完整70轮、3个seed。独立方法版本，不称 K-only，不覆盖历史实现或结果。
+
+## 当前正式实验
+
+A→W，seeds1/2/3，分别 C=10 source监督3轮，再70轮RTA，L4、Python3.8/torch1.7.1。每seed重新学习自己的source prior；K由该seed初始IMP决定，训练期固定。保留原版warm-end K-means未知头初始化，不加入IMP头初始化。
+
+端点 gpu-l4-s-kkb-ass1a1-2xg3a949wz74o，source阶段exec15。目录 /content/imp-runs/fusion-imp-rta-v1/seed{1,2,3}；source和rta分目录。原C-only prior在已回收runtime，不复用旧方案C+2模型。普通loss/结构/指标/checkpoint保存；不做hash或重复评价。三seed best/final均报告，均值和样本标准差；best为目标标签选epoch。
 
 ## 流程
 

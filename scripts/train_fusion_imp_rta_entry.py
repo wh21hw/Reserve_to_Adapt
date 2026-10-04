@@ -55,6 +55,11 @@ del fusion_result
     if epochs < 1:
         raise ValueError('FUSION_EPOCHS must be positive')
     replace_once('while epoch <70:', 'while epoch <%d:' % epochs)
+    replace_once('loss.backward()', "if not torch.isfinite(loss):\n                    raise RuntimeError('Nonfinite fusion loss; stop before update')\n                loss.backward()")
+    # The engineering bridge writes these fields; official raw code does not.
+    metric_anchor = 'elapsed_seconds=time.time()-started_at, seed=seed)'
+    if metric_anchor in source:
+        replace_once(metric_anchor, 'elapsed_seconds=time.time()-started_at, seed=seed, K=fusion_K, V=int(nomatch.size(0)))')
     source = 'from fusion_imp_rta import initial_structure, save_structure, refresh_virtual\n' + source
     return source
 
