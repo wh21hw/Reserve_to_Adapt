@@ -30,4 +30,8 @@ OfficeHome旧容量结果未保存assignments，因此需要从同一份已完�
 
 实际候选6528，簇标签4398（67.3713%），累计两个槽伪标签64/6464；第6至10轮仅一个槽获标签。支持结构传递可能改善已知/未知权衡，但不能声称均衡槽、恢复语义类别或解决误建簇。完整普通日志/summary下载到pipeline-results/officehome-cluster-identity-10e-v1-results.zip与对应summary.json。
 
-另做一次无标签已知兼容性诊断，仅用已有source/target瓶颈特征、source分类头矩阵，不重新跑图像/模型、不给目标语义标签。小簇80.65%预测已知类0，大簇最大已知预测集中度15.71%；但平均max概率仅0.0455/0.0440（C25均匀为0.04），源域描述性KL99%界以内分别88.71%/78.30%。单靠此置信度或KL界不足以排除大量未知，不能直接用来删除簇。保存unlabeled-known-compatibility.json/本地对应报告；源域同样本分位数只是描述，不承诺目标覆盖。后续优先检验域偏移/语义新类的区分，不强行让所有槽均衡。
+无标签已知兼容性诊断初版遗漏head的BN与LeakyReLU，旧unlabeled-known-compatibility.json及其预测/概率/KL数值无效，已撤回，保留旧报告为错误证据；不能据此声称分类器近均匀。该错误不涉及训练或直接计数的簇组成，也不改变10轮对照结果。
+
+修正版本使用已有瓶颈特征及source checkpoint的head BN统计/affine，依实际BN→LeakyReLU(.2)→fc→softmax计算；8行已保存source特征与实际head的一次针对性等价检查通过，无图像/encoder前向、无目标语义标签输入。head-v2报告：小簇91.9355%预测已知类0，大簇最大集中度15.5382%；平均max概率0.2410/0.1225，平均KL0.31043/0.52206。源域描述性KL99%界0.63695以内分别98.3871%/67.3611%，说明小簇已知兼容性有无标签信号，但简单全局KL界仍接受大量未知成分；源域同样本分位数不是目标覆盖保证。未据该报告删簇、调阈值或启动新训练。
+
+修正结果保存unlabeled-known-compatibility-head-v2.json及pipeline-results/officehome-unlabeled-known-compatibility-head-v2.json。当前簇到槽匹配是预head瓶颈均值与fc方向的余弦启发式，沿用RTA原型/权重口径；它并不等同于完整head输出的最佳对应，未来若改成head-aware匹配需独立消融，不偷偷改已完成版本。
