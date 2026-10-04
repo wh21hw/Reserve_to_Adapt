@@ -11,3 +11,5 @@ encoder_bn_policy.py模式接口检查已在legacyPy3.8/Torch1.7的CPU通过：�
 新组完成后只读history报告best/final OS*/UNK/HOS、与同epoch对照差值；best仍使用target标签选epoch，单seed短程探索，不称显著改善。target标签不决定K/阈值/预算，不因中间结果扩大网格或自动70轮。若失败，保留日志定位工程原因，不改研究设置重跑。
 
 脚本：scripts/run_rta_frozenbn_ablation_colab.py。入口scripts/train_legacy_task_entry.py新增RTA_FREEZE_ENCODER_BN=1可选开关，默认0保持旧行为；launch.json明确该变化，普通配置/history/log/checkpoint照常保存。该记录不表示已完成或有效。
+
+实现1d75b4a0；已启动后台exec154，现有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o。启动输出确认53个encoder BN module、affine trainable/head unchanged，以及C25/K4/Q29与相同source prior。当前running，尚无最终效果结论。collector为scripts/collect_rta_frozenbn_ablation_colab.py；新模式只在完成时读取一次BN buffers确认研究因素生效，不做前向或checkpoint重评价。
