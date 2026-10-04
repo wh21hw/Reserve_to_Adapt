@@ -13,3 +13,5 @@
 恢复进度：本地artifacts/officehome-pr2rw-v1有43MB source ZIP及757MB target ZIP（三个已有分片）。Drive共享客户端202264815644返回请求配额超限，改用已有分片直接上传，不更改Google客户端设置。source包已上传到/content/product_0-24_train_all.zip；target part000/part001上传中。尚未解压、尚未训练，不能提前宣称数据就绪。
 
 恢复脚本restore_officehome_inputs_colab.py仅合并已上传分片、拒绝路径越界/覆盖、确认列表图片存在及C25/65协议，不做hash/逐图重复审计。source launcher run_precision_officehome_source_colab.py单独训练seed1、C25、3轮，复用已验证source-only代码；只有数据恢复成功后启动，输出/content/imp-runs/source-precision-officehome-v1/seed1/source。后续固定K与估计K共享该prior，RTA尚未启动。
+
+最新状态：三个target分片均上传成功，恢复脚本已正常结束，restoration.json确认source 1785张/C25、target 4357张/65类。已在既有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o启动source监督3轮（seed1，后台exec63），输出/content/imp-runs/source-precision-officehome-v1/seed1/source。尚未完成source特征提取、尚未估计OfficeHome K，RTA对照尚未启动。target标签不进入source训练或K估计；65类仅用于确认任务列表口径。
