@@ -65,3 +65,15 @@ exec80读取既有C20/source-final.pt，不重训，提取source1785张2048维Re
 全部收敛；backbone λ=0.5293206、β=0.1464397。不能把backbone当作改进版：负对照更干净但正对照未改善。单次压力测试不能支持差值显著，也不能证明瓶颈完全无影响；只否定“换成backbone就解决该组欠聚类”的简单解释。
 
 结果pipeline-results/source-leaveclass-officehome-v1-backbone-controls.json。下一步先诊断source类内残差协方差/欧氏球尺度适配，可能探索仅source校准的距离度量；新假设不能冒称DP posterior证明。正式target/RTA、三数据集对标仍未完成。
+
+## Source残差协方差度量：失败分支
+
+仅在C20压力测试256维特征、942个source已知校准残差上，使用Ledoit-Wolf估计共享协方差Σ，再令x→xΣ^(-1/2)，不重新归一化。等价共享Mahalanobis距离；λ、β仍按原source规则重算，不改RTA。公式及接口参考官方文档https://scikit-learn.org/stable/modules/generated/sklearn.covariance.ledoit_wolf.html。收缩系数0.1361385、收缩后条件数51.7712；这些是距离建模探索，不是DP后验推导。
+
+结果：已知负对照K2、误入1.85%；混合新成本K3，但隐藏覆盖/匹配都仅16.67%，63个测试样本进入noise。比欧氏瓶颈K2、覆盖37.88%更差，不能因为K更大称为改进。全arm正常收敛；保留结果pipeline-results/source-leaveclass-officehome-v1-shrinkage-controls.json，不沿此分支继续调参。
+
+## 探索性容量进入真实target的下一步
+
+此前source-only controls不支持“恢复真实语义数”的强主张，但不应把完美数类当作检验RTA容量性能的额外门槛。按用户目标返回训练性能检验：将已固定的source校准成本规则应用到真实target，不再调β、不用target标签选规则。沿用C25/source3轮既有prior及256维欧氏特征；不是上述C20模拟模型，也不是协方差分支。
+
+exec85正常收敛：λ0.5512014、β0.1185924（复用全已知source校准结果），估计K1，候选分配1229/4357，noise89。整数K解释为探索容量，不声称语义数为1。结果pipeline-results/source-cost-officehome-v1-target-capacity.json。下一步同source prior、seed1、Q29/原版V机制、损失/预测，比较固定K4与估计K1的10轮RTA，不能和无前置source训练或70轮best混比；Q29/K4是已有声明的OfficeHome工程协议，尚未确认作者OfficeHome设置，不能冒称严格论文复现。

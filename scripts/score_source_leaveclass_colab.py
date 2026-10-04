@@ -10,6 +10,7 @@ root=Path('/content/imp-runs/source-leaveclass-officehome-v1/seed1')
 parser=argparse.ArgumentParser()
 parser.add_argument('--features',default='source/features.npz')
 parser.add_argument('--output',default='capacity-controls.json')
+parser.add_argument('--metric',choices=['euclidean','source-shrinkage'],default='euclidean')
 args=parser.parse_args()
 feature_path=(root/args.features).resolve()
 out=(root/args.output).resolve()
@@ -33,6 +34,17 @@ train,cost_rows,test=map(np.asarray,(train,cost_rows,test))
 tr=train[np.isin(y[train],known)]; cr=cost_rows[np.isin(y[cost_rows],known)]
 a=np.stack([x[tr][y[tr]==c].mean(0) for c in known])
 counts=np.array([(y[tr]==c).sum() for c in known]); remap={c:i for i,c in enumerate(known)}
+metric_info=dict(name=args.metric)
+if args.metric=='source-shrinkage':
+    from sklearn.covariance import ledoit_wolf
+    residuals=x[tr]-a[[remap[int(c)] for c in y[tr]]]
+    covariance,shrinkage=ledoit_wolf(residuals,assume_centered=True)
+    eigenvalues,vectors=np.linalg.eigh(covariance)
+    floor=max(float(eigenvalues.max())*1e-12,1e-12)
+    transform=vectors/np.sqrt(np.maximum(eigenvalues,floor))[None,:]
+    x=x.dot(transform); a=a.dot(transform)
+    metric_info.update(shrinkage=float(shrinkage),condition_number=float(eigenvalues.max()/max(eigenvalues.min(),floor)),
+                       source_calibration_rows=len(tr),eigenvalue_floor=floor,renormalized=False)
 radius=max(float(np.quantile(((x[tr]-a[[remap[int(c)] for c in y[tr]]])**2).sum(1),.99)),1e-8)
 reference=float(counts.mean())
 def d(left,right):
@@ -41,6 +53,7 @@ residual=np.minimum(d(x[cr],a).min(1),radius)
 beta=max(float((reference/len(cr)*np.maximum(residual[:,None]-d(x[cr],x[cr]),0.).sum(0)).max())*(1+1e-6),1e-8)
 report=dict(hidden_ids=hidden_ids,beta=beta,lambda_radius=radius,real_target_used=False,
     feature_file=args.features,feature_dimension=x.shape[1],
+    metric=metric_info,
     hidden_supervision=False,caveat='posthoc chosen block; known test images participated in known supervision',arms=[])
 for name,ids,cost in [('known-negative',test[np.isin(y[test],known)],beta),
                      ('original-cost',test,radius),('calibrated-cost',test,beta)]:
