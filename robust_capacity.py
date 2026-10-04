@@ -9,7 +9,8 @@ import numpy as np
 
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
-                        max_candidates=100, reference_samples=None, birth_order='after_update'):
+                        max_candidates=100, reference_samples=None, birth_order='after_update',
+                        known_centers_fixed=False):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -63,6 +64,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         for j in range(len(centers)):
             members = x[ids == j]
             if j < c:
+                if known_centers_fixed:
+                    continue
                 if weight*len(members)+prior_strength > 0:
                     centers[j] = (weight*members.sum(0)+prior_strength*a[j])/(weight*len(members)+prior_strength)
             elif len(members):
@@ -94,4 +97,5 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 penalty=float(penalty), prior_strength=float(prior_strength),
                 reference_samples=reference_samples, observation_weight=weight,
                 birth_order=birth_order,
+                known_centers_fixed=bool(known_centers_fixed),
                 semantic_unknown_count=None)
