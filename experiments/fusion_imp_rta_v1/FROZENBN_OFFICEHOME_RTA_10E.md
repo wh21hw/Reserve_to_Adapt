@@ -27,3 +27,7 @@ fixed4已启动，需确认TASK_KONLY_START与loss；estimated尚未启动，禁
 容量结果：`pipeline-results/officehome-frozenbn-capacity-10e-v1-estimate.json`。当前不具备最终RTA性能结论。
 
 最新只读检查：exec148仍running，fixed4已完成8/10轮（console Epoch7）；最近loss有限，无报错。第8轮显示OS*约66.1%、UNK79.0%、HOS71.9%，只是中间观察，不作完整预算比较。estimated K2尚未启动，待fixed4正常终止后单独启动。
+
+随后exec148正常done，wrapper输出FROZENBN_RTA_ARM_COMPLETE fixed4；history确认epoch1..10恰好10轮。fixed4的best和final均为第10轮：OS*=69.134668%、UNK=77.344037%、HOS=73.009306%。best使用target标签选epoch。
+
+已单独启动estimated K2（exec149），TASK_KONLY_START确认C25/K2/Q29与同一source-final.pt，当前running。保持10轮预算、原ResNet50与RTA目标，不传IMP中心初始化头。当前只完成一组，尚不能判断容量配对优劣；也不能以旧普通BN K1对比代替此配对。
