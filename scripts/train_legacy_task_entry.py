@@ -104,6 +104,16 @@ print('TASK_KONLY_START', dict(C=args.shared_classes, K=args.all_classes-args.sh
     Q=args.virtual_clusters, source_prior=os.environ['KONLY_SOURCE_PRIOR']), flush=True)
 ''')
 epochs = int(os.environ.get('RTA_EPOCHS', '70'))
+bn_policy=os.environ.get('RTA_FREEZE_ENCODER_BN','0')
+if bn_policy not in ('0','1'):
+    raise ValueError('RTA_FREEZE_ENCODER_BN must be 0 or 1')
+if bn_policy=='1':
+    replace_once('net = nn.Sequential(feature_extractor, cls).cuda()', '''net = nn.Sequential(feature_extractor, cls).cuda()
+from encoder_bn_policy import freeze_encoder_bn_on_forward
+encoder_bn_hook, encoder_bn_count = freeze_encoder_bn_on_forward(feature_extractor)
+print('RTA_ENCODER_BN_POLICY', dict(mode='frozen_running_stats', modules=encoder_bn_count,
+    affine_trainable=True, head_bn_unchanged=True), flush=True)
+''')
 if epochs < 1:
     raise ValueError('RTA_EPOCHS must be positive')
 replace_once('while epoch <70:', 'while epoch <'+str(epochs)+':')
