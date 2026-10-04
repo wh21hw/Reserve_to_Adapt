@@ -15,9 +15,12 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
             or not np.isfinite(a).all() or not np.isfinite(penalty)
-            or penalty <= 0 or not np.isfinite(prior_strength) or prior_strength < 0
+            or penalty <= 0
             or max_steps < 1 or max_candidates < 1):
         raise ValueError('Invalid features or settings')
+    prior = np.broadcast_to(np.asarray(prior_strength, dtype=np.float64), (len(a),)).copy()
+    if not np.isfinite(prior).all() or (prior < 0).any():
+        raise ValueError('Invalid prior precision')
     if reference_samples is not None and (not np.isfinite(reference_samples) or reference_samples <= 0):
         raise ValueError('reference_samples must be finite and positive')
     weight = 1. if reference_samples is None else float(reference_samples)/len(x)
@@ -35,7 +38,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
 
     def objective(mu):
         return float(weight*np.minimum(distances(x, mu).min(1), penalty).sum()
-                     + penalty*(len(mu)-c) + prior_strength*((mu[:c]-a)**2).sum())
+                     + penalty*(len(mu)-c) + (prior*((mu[:c]-a)**2).sum(1)).sum())
 
     def assign(mu):
         d = distances(x, mu)
@@ -66,8 +69,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
             if j < c:
                 if known_centers_fixed:
                     continue
-                if weight*len(members)+prior_strength > 0:
-                    centers[j] = (weight*members.sum(0)+prior_strength*a[j])/(weight*len(members)+prior_strength)
+                if weight*len(members)+prior[j] > 0:
+                    centers[j] = (weight*members.sum(0)+prior[j]*a[j])/(weight*len(members)+prior[j])
             elif len(members):
                 centers[j] = members.mean(0)
         # Delete a candidate only if the full penalized objective decreases.
@@ -94,7 +97,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     return dict(centers=centers, assignments=original_ids, K=len(centers)-c,
                 counts=np.asarray([(ids == j).sum() for j in range(len(centers))]),
                 noise_count=int((ids == -1).sum()), converged=converged, history=history,
-                penalty=float(penalty), prior_strength=float(prior_strength),
+                penalty=float(penalty), prior_strength=prior.tolist(),
                 reference_samples=reference_samples, observation_weight=weight,
                 birth_order=birth_order,
                 known_centers_fixed=bool(known_centers_fixed),
