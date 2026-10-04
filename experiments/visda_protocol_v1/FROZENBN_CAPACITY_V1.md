@@ -15,3 +15,5 @@ K0原样记录失败，不强制K1；K2与固定组方法输入相同，仅运�
 不按target指标挑seed/阈值/K或扩预算。最终保留全部best/final OS*/UNK/HOS及已知/未知取舍；best若使用target标签选epoch则明确oracle探索，非无偏验证或统计显著性。先按阶段验证，失败定位直接原因，不自动更改研究设置重跑。
 
 source launcher：scripts/run_visda_frozenbn_source_colab.py（1fd9885f）；训练入口单独部署为/content/train_visda_frozenbn_source_v1.py，未替换历史OfficeHome入口。日志间隔200步只影响输出，默认log_every0保持旧行为。计划输出/content/imp-runs/visda-frozenbn-capacity-10e-v1。当前只有脚本已部署，source/容量/RTA均未开始。
+
+推断入口已准备scripts/infer_visda_source_cost_colab.py：全量shape与C6/source3检查后调用既定分块接口，保存普通capacity.json及中心/分配capacity.npz，以便必要诊断，不做checkpoint前向。核心将隔离部署到/content/visda-capacity-code-v1，避免误用历史OfficeHome的旧模块；当前推断尚未运行。K结果如为0或不收敛仍保留失败，不据此改规则。
