@@ -9,7 +9,7 @@ import numpy as np
 
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
-                        max_candidates=100, reference_samples=None):
+                        max_candidates=100, reference_samples=None, birth_order='after_update'):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -20,6 +20,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     if reference_samples is not None and (not np.isfinite(reference_samples) or reference_samples <= 0):
         raise ValueError('reference_samples must be finite and positive')
     weight = 1. if reference_samples is None else float(reference_samples)/len(x)
+    if birth_order not in ('before_update', 'after_update'):
+        raise ValueError('Invalid birth_order')
     # Canonical ordering makes proposal ties independent of incoming row order.
     order = np.lexsort([x[:, j] for j in reversed(range(x.shape[1]))])
     x = x[order]
@@ -41,10 +43,21 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         return ids
 
     pairwise = distances(x, x)
+    def propose(mu):
+        residual = np.minimum(distances(x, mu).min(1), penalty)
+        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
+        proposal = int(gain.argmax())
+        if gain[proposal] > tolerance:
+            if len(mu)-c >= max_candidates:
+                raise RuntimeError('Candidate capacity exhausted; count is censored')
+            return np.vstack([mu, x[proposal]])
+        return mu
     history = [dict(step=0, objective=objective(centers), K=0)]
     converged = False
     for step in range(1, max_steps+1):
         before = objective(centers)
+        if birth_order == 'before_update':
+            centers = propose(centers)
         ids = assign(centers)
         # Fixed assignments: anchored means minimize the same quadratic objective.
         for j in range(len(centers)):
@@ -63,13 +76,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 break
             centers = trials[best]
         # Whole-data residual improvement, not one-point distance threshold.
-        residual = np.minimum(distances(x, centers).min(1), penalty)
-        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
-        proposal = int(gain.argmax())
-        if gain[proposal] > tolerance:
-            if len(centers)-c >= max_candidates:
-                raise RuntimeError('Candidate capacity exhausted; count is censored')
-            centers = np.vstack([centers, x[proposal]])
+        if birth_order == 'after_update':
+            centers = propose(centers)
         after = objective(centers)
         if after > before+tolerance:
             raise RuntimeError('Objective increased')
@@ -85,4 +93,5 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 noise_count=int((ids == -1).sum()), converged=converged, history=history,
                 penalty=float(penalty), prior_strength=float(prior_strength),
                 reference_samples=reference_samples, observation_weight=weight,
+                birth_order=birth_order,
                 semantic_unknown_count=None)
