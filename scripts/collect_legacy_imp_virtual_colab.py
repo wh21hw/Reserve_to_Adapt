@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import zipfile
 
-root = Path('/content/imp-runs/legacy-imp-virtual-v1/seed3')
+root = Path('/content/imp-runs/legacy-imp-virtual-v2/seed3')
 runs = list(root.glob('*_seed3/metrics.json'))
 if len(runs) != 1:
     raise RuntimeError('Expected one historical run')
@@ -22,7 +22,7 @@ summary = dict(metrics=metrics, classifier_unknown_slots=2,
     comparison='Whole old recipe, including 5 source epochs; not a pure IMP effect',
     selection='Previously selected seed3, target-label oracle-best epoch')
 (root/'summary.json').write_text(json.dumps(summary, indent=2, allow_nan=False))
-output = Path('/content/legacy-imp-virtual-v1-seed3-results.zip')
+output = Path('/content/legacy-imp-virtual-v2-seed3-results.zip')
 with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:
     for path in sorted(root.rglob('*')):
         if path.is_file() and path.suffix in ('.json', '.jsonl', '.txt', '.log'):

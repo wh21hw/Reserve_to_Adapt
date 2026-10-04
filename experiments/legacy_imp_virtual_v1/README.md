@@ -6,6 +6,8 @@
 
 原runtime已被Colab回收，已创建新L4 `gpu-l4-s-kkb-ass1a1-2xg3a949wz74o`，准备恢复数据/环境。尚未启动训练，不把准备成功当效果结果。前次OfficeHome exec147因runtime消失，目前无完整结果可确认。
 
+启动记录：环境/数据恢复完成。exec5在训练前因新增配置记录引用未导入Path而失败，未执行SGD；失败目录`/content/imp-runs/legacy-imp-virtual-v1/seed3`保留。仅将该记录改为路径字符串，新目录改为`legacy-imp-virtual-v2/seed3`，不修改旧IMP数值算法或超参数。
+
 独立入口 `scripts/train_legacy_imp_virtual_entry.py` / `scripts/run_legacy_imp_virtual_colab.py`；仍依赖已选baseline工程归档的data/networks/utilities等。仅改路径、固定seed、防覆盖、普通逐轮指标/best+last保存、评价no_grad，以及移除浏览器自动下载。原快照保持不动，根目录用户修改不动。运行目录 `/content/imp-runs/legacy-imp-virtual-v1/seed3`，若失败先保留证据，再决定必要的工程修复，不自动调alpha/预算。
 
 记录日期：2026-10-03。依据用户本次提供的旧 main.py 附件与聊天中贴出的 IMPClusterer。此目录是历史方案记录，不是当前训练入口，不表示已经跑过本快照，也不覆盖根目录用户代码。

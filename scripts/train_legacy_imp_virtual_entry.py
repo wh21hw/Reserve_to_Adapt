@@ -37,7 +37,7 @@ with open(os.path.join(args.log_dir, 'config.json'), 'w') as stream:
         alpha=.05, cluster_steps=5, source_centers_fixed=True,
         classifier_unknown_slots=2, design='Adaptive virtual prototypes, NOT adaptive output K',
         engineering_edits=['Paths, seed, no-overwrite, metrics/checkpoints, eval no_grad'],
-        dependency_root=str(Path('/content/rta-legacy-l4-bridge-v1')),
+        dependency_root='/content/rta-legacy-l4-bridge-v1',
         torch_version=torch.__version__, gpu=torch.cuda.get_device_name()), stream, indent=2)
 """)
 replace_once("    with TrainingModeManager([feature_extractor, cls], train=False) as mgr, \\\n", "    with torch.no_grad(), TrainingModeManager([feature_extractor, cls], train=False) as mgr, \\\n")
