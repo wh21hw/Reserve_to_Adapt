@@ -25,3 +25,5 @@ exec147容量估计正常收敛K2，15步目标18.75601→17.88952；source anch
 fixed4已启动，需确认TASK_KONLY_START与loss；estimated尚未启动，禁止排队kernel检查/训练。collector为`scripts/collect_frozenbn_officehome_colab.py`，完整配对后只读已有history收集best/final、普通日志，不重评价checkpoint。
 
 容量结果：`pipeline-results/officehome-frozenbn-capacity-10e-v1-estimate.json`。当前不具备最终RTA性能结论。
+
+最新只读检查：exec148仍running，fixed4已完成8/10轮（console Epoch7）；最近loss有限，无报错。第8轮显示OS*约66.1%、UNK79.0%、HOS71.9%，只是中间观察，不作完整预算比较。estimated K2尚未启动，待fixed4正常终止后单独启动。

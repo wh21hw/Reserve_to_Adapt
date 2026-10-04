@@ -11,7 +11,7 @@ import numpy as np
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
                         max_candidates=100, reference_samples=None, birth_order='after_update',
-                        known_centers_fixed=False, birth_penalty=None):
+                        known_centers_fixed=False, birth_penalty=None, proposal_block_size=None):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -30,6 +30,9 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         raise ValueError('birth_penalty must be finite and positive')
     if birth_order not in ('before_update', 'after_update'):
         raise ValueError('Invalid birth_order')
+    if proposal_block_size is not None and (isinstance(proposal_block_size, bool)
+            or not isinstance(proposal_block_size, (int, np.integer)) or proposal_block_size < 1):
+        raise ValueError('proposal_block_size must be a positive integer or None')
     # Canonical ordering makes proposal ties independent of incoming row order.
     order = np.lexsort([x[:, j] for j in reversed(range(x.shape[1]))])
     x = x[order]
@@ -50,10 +53,20 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         ids[d.min(1) >= penalty] = -1
         return ids
 
-    pairwise = distances(x, x)
+    # Optional exact candidate-column blocks avoid storing the N x N matrix.
+    # All sample proposals and the original row reduction remain included.
+    # This bounds memory, not the quadratic proposal-computation time.
+    pairwise = distances(x, x) if proposal_block_size is None else None
     def propose(mu):
         residual = np.minimum(distances(x, mu).min(1), penalty)
-        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-cost
+        if pairwise is not None:
+            gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-cost
+        else:
+            gain = np.empty(len(x), dtype=np.float64)
+            for start in range(0, len(x), proposal_block_size):
+                end = min(start+proposal_block_size, len(x))
+                block = distances(x, x[start:end])
+                gain[start:end] = weight*np.maximum(residual[:, None]-block, 0.).sum(0)-cost
         proposal = int(gain.argmax())
         if gain[proposal] > tolerance:
             if len(mu)-c >= max_candidates:
@@ -105,4 +118,5 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 reference_samples=reference_samples, observation_weight=weight,
                 birth_order=birth_order,
                 known_centers_fixed=bool(known_centers_fixed),
+                proposal_block_size=proposal_block_size,
                 semantic_unknown_count=None)
