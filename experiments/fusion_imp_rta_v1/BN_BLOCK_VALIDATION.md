@@ -11,3 +11,35 @@
 隐藏类标签只在最终诊断阶段使用，不进入网络、阈值/建簇成本拟合；known评分图像曾参加source监督，不能宣称独立known泛化。无RealWorld真实target、正式K/RTA改动或70轮训练。
 
 实现：`scripts/run_source_frozenbn_validation_colab.py`；复用已检验source trainer，不重复稳定smoke。输出：`/content/imp-runs/source-frozenbn-block0to4-v1/source-ce`、`source-frozenbn`。
+
+## 完成：两组各3轮、66步
+
+实现cec8dab0；exec142普通组、exec143冻结组均正常完成，无NaN/OOM。1458张known监督，source25类1785张用于冻结提取。普通CE损失2.60807/1.72999/1.19050；冻结BN损失2.44374/1.38332/.89344。未挑epoch、超参数或较好seed。
+
+测试231known+51hidden；普通/冻结BN的已知分类准确率90.04%/93.51%。
+
+| final3距离分数 | AUROC | AP | known误报 | hidden覆盖 |
+| --- | ---: | ---: | ---: | ---: |
+| 普通CE瓶颈 | .86003 | .48862 | 6/231 | 1/51 |
+| 冻结BN瓶颈 | .89135 | .66837 | 3/231 | 16/51 |
+| 普通CE backbone | .85273 | .48817 | 8/231 | 2/51 |
+| 冻结BN backbone | .89619 | .64837 | 5/231 | 12/51 |
+
+瓶颈source99%阈值覆盖由1.96%到31.37%；但隐藏类3仍0覆盖，其余各类覆盖[.5,.2,.1,0,.85714]。不因backbone与瓶颈各项差异临时选择主特征。
+
+## 同公式容量结果
+
+默认256维，所有公式与此前声明相同。普通lambda=.5563763216、beta=.1486757003；冻结BN lambda=.5808520573、beta=.1761760399。beta/lambda随source特征重算，不是按hidden成绩调参。
+
+| 校准成本规则 | known负对照K / 误入 | 混合K | 混合known误入 | hidden覆盖 | 一簇一类匹配/全hidden |
+| --- | --- | --- | --- | --- | --- |
+| 普通CE | 1 / 3/231 | 2 | 0/231 | 17/51 = 33.33% | 17/51 = 33.33% |
+| 冻结BN | 0 / 0/231 | 3 | 1/231 | 32/51 = 62.75% | 32/51 = 62.75% |
+
+冻结组候选计数：类0=[0,11,0]、1=[0,0,15]、2/3均全0、4=[6,0,0]；覆盖类0/1/4，没有恢复全部五类。混合known误入略增，所以不是每个工作点都严格支配对照。两组原始lambda建簇成本仍K0/hidden覆盖0，失败结果保留。所有arm收敛；冻结组噪声2张，普通组6张。
+
+该额外source块支持冻结encoder BN带来的新颖性/容量改善不只存在于10–14块，但仍不是跨域验证、多seed显著性或正式RTA成绩。两个块都只找回部分隐藏语义，因此暂称“更好的容量候选”，不称真实未知数恢复。
+
+下一步返回真实OfficeHome Pr→Rw：用全25已知source预热3轮、冻结encoder BN的已声明设置；无真实target标签拟合容量，固定K与估计K共享同一新prior和RTA初始化/预算。与旧普通BN结果仅作预热因素背景。先短程同预算验证，未知K0不得偷偷强制K1；不自动扩70轮或系数网格。RTA本体仍ResNet，无DINO或新增loss，冻结BN只发生于source预热，不默认延伸到RTA训练。
+
+结果：`pipeline-results/source-frozenbn-block0to4-v1.json`，`source-frozenbn-block0to4-v1-ce-capacity.json`，`source-frozenbn-block0to4-v1-frozen-capacity.json`。
