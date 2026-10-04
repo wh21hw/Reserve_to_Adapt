@@ -19,3 +19,5 @@ source launcher：scripts/run_visda_frozenbn_source_colab.py（1fd9885f）；训
 推断入口已准备scripts/infer_visda_source_cost_colab.py：全量shape与C6/source3检查后调用既定分块接口，保存普通capacity.json及中心/分配capacity.npz，以便必要诊断，不做checkpoint前向。核心将隔离部署到/content/visda-capacity-code-v1，避免误用历史OfficeHome的旧模块；当前推断尚未运行。K结果如为0或不收敛仍保留失败，不据此改规则。
 
 实际进展：source3为exec164，首轮完成、第二轮训练中；全量数据已恢复、无标签target列表准备完成。推断入口及分块核心已隔离部署，容量/RTA未启动。
+
+后续RTA独立入口scripts/run_visda_frozenbn_rta_colab.py已准备并部署：fixed2/estimated单arm、共享source3、seed1、Q8、保持encoder BN、原版初始化/损失/筛选/预测、10轮；不传簇身份。必须先取得完整source summary和收敛正K，K2相同时不重复同一arm；K0/失败不强制改K。类别映射使用仓库class-map.json，ResNet口径和原总预算不伪称已解决。当前source正在第3轮，容量及RTA均未执行。结构版OfficeHome为另一个实验，不能混称K-only。

@@ -24,7 +24,7 @@ command[command.index('/content/train_legacy_task_entry.py')] = '/content/cluste
 env = dict(os.environ, OPENBLAS_NUM_THREADS='2', OMP_NUM_THREADS='2', RTA_SEED='1',
            RTA_EPOCHS='10', RTA_FREEZE_ENCODER_BN='1', KONLY_SOURCE_PRIOR=old['source_prior'],
            RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
-           RTA_CLUSTER_LABELS=str(artifact), PYTHONPATH='/content/cluster-identity-code-v1')
+           RTA_CLUSTER_LABELS=str(artifact), PYTHONPATH='/content/cluster-identity-code-v1:/content')
 manifest = dict(old, command=command, control=str(control), cluster_artifact=str(artifact),
     research_change='Only fixed offline cluster identities replace unknown argmax for covered selected candidates',
     head_initialization='Original warm-end K-means, unchanged',
