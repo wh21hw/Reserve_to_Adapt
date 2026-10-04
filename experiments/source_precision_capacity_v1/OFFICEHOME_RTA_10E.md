@@ -9,3 +9,5 @@ K估计不使用target标签；指标使用target原标签做macro OS*/UNK/HOS�
 2026-10-04：入口构建检查通过，修复task_protocol Python3.8路径兼容，取消任务列表hash字段，不新增审计门槛。已在既有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o启动fixed4，后台exec90；console.log已确认TASK_KONLY_START C25/K4/Q29及共享source路径。尚未观察首轮loss。estimated未启动，不能排队新exec。输出/content/imp-runs/officehome-capacity-10e-v1/fixed4/，训练子目录officehome-pr2rw_seed1。
 
 后续：先观察fixed4 loss有限/实际epochs，再独立启动estimated；两组完成后下载逐轮指标与launch.json，汇总best/final，不自动重跑或改设置。正常训练用独立shell读取console.log/history.jsonl或exec attach90，不排队kernel检查。
+
+最新进度：exec90仍running；console已输出原训练epoch0（history记为完成epoch1），OS*=0.817、UNK/HOS=0，ce0.859、virtual0.944、ce_ep2.220、adv0.788，loss通过有限值保护。尚处warmup，不能以UNK0判失败或提前调整。collector collect_officehome_capacity_colab.py已准备，要求两组均完整10轮，仅打包普通日志/配置/指标，不传checkpoint或重评价；estimated尚未启动。
