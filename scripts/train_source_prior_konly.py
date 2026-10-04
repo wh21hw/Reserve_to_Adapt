@@ -45,6 +45,14 @@ def source_objective(net, teacher, images, truth, retention_weight):
     return ce + retention_weight * retention, ce, retention, logits
 
 
+def source_train_mode(net, freeze_backbone_bn):
+    net.train()
+    if freeze_backbone_bn:
+        for module in net[0].modules():
+            if isinstance(module, (torch.nn.BatchNorm1d, torch.nn.BatchNorm2d, torch.nn.BatchNorm3d)):
+                module.eval()  # Affine parameters remain trainable; head BN is unaffected.
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--code-root', required=True)
@@ -58,6 +66,7 @@ def main():
     parser.add_argument('--retention-weight', type=float, default=0)
     parser.add_argument('--save-backbone', action='store_true')
     parser.add_argument('--check-only', action='store_true')
+    parser.add_argument('--freeze-backbone-bn', action='store_true')
     args = parser.parse_args()
     root, output = Path(args.data_root), Path(args.output)
     if output.exists():
@@ -97,7 +106,8 @@ def main():
         for parameter in teacher.parameters():
             parameter.requires_grad_(False)
     if args.check_only:
-        net.train()
+        source_train_mode(net, args.freeze_backbone_bn)
+        bn_mean_before = net[0].bn1.running_mean.detach().clone()
         images, truth = next(iter(loader))
         loss, ce, retention, _ = source_objective(net, teacher, images.cuda(), truth.cuda(), args.retention_weight)
         loss.backward()
@@ -105,8 +115,11 @@ def main():
             raise RuntimeError('Nonfinite functional check')
         if teacher is not None and any(p.grad is not None for p in teacher.parameters()):
             raise RuntimeError('Teacher received a gradient')
+        if args.freeze_backbone_bn and not torch.equal(bn_mean_before, net[0].bn1.running_mean):
+            raise RuntimeError('Frozen encoder BN statistics changed')
         print('SOURCE_RETENTION_CHECK_OK', dict(loss=float(loss.detach()), ce=float(ce.detach()),
-            retention=float(retention.detach()), outputs=C, teacher_frozen=teacher is not None), flush=True)
+            retention=float(retention.detach()), outputs=C, teacher_frozen=teacher is not None,
+            backbone_bn_frozen=args.freeze_backbone_bn), flush=True)
         return
     schedule = lambda step, initial_lr: inverseDecaySheduler(step, initial_lr, gamma=10, power=.75, max_iter=10000)
     optimizers = [OptimWithSheduler(torch.optim.SGD(module.parameters(), lr=lr,
@@ -122,7 +135,10 @@ def main():
                       torchvision=torchvision.__version__, cuda=torch.version.cuda,
                       gpu=torch.cuda.get_device_name()))
     config.update(retention_weight=args.retention_weight, save_backbone=args.save_backbone,
-                  teacher='frozen initial ImageNet ResNet50, eval mode' if teacher is not None else None)
+                  teacher='frozen initial ImageNet ResNet50, eval mode' if teacher is not None else None,
+                  freeze_backbone_bn=args.freeze_backbone_bn)
+    if args.freeze_backbone_bn:
+        config['stage'] = 'source frozen encoder BN exploration, not K-only'
     if teacher is not None:
         config['stage'] = 'source feature-retention exploration, not K-only'
         config['loss'] = 'source CE + weight * mean(1-cosine(backbone, frozen ImageNet teacher))'
@@ -131,7 +147,7 @@ def main():
     print('SOURCE_PRIOR_START', json.dumps(config), flush=True)
     history = []
     for epoch in range(args.epochs):
-        net.train()
+        source_train_mode(net, args.freeze_backbone_bn)
         losses, ce_losses, retention_losses, correct, total, start = [], [], [], 0, 0, time.time()
         for images, truth in loader:
             images, truth = images.cuda(), truth.cuda()

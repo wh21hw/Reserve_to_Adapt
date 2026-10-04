@@ -1,4 +1,5 @@
 """Final-only source held-class diagnosis for the retention experiment."""
+import argparse
 import json
 from pathlib import Path
 import numpy as np
@@ -6,7 +7,11 @@ import torch
 from sklearn.metrics import roc_auc_score,average_precision_score
 
 torch.set_num_threads(2)
-root=Path('/content/imp-runs/source-retention-officehome-v1/seed1')
+parser=argparse.ArgumentParser()
+parser.add_argument('--root',default='/content/imp-runs/source-retention-officehome-v1/seed1')
+parser.add_argument('--variant-name',default='source_retention')
+args=parser.parse_args()
+root=Path(args.root)
 old=Path('/content/imp-runs/source-leaveclass-officehome-v1/seed1')
 output=root/'comparison.json'
 if output.exists():raise FileExistsError('Preserve existing diagnosis')
@@ -19,9 +24,9 @@ for c in range(25):
 train,calibration,test=map(np.asarray,(train,calibration,test));tr=train[np.isin(y[train],known)];cr=calibration[np.isin(y[calibration],known)]
 hidden=np.isin(y[test],range(10,15));kt=test[~hidden]
 report=dict(source_only=True,real_target_used=False,final_epoch=3,hidden_classes=list(range(10,15)),
-    selection='Fixed retention weight1 and final3; no target/hidden label epoch, coefficient or model selection',
+    selection='Predeclared source variant, final3; no target/hidden label epoch, coefficient or model selection',
     caveat='Single seed, posthoc stress block; known test images participated in source network supervision. Not RTA performance.',arms={})
-for name,base in [('source_ce',old),('source_retention',root)]:
+for name,base in [('source_ce',old),(args.variant_name,root)]:
     checkpoint=torch.load(str(base/'source/source-final.pt'),map_location='cpu')
     if checkpoint['config']['epochs']!=3 or len(checkpoint['history'])!=3:
         raise RuntimeError('Training budget mismatch')
@@ -32,7 +37,9 @@ for name,base in [('source_ce',old),('source_retention',root)]:
         v=torch.nn.functional.batch_norm(torch.from_numpy(bottle[kt]),state['1.main.1.0.running_mean'],
             state['1.main.1.0.running_var'],state['1.main.1.0.weight'],state['1.main.1.0.bias'],training=False,eps=1e-5)
         pred=torch.nn.functional.linear(torch.nn.functional.leaky_relu(v,.2),state['1.fc.weight']).argmax(1).numpy()
-    arm=dict(known_classifier_accuracy=float((pred==np.array([mapping[int(c)] for c in y[kt]])).mean()),
+    arm=dict(retention_weight=checkpoint['config'].get('retention_weight',0),
+        freeze_backbone_bn=checkpoint['config'].get('freeze_backbone_bn',False),
+        known_classifier_accuracy=float((pred==np.array([mapping[int(c)] for c in y[kt]])).mean()),
         training_history=checkpoint['history'],scores={})
     for feature_name,x in [('bottleneck',bottle),('backbone',backbone)]:
         x=x.astype(np.float64)
