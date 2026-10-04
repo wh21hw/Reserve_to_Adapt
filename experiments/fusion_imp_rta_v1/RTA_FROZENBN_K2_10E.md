@@ -13,3 +13,5 @@
 实现e0fdb9eb，collector ecdf5b21。已单独启动后台exec156，现有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o；启动日志确认53个encoder BN模块保持统计、affine trainable/head unchanged，以及C25/K2/Q29和同一source-final.pt。当前running，尚无最终结论；没有重新训练source、估计K或重复前三组。
 
 collector scripts/collect_bn_capacity_cross_colab.py已部署，仅在本arm完整10轮后执行。它读取四组已有history，列出同BN下K差值和同K下BN差值、final交互项，并在新arm结束时读取一次统计buffers确认BN因素生效，不做前向或重新评价。输出/content/officehome-bn-capacity-cross-10e-v1-results.zip。
+
+论文口径更正：本轮只读PDF复核确认OfficeHome K4，按论文C+K目标聚类应为Q29；此前两者“未确认”的记录已由PAPER_SETTING_CORRECTION.md更正。K2 arm仍保持Q29以隔离头容量，不在运行中改成论文绑定式Q27。完整预算及发布代码/论文公式差异仍未解决，不能声称严格论文复现。

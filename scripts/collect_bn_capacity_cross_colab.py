@@ -15,6 +15,8 @@ archive=Path('/content/officehome-bn-capacity-cross-10e-v1-results.zip')
 if output.exists() or archive.exists():raise FileExistsError('Preserve results')
 prior_path=str(pair/'prior/source/source-final.pt')
 report=dict(task='OfficeHome Pr->Rw',seed=1,Q=29,C=25,epochs=10,source_epochs=3,estimated_K=2,
+    paper_confirmed_baseline_K=4,paper_baseline_Q=29,
+    adaptive_Q_policy='Keep Q29 to isolate output K; paper ties Q=C+K, so its K2 coupling would imply Q27',
     selection='Oracle-best target-label HOS epoch; short-course exploratory module study, not significance',
     caveat='Fourth arm declared after observing earlier results; not strict paper reproduction or blind external validation',arms={})
 histories={};files=[]
