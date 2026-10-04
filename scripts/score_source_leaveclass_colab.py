@@ -11,6 +11,7 @@ parser.add_argument('--root',default='/content/imp-runs/source-leaveclass-office
 parser.add_argument('--features',default='source/features.npz')
 parser.add_argument('--output',default='capacity-controls.json')
 parser.add_argument('--metric',choices=['euclidean','source-shrinkage'],default='euclidean')
+parser.add_argument('--hidden-ids',default='10,11,12,13,14')
 args=parser.parse_args()
 root=Path(args.root)
 feature_path=(root/args.features).resolve()
@@ -25,7 +26,10 @@ rows=[line.rsplit(None,1) for line in Path('/content/osda-officehome-pr2rw-v1/pr
 y=np.asarray([int(row[1]) for row in rows])
 if len(x)!=len(y):
     raise ValueError('Source extraction row count mismatch')
-hidden_ids=list(range(10,15)); known=[c for c in range(25) if c not in hidden_ids]
+hidden_ids=sorted(set(int(c) for c in args.hidden_ids.split(',')))
+if not hidden_ids or any(c not in range(25) for c in hidden_ids) or len(hidden_ids)==25:
+    raise ValueError('Invalid source held-class block')
+known=[c for c in range(25) if c not in hidden_ids]
 rng=np.random.RandomState(2026); train,cost_rows,test=[],[],[]
 for c in range(25):
     ids=np.flatnonzero(y==c); rng.shuffle(ids)
@@ -55,14 +59,14 @@ beta=max(float((reference/len(cr)*np.maximum(residual[:,None]-d(x[cr],x[cr]),0.)
 report=dict(hidden_ids=hidden_ids,beta=beta,lambda_radius=radius,real_target_used=False,
     feature_file=args.features,feature_dimension=x.shape[1],
     metric=metric_info,
-    hidden_supervision=False,caveat='posthoc chosen block; known test images participated in known supervision',arms=[])
+    hidden_supervision=False,caveat='source class-block exploration; known test images participated in known supervision',arms=[])
 for name,ids,cost in [('known-negative',test[np.isin(y[test],known)],beta),
                      ('original-cost',test,radius),('calibrated-cost',test,beta)]:
     r=fit_robust_capacity(x[ids],a,radius,prior_strength=counts,reference_samples=reference,
         birth_order='before_update',birth_penalty=cost)
-    assignment=r['assignments']; hidden=np.isin(y[ids],hidden_ids); unknown=assignment>=20
-    matrix=np.array([[(assignment[y[ids]==c]==20+j).sum() for j in range(r['K'])]
-                     for c in hidden_ids],dtype=int).reshape(5,r['K'])
+    assignment=r['assignments']; hidden=np.isin(y[ids],hidden_ids); unknown=assignment>=len(known)
+    matrix=np.array([[(assignment[y[ids]==c]==len(known)+j).sum() for j in range(r['K'])]
+                     for c in hidden_ids],dtype=int).reshape(len(hidden_ids),r['K'])
     matched=0
     if r['K']:
         rr,cc=linear_sum_assignment(-matrix); matched=int(matrix[rr,cc].sum())
