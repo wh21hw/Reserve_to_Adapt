@@ -19,3 +19,21 @@ K估计不使用target标签；指标使用target原标签做macro OS*/UNK/HOS�
 已独立启动estimated，后台exec92，使用原先声明的同source prior/seed1/Q29/10轮设置，K从source-cost-target-capacity.json读取（既有估计为1），未调参或改变损失。需观察启动与首轮，再等待完整10轮，运行collector做配对汇总；目前尚不能判断估计K优劣。
 
 exec92启动日志确认C25/K1/Q29和共享source路径，现已完成2/10轮，history第2轮OS*=82.37572%、UNK/HOS=0，elapsed230.21秒。console前两轮loss项有限，训练仍处原版4轮warmup，暂不能把UNK0解释为K1失败。训练子进程与exec92均在运行，未重跑或排队新kernel exec。
+
+进行中第5轮配对：fixed4 OS*=64.55527%、UNK=76.84999%、HOS=70.16813%；estimated K1 OS*=62.23596%、UNK=86.48600%、HOS=72.38392%。K1相对fixed4分别为-2.31931、+9.63602、+2.21579个百分点。两组elapsed约526/530秒，均完成相同5轮。K1第4轮末UNK8.991%到第5轮86.486%，loss项有限，exec92仍running。这支持“一个未知槽也能学拒识”的观察，但不证明最终改善、真实类别恢复或概率分散是因果；需等完整10轮配对，不据中途结果选参。
+
+## 完成结果与下一步
+
+exec90/92均正常结束（returncode0）。collector确认每组完整epoch1..10、指标有限，直接读取已有history，未重评价checkpoint。日志/配置/指标/summary下载至pipeline-results/officehome-capacity-10e-v1-results.zip，并解压至同名目录。未重启runtime、重跑或改参数。
+
+两组best均为第10轮，因此best与final相同：
+
+| 设置 | K | best/final epoch | OS* | UNK | HOS |
+| --- | --- | --- | --- | --- | --- |
+| 固定容量 | 4 | 10 | 70.58996% | 77.76500% | 74.00397% |
+| source估计容量 | 1 | 10 | 66.45630% | 85.74736% | 74.87931% |
+| 估计−固定（百分点） | — | — | -4.13366 | +7.98236 | +0.87533 |
+
+结论：本次单seed短程实验中，source规则K1并未导致未知拒识失败，而是提升UNK、牺牲部分OS*，HOS略高。不能宣称显著提升、恢复40个未知语义类、证明概率分散因果或对齐论文成绩；best为target标签选epoch。本实验只支持容量可能影响已知/未知权衡，不能推广到其他seed/完整70轮。
+
+下一步优先机制诊断而非按target成绩调整K：检查已知→未知与已知类间混淆的分解，以及RTA未知筛选是否将已知样本纳入伪标签训练。若需要推理读取，仅分析一份每组final checkpoint作为新诊断，不重复逐checkpoint评分或训练。诊断指标只作解释，不回流source估计规则。先定位主要误差，再声明一次单因素优化；不要把IMP头初始化、改解码、额外损失同时叠加成K-only。
