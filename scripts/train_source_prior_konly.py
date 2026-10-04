@@ -67,12 +67,16 @@ def main():
     parser.add_argument('--save-backbone', action='store_true')
     parser.add_argument('--check-only', action='store_true')
     parser.add_argument('--freeze-backbone-bn', action='store_true')
+    parser.add_argument('--log-every', type=int, default=0,
+                        help='Optional progress interval in batches; zero preserves quiet logging')
     args = parser.parse_args()
     root, output = Path(args.data_root), Path(args.output)
     if output.exists():
         raise RuntimeError('Do not overwrite a previous experiment')
     if args.epochs < 1:
         raise ValueError('epochs must be positive')
+    if args.log_every < 0:
+        raise ValueError('log-every must be nonnegative')
     if not np.isfinite(args.retention_weight) or args.retention_weight < 0:
         raise ValueError('retention weight must be finite and nonnegative')
     if not torch.cuda.is_available() or 'L4' not in torch.cuda.get_device_name():
@@ -137,6 +141,7 @@ def main():
     config.update(retention_weight=args.retention_weight, save_backbone=args.save_backbone,
                   teacher='frozen initial ImageNet ResNet50, eval mode' if teacher is not None else None,
                   freeze_backbone_bn=args.freeze_backbone_bn)
+    config['log_every']=args.log_every
     if args.freeze_backbone_bn:
         config['stage'] = 'source frozen encoder BN exploration, not K-only'
     if teacher is not None:
@@ -149,7 +154,7 @@ def main():
     for epoch in range(args.epochs):
         source_train_mode(net, args.freeze_backbone_bn)
         losses, ce_losses, retention_losses, correct, total, start = [], [], [], 0, 0, time.time()
-        for images, truth in loader:
+        for batch_index, (images, truth) in enumerate(loader, start=1):
             images, truth = images.cuda(), truth.cuda()
             for optimizer in optimizers:
                 optimizer.zero_grad()
@@ -166,6 +171,10 @@ def main():
             retention_losses.append(float(retention.detach()))
             correct += int((logits.argmax(1) == truth).sum())
             total += len(truth)
+            if args.log_every and (batch_index==1 or batch_index % args.log_every==0):
+                print('SOURCE_PRIOR_PROGRESS', json.dumps(dict(epoch=epoch+1,
+                    batch=batch_index, batches=len(loader), loss=float(loss.detach()),
+                    mean_loss=float(np.mean(losses)), seconds=time.time()-start)), flush=True)
         row = dict(epoch=epoch+1, loss=float(np.mean(losses)), accuracy=correct/total,
                    ce=float(np.mean(ce_losses)), retention=float(np.mean(retention_losses)),
                    optimizer_steps=[o.global_step for o in optimizers], seconds=time.time()-start)
@@ -177,21 +186,26 @@ def main():
     net.eval()
 
     @torch.no_grad()
-    def extract(names):
+    def extract(names, domain):
         features, backbones = [], []
         data = DataLoader(Images(names, root, fixed), batch_size=64, shuffle=False,
                           num_workers=4, pin_memory=True)
-        for images in data:
+        extraction_start=time.time()
+        for batch_index, images in enumerate(data,start=1):
             backbone = net[0](images.cuda())
             features.append(net[1](backbone)[1].cpu().numpy())
             if args.save_backbone:
                 backbones.append(torch.nn.functional.normalize(backbone, dim=1, eps=1e-8).cpu().numpy())
+            if args.log_every and (batch_index==1 or batch_index % args.log_every==0):
+                print('SOURCE_FEATURE_PROGRESS', json.dumps(dict(domain=domain,
+                    rows=min(batch_index*64,len(names)), total_rows=len(names),
+                    seconds=time.time()-extraction_start)), flush=True)
         values = np.concatenate(features)
         if not np.isfinite(values).all():
             raise RuntimeError('Nonfinite frozen features')
         return values, np.concatenate(backbones) if backbones else None
 
-    (source, _), (target, target_backbone) = extract(source_names), extract(target_names)
+    (source, _), (target, target_backbone) = extract(source_names,'source'), extract(target_names,'target')
     centers = np.stack([source[labels == c].mean(0) for c in range(C)])
     residual = source - centers[labels]
     np.savez_compressed(output/'features.npz', source=source, target=target,
