@@ -13,3 +13,5 @@ OfficeHome旧容量结果未保存assignments，因此需要从同一份已完�
 当前：实现已准备，尚未功能检查、重建簇artifact或启动训练。VisDA source exec164正在运行，不排队启动结构对照。接口变化仅做一次针对性检查，成功后在GPU空闲时分阶段执行。
 
 进展：一次CPU针对性检查通过，验证样本索引随shuffle/cycling传递、簇到槽排列、已知/noise回退及entry插入。实际task-adapted入口集成编译也通过，无模型训练。旧OfficeHome同source features恢复得到K2、未知支持1152/62、noise57，源半径0.5785163178276425及成本0.1281749691242145，与已有记录一致；已保存/content/imp-runs/officehome-cluster-identity-10e-v1/clusters.npz（固定身份与无标签路径顺序）。未修改历史控制入口，结构版隔离部署于/content/cluster-identity-code-v1。结构训练尚未启动。
+
+汇总入口scripts/collect_cluster_identity_colab.py已准备：读取两组现有日志，记录best/final与逐轮差值、映射/覆盖率/槽计数；不重新前向checkpoint。旧argmax控制没有槽计数，因此不可宣称结构组改善了相对槽均衡。报告前四轮warmup指标差异，以暴露新增模块生效前可能的控制偏差，不把未见偏差当确定性证明。训练未完成时不执行collector。
