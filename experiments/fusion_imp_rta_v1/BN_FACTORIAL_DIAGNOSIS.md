@@ -30,3 +30,29 @@
 复用此前CE seed1/3轮/63步对照；新臂相同1362张known、同增广/初始化/优化器/学习率/seed/预算（详见SOURCE_RETENTION_V1.md），retention_weight=0。隐藏source类10–14仍不参与梯度或BN更新，真实target未读取。仅评分final3，source校准99%门限不扫描。
 
 先一次真实batch检查冻结统计与有限梯度，再完整3轮训练。输出`/content/imp-runs/source-frozenbn-officehome-v1/seed1/source/`；报告已知分类与backbone/瓶颈新颖性。不能根据隐藏类标签选择冻结层范围、epoch或系数；不能把更换预热BN设置称纯K-only。
+
+## 3轮冻结 encoder BN 训练完成
+
+实现83e8279a，exec138正常完成3轮63次更新；loss2.50867/1.38610/.87124，无NaN/OOM。仿射参数及encoder权重仍训练，头BN正常更新，retention_weight=0。
+
+| final3 | 瓶颈 AUROC / AP | 瓶颈误报 / 覆盖 | backbone AUROC / AP | backbone误报 / 覆盖 | 已知分类 |
+| --- | --- | --- | --- | --- | --- |
+| 普通 source CE | .87072 / .69848 | 3/216 / 14/66 | .88468 / .71961 | 3/216 / 14/66 | 94.44% |
+| 冻结encoder BN的CE | .91842 / .81548 | 1/216 / 15/66 | .90979 / .76870 | 3/216 / 20/66 | 94.91% |
+
+瓶颈排序改善，而source99门限的覆盖只小幅增加；仍不能宣称问题解决。backbone覆盖增加但不因此临时挑backbone作为主估计特征。
+
+## 原容量规则迁移：保持公式，不选新阈值
+
+对新模型默认256维瓶颈运行既有 `score_source_leaveclass_colab.py`。source70%建原型，κ_c=各已知训练样本数，R=其均值，lambda=source类内平方残差99%分位；beta=source已知校准负对照最大初始建簇增益*(1+1e-6)，birth-first、已知中心允许移动，其余目标/噪声/删除规则不改。原始成本对照和校准成本对照均保留，不选择较好成本来改变规则。新lambda=.5403349530、beta=.1201874129，其数值由既定source公式重算，不是新超参数搜索。
+
+| 校准成本规则 | 全已知负对照K / 误入 | 混合K | 混合已知误入 | 留类候选覆盖 | 一簇一类匹配/全留类 |
+| --- | --- | --- | --- | --- | --- |
+| 普通 source CE 特征 | 1 / 2/216 | 2 | 1/216 | 25/66 = 37.88% | 24/66 = 36.36% |
+| 冻结encoder BN特征 | 0 / 0/216 | 3 | 0/216 | 41/66 = 62.12% | 39/66 = 59.09% |
+
+新簇的隐藏类计数：类10=[0,12,0]、11=[1,0,0]、12=[15,0,0]、13=[0,1,0]、14=[0,0,12]。主要覆盖10/12/14，11/13仍大多没有脱离已知结构；K3不能称恢复真实五类。噪声5张；所有arm正常收敛。原始lambda建簇成本规则仍K0/留类覆盖0%，未用失败结果改公式。
+
+这项结果有机制和容量的初步支持，但依然是同一seed/事后压力块，不是独立验证或正式target成绩。下一步先在另一预先固定的source留类块、同预算CE/冻结BN两组检验，再决定真实target的固定K/估计K训练；不自动启动70轮矩阵。
+
+结果 `pipeline-results/source-frozenbn-officehome-v1.json`、`pipeline-results/source-frozenbn-officehome-v1-capacity.json`；标准对照为既有 `pipeline-results/source-leaveclass-officehome-v1-controls.json`。评分与估计各执行一次，未重复checkpoint审计。

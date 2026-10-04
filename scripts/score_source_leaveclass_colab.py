@@ -6,12 +6,13 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from robust_capacity import fit_robust_capacity
 
-root=Path('/content/imp-runs/source-leaveclass-officehome-v1/seed1')
 parser=argparse.ArgumentParser()
+parser.add_argument('--root',default='/content/imp-runs/source-leaveclass-officehome-v1/seed1')
 parser.add_argument('--features',default='source/features.npz')
 parser.add_argument('--output',default='capacity-controls.json')
 parser.add_argument('--metric',choices=['euclidean','source-shrinkage'],default='euclidean')
 args=parser.parse_args()
+root=Path(args.root)
 feature_path=(root/args.features).resolve()
 out=(root/args.output).resolve()
 if root.resolve() not in feature_path.parents or root.resolve() not in out.parents:
