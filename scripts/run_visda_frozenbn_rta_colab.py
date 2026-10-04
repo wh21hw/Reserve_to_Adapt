@@ -11,14 +11,18 @@ args = parser.parse_args()
 root = Path('/content/imp-runs/visda-frozenbn-capacity-10e-v1')
 data = Path('/content/osda-visda-syn2real-v1')
 source = json.loads((root/'source/summary.json').read_text())
-estimate = json.loads((root/'capacity.json').read_text())
 if not source['complete'] or source['epochs'] != 3:
     raise ValueError('Expected completed shared source3 prior')
-if estimate['target_labels_used'] or not estimate['converged'] or estimate['K'] < 1:
-    raise ValueError('No converged positive capacity; preserve failure, never force K1')
-if args.arm == 'estimated' and estimate['K'] == 2:
-    raise ValueError('Estimated K equals fixed K2; run one equivalent arm only')
-k = 2 if args.arm == 'fixed2' else int(estimate['K'])
+if args.arm == 'estimated':
+    estimate = json.loads((root/'capacity.json').read_text())
+    if estimate['target_labels_used'] or not estimate['converged'] or estimate['K'] < 1:
+        raise ValueError('No converged positive capacity; preserve failure, never force K1')
+    if estimate['K'] == 2:
+        raise ValueError('Estimated K equals fixed K2; run one equivalent arm only')
+    k = int(estimate['K'])
+else:
+    # Fixed control needs only the completed shared prior, not an inferred K.
+    k = 2
 class_map = Path('/content/visda-rta-class-map-v1.json')
 mapping = json.loads(class_map.read_text())
 if [mapping[str(i)] for i in [1, 2, 3, 6, 10, 11]] != ['bicycle', 'bus', 'car', 'motorcycle', 'train', 'truck']:

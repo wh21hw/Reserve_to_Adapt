@@ -23,3 +23,5 @@ source launcher：scripts/run_visda_frozenbn_source_colab.py（1fd9885f）；训
 后续RTA独立入口scripts/run_visda_frozenbn_rta_colab.py已准备并部署：fixed2/estimated单arm、共享source3、seed1、Q8、保持encoder BN、原版初始化/损失/筛选/预测、10轮；不传簇身份。必须先取得完整source summary和收敛正K，K2相同时不重复同一arm；K0/失败不强制改K。类别映射使用仓库class-map.json，ResNet口径和原总预算不伪称已解决。当前source正在第3轮，容量及RTA均未执行。结构版OfficeHome为另一个实验，不能混称K-only。
 
 实际进展：exec164完整完成source3（3738步，最终source CE0.080924、训练accuracy0.97492）及全量79765×256 source/55388×256 target特征，不能当target成绩。普通配置/日志/summary已保存并下载pipeline-results/visda-frozenbn-source3-v1-results.zip。CPU容量推断独立exec166已启动，日志capacity-console.log，尚无K结果；GPU交给OfficeHome结构对照，不同时运行两项GPU训练。VisDA RTA尚未启动。
+
+排程修正（未见VisDA K或目标成绩前）：OfficeHome结构10轮已完整结束，GPU释放；fixed2控制只依赖完整source prior，不依赖估计K，因此允许CPU推断仍在运行时独立启动该控制，避免无谓空置GPU。研究参数不变，不串联两项GPU任务。estimated仍须完成收敛正K，K2则复用等价控制，不强制K1；该排程不表示估计已成功。
