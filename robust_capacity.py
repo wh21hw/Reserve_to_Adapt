@@ -1,14 +1,15 @@
 """Source-anchored capped penalized clustering; a proposed extension, not DP posterior.
 
-J = sum_i min(min_j squared_distance(x_i, mu_j), lambda)
+J = w * sum_i min(min_j squared_distance(x_i, mu_j), lambda)
     + lambda * K_unknown + kappa * sum_known squared_distance(mu_c, anchor_c).
+Default w=1 preserves the original probe. With reference_samples R, w=R/N.
 Noise has assignment -1 and is not counted as a semantic unknown component.
 """
 import numpy as np
 
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
-                        max_candidates=100):
+                        max_candidates=100, reference_samples=None):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -16,18 +17,21 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
             or penalty <= 0 or not np.isfinite(prior_strength) or prior_strength < 0
             or max_steps < 1 or max_candidates < 1):
         raise ValueError('Invalid features or settings')
+    if reference_samples is not None and (not np.isfinite(reference_samples) or reference_samples <= 0):
+        raise ValueError('reference_samples must be finite and positive')
+    weight = 1. if reference_samples is None else float(reference_samples)/len(x)
     # Canonical ordering makes proposal ties independent of incoming row order.
     order = np.lexsort([x[:, j] for j in reversed(range(x.shape[1]))])
     x = x[order]
     c, centers = len(a), a.copy()
-    tolerance = 1e-10 * max(1., len(x)*penalty)
+    tolerance = 1e-10 * max(1., weight*len(x)*penalty)
 
     def distances(left, right):
         return np.maximum((left*left).sum(1)[:, None] + (right*right).sum(1)[None]
                           - 2*left.dot(right.T), 0.)
 
     def objective(mu):
-        return float(np.minimum(distances(x, mu).min(1), penalty).sum()
+        return float(weight*np.minimum(distances(x, mu).min(1), penalty).sum()
                      + penalty*(len(mu)-c) + prior_strength*((mu[:c]-a)**2).sum())
 
     def assign(mu):
@@ -46,8 +50,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         for j in range(len(centers)):
             members = x[ids == j]
             if j < c:
-                if len(members)+prior_strength > 0:
-                    centers[j] = (members.sum(0)+prior_strength*a[j])/(len(members)+prior_strength)
+                if weight*len(members)+prior_strength > 0:
+                    centers[j] = (weight*members.sum(0)+prior_strength*a[j])/(weight*len(members)+prior_strength)
             elif len(members):
                 centers[j] = members.mean(0)
         # Delete a candidate only if the full penalized objective decreases.
@@ -60,7 +64,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
             centers = trials[best]
         # Whole-data residual improvement, not one-point distance threshold.
         residual = np.minimum(distances(x, centers).min(1), penalty)
-        gain = np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
+        gain = weight*np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
         proposal = int(gain.argmax())
         if gain[proposal] > tolerance:
             if len(centers)-c >= max_candidates:
@@ -80,4 +84,5 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 counts=np.asarray([(ids == j).sum() for j in range(len(centers))]),
                 noise_count=int((ids == -1).sum()), converged=converged, history=history,
                 penalty=float(penalty), prior_strength=float(prior_strength),
+                reference_samples=reference_samples, observation_weight=weight,
                 semantic_unknown_count=None)
