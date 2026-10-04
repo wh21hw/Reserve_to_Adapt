@@ -11,3 +11,5 @@ K估计不使用target标签；指标使用target原标签做macro OS*/UNK/HOS�
 后续：先观察fixed4 loss有限/实际epochs，再独立启动estimated；两组完成后下载逐轮指标与launch.json，汇总best/final，不自动重跑或改设置。正常训练用独立shell读取console.log/history.jsonl或exec attach90，不排队kernel检查。
 
 最新进度：exec90仍running；console已输出原训练epoch0（history记为完成epoch1），OS*=0.817、UNK/HOS=0，ce0.859、virtual0.944、ce_ep2.220、adv0.788，loss通过有限值保护。尚处warmup，不能以UNK0判失败或提前调整。collector collect_officehome_capacity_colab.py已准备，要求两组均完整10轮，仅打包普通日志/配置/指标，不传checkpoint或重评价；estimated尚未启动。
+
+后续检查：fixed4已完成4/10轮；发布代码warmiter3配合零基epoch<=3，实际前4轮warmup，第4轮末初始化未知头。console epoch3已得到OS*79.8%、UNK29.1%、HOS42.7%，先前三轮UNK0不代表失败。进程仍running，L4利用率100%，显存13440MiB，未见OOM或非有限loss。该值只是进行中指标，不是最终对照结论；estimated仍未启动。
