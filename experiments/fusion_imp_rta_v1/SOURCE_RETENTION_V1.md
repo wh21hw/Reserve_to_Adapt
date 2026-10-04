@@ -17,3 +17,18 @@ teacher 与 RTA 原始权重相同，无外部模型或额外预训练信息。�
 先进行一次真实batch的损失/梯度/teacher冻结接口检查，再启动3轮新臂；失败保留日志，不自动调系数或延长轮数。完成后决定是否继续容量估计及真实target/RTA；本协议不授权自动扩大网格或70轮矩阵。
 
 运行输出：`/content/imp-runs/source-retention-officehome-v1/seed1/source/`。实现：`scripts/train_source_prior_konly.py` 的可选 retention 参数。
+
+## 完成结果：没有有效改善，不接入长训练
+
+代码实现 `c53176d2`，exec132正常完成3轮、63次更新，无NaN/OOM。CE约2.66982/1.72195/1.16096；方向保留损失0.11964/0.11869/0.11674。真实batch功能检查验证teacher无梯度；未修改目标训练、K、RTA伪标签或预测。
+
+| final3 规则 | 瓶颈 AUROC / AP | backbone AUROC / AP | 已知误报 | 留类覆盖 | 已知分类准确率 |
+| --- | --- | --- | --- | --- | --- |
+| source CE 对照 | .87072 / .69848 | .88468 / .71961 | 3/216 | 14/66 | 94.44% |
+| source CE + 保留约束1 | .87212 / .70486 | .88517 / .72230 | 3/216 | 14/66 | 94.44% |
+
+两个特征层的门控统计均相同；各隐藏类召回也均与各自对照一致。这些小幅排序变化不足以支持有效增量，不挑最好隐藏类、不扫系数、不延长训练或启动70轮RTA。
+
+当前约束只轻微改变训练轨迹，没有恢复原始ImageNet ResNet的31.82%留类覆盖。由于teacher使用eval统计而student使用train统计，初始正则约0.123并不等于已经遗忘的量，不能把它全部解释为参数漂移。下一诊断应区分source训练的权重变化与BatchNorm running统计变化；不是已确认BN为原因。本轮未执行BN重置/冻结，也未更改正式网络。
+
+最终对照含既有CE的完整3轮history及新臂history，结果 `pipeline-results/source-retention-officehome-v1.json`；评分脚本 `scripts/score_source_retention_colab.py`。没有重复checkpoint评分或大文件传输。
