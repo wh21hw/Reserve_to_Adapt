@@ -49,3 +49,21 @@ source-only结果不支持把上述任一门控直接推广为正式自适应K�
 下一可检验假设：仅使用source代理新类别，学习关系分数与原型距离的联合新颖性判断，并按类别划分训练/验证，避免代理未知类既用于学习又用于评分。保持两种分数和模型固定，不根据真实target结果选择权重或阈值；任何门控学习都属于新版本，不能称K-only。先在此冻结控制上验证，而非立即重训RTA或扩预算。
 
 脚本scripts/diagnose_source_novelty_ranking_colab.py；结果pipeline-results/source-novelty-ranking-v1.json。
+
+## Source代理未知联合判别：类别隔离验证
+
+既有C20 backbone未监督隐藏10–14五类；新颖性判别器允许使用其中4个source代理未知类标签，留第5类全部样本不参与判别器学习。逐类轮换5折，不是5个训练seed。训练只用原70%划分的20已知+4代理未知；source已知15%独立于判别器训练作99%分数阈值校准，最后15%已知及留出未知类测试。网络不更新、无真实target输入。
+
+只用关系KL和最近已知距离两个数值特征，StandardScaler只在训练行拟合；LogisticRegression固定C1、class_weight=balanced、liblinear、random_state2026、max_iter1000，不扫参数。已知测试曾参加原backbone监督，隐藏块是事后压力块，因此不能称全面未知/跨域泛化验证。`representation_hidden_supervision=False`不意味着判别器没有代理未知监督。
+
+| 五类折宏平均 | AUROC | AP | 已知误报 | source99阈值隐藏召回 |
+| --- | --- | --- | --- | --- |
+| 关系KL | 0.85784 | 0.35309 | 0.93% | 11.76% |
+| 原型距离 | 0.87864 | 0.41912 | 1.39% | 22.62% |
+| 学习联合分数 | 0.88974 | 0.45396 | 1.11% | 19.19% |
+
+联合分数小幅改善排序，但没有一致改善既定低误报工作点；隐藏13类的AUROC仅0.68287，其余类0.89815–0.96944。不能从五个相关类别折宣称统计显著，也不能挑最好折或改变分位掩盖召回下降。暂不接入RTA长训练，不继续对两分数扫描权重。
+
+下一研究因素应优先检验独立于source分类瓶颈的语义表征，或显式新类别结构学习；此前仅换同一ResNet backbone以及协方差度量的失败控制保留，不能重复当新方案。任何外部预训练表征都需披露额外模型/计算与预训练数据，不冒称原RTA论文对齐或纯容量收益。此处只是研究决策，尚未启动外部表征实验。
+
+脚本scripts/probe_source_proxy_novelty_colab.py；结果pipeline-results/source-proxy-novelty-classfolds-v1.json。
