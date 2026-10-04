@@ -1,0 +1,83 @@
+"""Source-anchored capped penalized clustering; a proposed extension, not DP posterior.
+
+J = sum_i min(min_j squared_distance(x_i, mu_j), lambda)
+    + lambda * K_unknown + kappa * sum_known squared_distance(mu_c, anchor_c).
+Noise has assignment -1 and is not counted as a semantic unknown component.
+"""
+import numpy as np
+
+
+def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
+                        max_candidates=100):
+    x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
+    if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
+            or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
+            or not np.isfinite(a).all() or not np.isfinite(penalty)
+            or penalty <= 0 or not np.isfinite(prior_strength) or prior_strength < 0
+            or max_steps < 1 or max_candidates < 1):
+        raise ValueError('Invalid features or settings')
+    # Canonical ordering makes proposal ties independent of incoming row order.
+    order = np.lexsort([x[:, j] for j in reversed(range(x.shape[1]))])
+    x = x[order]
+    c, centers = len(a), a.copy()
+    tolerance = 1e-10 * max(1., len(x)*penalty)
+
+    def distances(left, right):
+        return np.maximum((left*left).sum(1)[:, None] + (right*right).sum(1)[None]
+                          - 2*left.dot(right.T), 0.)
+
+    def objective(mu):
+        return float(np.minimum(distances(x, mu).min(1), penalty).sum()
+                     + penalty*(len(mu)-c) + prior_strength*((mu[:c]-a)**2).sum())
+
+    def assign(mu):
+        d = distances(x, mu)
+        ids = d.argmin(1)
+        ids[d.min(1) >= penalty] = -1
+        return ids
+
+    pairwise = distances(x, x)
+    history = [dict(step=0, objective=objective(centers), K=0)]
+    converged = False
+    for step in range(1, max_steps+1):
+        before = objective(centers)
+        ids = assign(centers)
+        # Fixed assignments: anchored means minimize the same quadratic objective.
+        for j in range(len(centers)):
+            members = x[ids == j]
+            if j < c:
+                if len(members)+prior_strength > 0:
+                    centers[j] = (members.sum(0)+prior_strength*a[j])/(len(members)+prior_strength)
+            elif len(members):
+                centers[j] = members.mean(0)
+        # Delete a candidate only if the full penalized objective decreases.
+        while len(centers) > c:
+            trials = [np.delete(centers, j, axis=0) for j in range(c, len(centers))]
+            costs = np.asarray([objective(mu) for mu in trials])
+            best = costs.argmin()
+            if costs[best] >= objective(centers)-tolerance:
+                break
+            centers = trials[best]
+        # Whole-data residual improvement, not one-point distance threshold.
+        residual = np.minimum(distances(x, centers).min(1), penalty)
+        gain = np.maximum(residual[:, None]-pairwise, 0.).sum(0)-penalty
+        proposal = int(gain.argmax())
+        if gain[proposal] > tolerance:
+            if len(centers)-c >= max_candidates:
+                raise RuntimeError('Candidate capacity exhausted; count is censored')
+            centers = np.vstack([centers, x[proposal]])
+        after = objective(centers)
+        if after > before+tolerance:
+            raise RuntimeError('Objective increased')
+        history.append(dict(step=step, objective=after, K=len(centers)-c))
+        if before-after <= tolerance:
+            converged = True
+            break
+    ids = assign(centers)
+    original_ids = np.empty_like(ids)
+    original_ids[order] = ids
+    return dict(centers=centers, assignments=original_ids, K=len(centers)-c,
+                counts=np.asarray([(ids == j).sum() for j in range(len(centers))]),
+                noise_count=int((ids == -1).sum()), converged=converged, history=history,
+                penalty=float(penalty), prior_strength=float(prior_strength),
+                semantic_unknown_count=None)
