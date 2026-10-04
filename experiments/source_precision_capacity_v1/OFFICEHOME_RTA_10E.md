@@ -95,4 +95,20 @@ K1去除62已知但同时去除331未知，显示几何互补而非无代价保�
 
 首轮已完成：OS*=80.63570%、UNK/HOS0，ce0.819/virtual0.912/adv0.798均有限；exec108仍running。后续epoch1/batch14已记录16→9候选，说明过滤生效。collector collect_imp_intersection_officehome_colab.py已准备（尚未部署执行），要求baseline和新组各完整10轮，汇总原零基epoch0..9候选保留量、best/final差值，仅打包普通日志配置指标，不传checkpoint。
 
+后续实时检查：exec108仍running，已完成7/10轮。第7轮OS*=60.19783%、UNK=88.40359%、HOS=71.62387%；当前best为完成第5轮，OS*=63.02656%、UNK=85.73847%、HOS=72.64881%。console ce/entropy/virtual/ce_ep/adv有限。训练尚未完成，不将当前best与baseline完整10轮best比较下结论，不因中途波动调整候选规则或预算。下一步等待同预算完成并执行既定collector。
+
+## IMP intersection 完整10轮结果与决策
+
+exec108已done，returncode=0；collector确认两组各epoch1..10且指标有限，无checkpoint重评价。普通日志/配置/候选计数/比较结果已下载到pipeline-results/officehome-imp-intersection-10e-v3-results.zip并解压到同名目录（去掉-results.zip）。两组best均为第10轮，因此best与final相同。
+
+| 设置（K1/source3/seed1/Q29/10轮） | best/final epoch | OS* | UNK | HOS |
+| --- | --- | --- | --- | --- |
+| 原RTA候选筛选 | 10 | 66.45630 | 85.74736 | 74.87931 |
+| 原候选 ∩ 初始IMP未知分配 | 10 | 67.15395 | 84.63407 | 74.88749 |
+| intersection−baseline，百分点 | — | +0.69765 | −1.11330 | +0.00818 |
+
+正式ce_ep阶段第5–10轮保留原候选约59.83%–64.15%。筛选生效，但HOS近乎不变：当前证据不支持扩大该版本至70轮或宣称改进。单seed短程、target标签选best；已记录warmup筛选改变CLS二次前向的BatchNorm统计，因此不能将细小差异全部归因于候选质量。
+
+研究更新：冻结初始几何与RTA关系筛选求交，虽在快照诊断下降低误选已知比例，也同时丢失约三分之一真实未知候选；训练结果符合已知/未知权衡变化，未证明泛化收益。不可将“探针候选更纯”直接等同于“方法更好”。下一步应转向解释IMP结构如何约束未知槽的学习，而非继续调交集阈值、扩大K或扩预算。特别是K1实验只能测试拒识候选，不能验证多个IMP簇到多个未知槽的身份绑定；多槽绑定需独立版本和匹配预算，不能称K-only。
+
 实现范围说明：与原版一样，warmup也计算ce_ep但系数为0。本版本过滤在所有轮次的ce_ep样本选取中生效；由于该分支重新经过训练模式分类器，候选变化还可能影响BatchNorm运行统计，不能声称两组warmup数值路径完全相同。这是样本选择实现的伴随效应，不是另加loss；本次保持已声明版本不在训练中改规则，结果解释时披露。
