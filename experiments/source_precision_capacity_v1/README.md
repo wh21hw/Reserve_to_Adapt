@@ -17,3 +17,5 @@
 最新状态：三个target分片均上传成功，恢复脚本已正常结束，restoration.json确认source 1785张/C25、target 4357张/65类。已在既有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o启动source监督3轮（seed1，后台exec63），输出/content/imp-runs/source-precision-officehome-v1/seed1/source。尚未完成source特征提取、尚未估计OfficeHome K，RTA对照尚未启动。target标签不进入source训练或K估计；65类仅用于确认任务列表口径。
 
 随后exec63已正常完成（returncode0），三个source epoch loss为2.895804/1.905485/1.342651。冻结特征已保存；独立启动固定规则推断exec65，脚本infer_precision_officehome_colab.py仅使用source、source_labels、target特征，结果保存seed1/capacity.json。未根据此任务调规则，尚未启动RTA对照。
+
+外部验证结果：exec65正常结束并收敛（7步），OfficeHome seed1估计K=0；λ=0.5512014144，R=49.44，target4357张中noise116（2.66%），其余4241张被25个已知中心吸收。结果pipeline-results/source-precision-officehome-v1-capacity.json。该结果否定目前规则可直接稳定跨任务使用的假设，不强制K1，也不在K0下启动需要未知输出槽的RTA。下一步在无target标签的冻结几何中区分阈值覆盖过宽与整体收益/建簇成本问题；不把真实40个未知语义数作为调参目标。
