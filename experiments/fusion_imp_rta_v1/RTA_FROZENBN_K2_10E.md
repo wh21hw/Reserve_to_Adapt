@@ -9,3 +9,7 @@
 完成后报告四组best/final OS*/UNK/HOS及同epoch差值；分别计算BN内的容量对照、同K下BN对照，不把双因素差异伪称单因素收益。best仍target标签选epoch，单seed短程探索，不称显著性或真实未知语义数恢复。实验是看到前三组结果后的模块研究，不称无偏预声明外部验证。若结果不支持容量收益，也保留，不调整K或延长预算寻找好峰值。
 
 正式ResNet不变、DINO只诊断。无新loss、IMP未知头初始化、结构KL或动态改变K；当前推断一次K后固定。三数据集完整外部验证和原论文预算对齐仍未完成。
+
+实现e0fdb9eb，collector ecdf5b21。已单独启动后台exec156，现有L4端点gpu-l4-s-kkb-ass1a1-2xg3a949wz74o；启动日志确认53个encoder BN模块保持统计、affine trainable/head unchanged，以及C25/K2/Q29和同一source-final.pt。当前running，尚无最终结论；没有重新训练source、估计K或重复前三组。
+
+collector scripts/collect_bn_capacity_cross_colab.py已部署，仅在本arm完整10轮后执行。它读取四组已有history，列出同BN下K差值和同K下BN差值、final交互项，并在新arm结束时读取一次统计buffers确认BN因素生效，不做前向或重新评价。输出/content/officehome-bn-capacity-cross-10e-v1-results.zip。
