@@ -15,3 +15,29 @@
 collector scripts/collect_bn_capacity_cross_colab.py已部署，仅在本arm完整10轮后执行。它读取四组已有history，列出同BN下K差值和同K下BN差值、final交互项，并在新arm结束时读取一次统计buffers确认BN因素生效，不做前向或重新评价。输出/content/officehome-bn-capacity-cross-10e-v1-results.zip。
 
 论文口径更正：本轮只读PDF复核确认OfficeHome K4，按论文C+K目标聚类应为Q29；此前两者“未确认”的记录已由PAPER_SETTING_CORRECTION.md更正。K2 arm仍保持Q29以隔离头容量，不在运行中改成论文绑定式Q27。完整预算及发布代码/论文公式差异仍未解决，不能声称严格论文复现。
+
+## 四组完成
+
+exec156正常done，history恰好10轮，loss有限。collector bac74e6c正常收集四组；新hold/K2 encoder统计buffers与prior完全相同，因子生效。该确认不做模型前向或重新评价。最终hold/K2日志未观察到GMM收敛警告；hold/K4记录1条，不把消息数解释为失败拟合数。
+
+| RTA BN / K | best HOS%（epoch） | final OS*% | final UNK% | final HOS% |
+| --- | ---: | ---: | ---: | ---: |
+| 更新 / 固定4 | 73.0093（10） | 69.1347 | 77.3440 | 73.0093 |
+| 更新 / 估计2 | 74.5557（7） | 73.2505 | 75.8897 | 74.5467 |
+| 保持 / 固定4 | 75.4183（9） | 72.9730 | 78.0010 | 75.4032 |
+| 保持 / 估计2 | 76.6334（10） | 69.4019 | 85.5471 | 76.6334 |
+
+同epoch10的单因素差值：
+
+- 更新BN中K2−K4：OS*+4.1158pp、UNK−1.4543pp、HOS+1.5374pp。
+- 保持BN中K2−K4：OS*−3.5711pp、UNK+7.5462pp、HOS+1.2301pp。
+- 固定K4中保持−更新BN：OS*+3.8383pp、UNK+0.6569pp、HOS+2.3939pp。
+- 估计K2中保持−更新BN：OS*−3.8486pp、UNK+9.6574pp、HOS+2.0866pp。
+
+因此，估计K2在两个BN策略下的final HOS均较固定K4高，但改善来源不同；保持BN/K2显著更多地拒识未知，也牺牲已知准确率。这里“更多”是数值描述，不是统计显著性。容量收益的final HOS交互项为−.3073pp；仅为单seed差分描述，不做显著性检验或独立可加贡献宣称。
+
+保持BN下，K2第5/6轮HOS反而低于K4，第7–10轮才高于K4；不能说所有轮次都支配对照。best选择使用target标签，四组全量记录保留，不选较有利的一组当均值。这个容量规则得到K2不是target标签调参结果，也不代表找回OfficeHome真实40个未知类。
+
+下一步应冻结当前候选定义，用其他任务检验容量与已知/未知取舍，而非继续在OfficeHome搜K、阈值或seed。完整预算稳定性、多seed及VisDA仍未完成；保持BN是单独的训练策略版本，不把联合收益称为仅自适应K。四组共同增加source CE3轮，不能将其成绩直接当原论文无此阶段的预算对等结果。
+
+结果已下载：pipeline-results/officehome-bn-capacity-cross-10e-v1-results.zip、pipeline-results/officehome-bn-capacity-cross-10e-v1-summary.json；含四组普通配置、完整log/history与单因素差值。只有新增arm被训练，前三组全部复用。
