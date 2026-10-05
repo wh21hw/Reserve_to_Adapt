@@ -59,3 +59,13 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 在恢复材料保存之后，全量CPU容量推断exec18已启动；固定K2十轮控制独立shell5已启动，已观察TRAIN START。二者共享上述source prior，容量仍使用原source_counts，未推广效果不佳的domain_balanced。当前尚无K结果或完整RTA epoch成绩。estimated组仍等待收敛正K；K2复用控制、K0不强制K1。新runtime保持gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj，不启动第二项GPU训练。
 
 固定K2首轮history已写出：epoch1，OS*=60.873605%、UNK=0%、HOS=0%，累计1570.38秒；控制台CE0.059、virtual0.063等损失有限。此时处于原版预热阶段，未知头尚未完成warm-end初始化，不能据首轮UNK0认定最终拒识失败。继续既定10轮，不调损失/seed/预算。CPU容量进程22657运行约26分钟且持续计算，仍未取得K。
+
+第2轮已完整写出history：OS*=58.906786%、UNK=0%、HOS=0%，累计2825.88秒。已知类指标较首轮下降1.96682个百分点，但仍属预热阶段；不以目标指标改参数、提前停训或扩预算。容量进程运行约48分钟、持续CPU计算，尚未写出K结果。
+
+## 全量容量与固定组完成
+
+容量已成功结束（exec18 returncode0），耗时5058.78秒，63步收敛，K=8，无target标签。六个已知中心吸收target数为[183,25,211,871,32,138]，八个候选未知簇支持数为[11591,5970,10206,5134,7775,3512,6897,2770]，noise73。约97.2%的target被分到新簇，这提示源特征下的域偏移/已知先验适配需要诊断，不能把K8直接称为真实未知数。容量普通JSON已下载 pipeline-results/visda-capacity-restored-20261005.json。
+
+固定K2完整10轮正常结束，耗时12920.11秒。目标标签oracle best为第4轮：OS*=53.550094%、UNK=32.632558%、HOS=40.552861%；第10轮final为OS*=0.211454%、UNK=99.907958%、HOS=0.422014%。从第5轮开始明显转向几乎全部拒识，说明固定小K也存在后期塌缩，不能归因于增加K。全部10轮history已下载 pipeline-results/visda-fixed2-restored-20261005-history.jsonl；没有重评checkpoint或事后换seed。
+
+随后在GPU固定组结束后，estimated K8独立shell5已启动，已观察TASK_KONLY_START C6/K8/Q8、53个encoder BN统计保持。共享同一个source3 prior、seed1和10轮预算，仍不传簇身份、不改损失/筛选/预测。当前尚无estimated完整轮次，必须等待后再判断容量改动能否改善或只是同类塌缩；不提前将失败控制替换成更易出好成绩的协议。
