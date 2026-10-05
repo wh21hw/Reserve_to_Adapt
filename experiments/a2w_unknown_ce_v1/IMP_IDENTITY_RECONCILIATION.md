@@ -46,3 +46,7 @@ artifact已保存但未输入任何训练。匹配在source3空间完成，后�
 ## 实际保存
 
 运行根目录/content/imp-runs/a2w-unknown-ce-10e-v1下两个probe目录；无标签clusters.npz和普通报告已实际复制到Drive OSDA/runs/a2w-unknown-ce-10e-v1。CPU推断结果下载到pipeline-results/a2w-imp-structure-{capacity,posthoc}-v1.json和a2w-identity-reconciliation-posthoc-v1.json。已有完整RTA控制/关闭CE结果均保留，不重复训练或重评checkpoint。
+
+2026-10-05后续：两个K8 arm的隔离launcher和日志collector已准备（scripts/run_a2w_reconciled_identity_colab.py、collect_a2w_reconciled_identity_colab.py），默认prepare-only，明确--run才会训练。WSL Python已做一次AST语法检查，尚未在真实runtime编译身份patch或跑训练。用户已同意后续做实验，但要求先关闭所有实例节省积分；当前不启动这两组。之后恢复同一source checkpoint与无标签artifact，不重新训练source或根据目标标签改K。
+
+当前GPU策略由用户更新为能用T4就用T4，不再强制至少L4。恢复时先依据实际显存决定设备；这会与历史L4结果产生环境差异，需披露。K8两组必须用同一种GPU，不能一组T4一组L4后声称干净消融；若T4不够，不通过偷偷减batch改变研究设置。
