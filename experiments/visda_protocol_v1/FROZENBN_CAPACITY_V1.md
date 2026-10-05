@@ -75,3 +75,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 进一步几何诊断（scripts/diagnose_visda_geometry_colab.py），仅重建既定source70%anchors并计算已保存特征的距离，不重新聚类/训练。source radius=0.960186；source校准超半径0.30088%，target已知14.21250%、未知45.46182%。target已知最近source中心身份准确率64.81872%；事后距离区分未知AUROC=0.77166（诊断而非拒识成绩）。六个已知中心平方位移仅1.70e-8至9.97e-6。相比最终96.1%已知进入新簇，不能把结果简单解释成绝大多数已知都超出生簇半径；当前带source类计数先验的全局gain建簇目标偏好新簇拟合target结构，而已知中心基本未动。弱先验C20结果已有负证据，不据此自动推广或按target标签挑阈值。远端capacity-geometry-diagnostic.json已保存并输出完整报告；本地下载两次fetch failed，尚未确认取得本地JSON副本，数值证据保留在本段及工具输出。
 
 estimated K8第1轮完整写出：OS*=61.446067%、UNK=0%、HOS=0%，elapsed1569.51秒。训练进程78192仍存在，继续第2轮；第一轮仍为warmup，不能当最终拒识失败。新共享偏移选项仅用于独立source-only CPU代理，当前部署的VisDA聚类/RTA没有应用该改动。代理报告已成功下载pipeline-results/c20-shared-shift-probe-v1.json，详细结果另记SHARED_SHIFT_PROXY_V1.md。
+
+estimated第2轮已完整写出：OS*=60.424391%、UNK=0%、HOS=0%，累计2830.79秒；控制台ce0.032、virtual0.033、ce_ep3.706、adv1.100有限，shell5继续running。当前仍是原版warmup，未知槽尚不能据此判定最终无效。维持十轮、seed1、K8/Q8、共享prior，不根据这两轮指标调参或扩预算。
