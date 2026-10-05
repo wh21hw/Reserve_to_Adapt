@@ -50,3 +50,35 @@ def infer_protected_known(source, labels, source_logits, target, target_logits,
     return dict(protected_known=protected, known_identity=nearest,
                 agreement=agreement, radii=radii, confidence=confidence,
                 radius_quantile=radius_quantile, confidence_quantile=confidence_quantile)
+
+
+def cluster_supported_known(guard, assignments, minimum_fraction=.5):
+    """Require a strict majority of the entire cluster to support one identity.
+
+    A candidate cluster is NOT automatically unknown or known. Noise never gets
+    cluster support. Output only filters existing eligible points, not labels
+    previously uncertain members by majority propagation.
+    """
+    ids = np.asarray(assignments, dtype=np.int64)
+    eligible = np.asarray(guard['protected_known'], dtype=bool)
+    identity = np.asarray(guard['known_identity'], dtype=np.int64)
+    if ids.shape != eligible.shape or identity.shape != ids.shape:
+        raise ValueError('Cluster/guard ordering mismatch')
+    if not .5 <= minimum_fraction < 1:
+        raise ValueError('Require unambiguous majority')
+    keep = np.zeros(len(ids), dtype=bool)
+    details = []
+    for cluster in np.unique(ids[ids >= 0]):
+        members = ids == cluster
+        votes = identity[members & eligible]
+        if len(votes) == 0:
+            continue
+        counts = np.bincount(votes)
+        winner = int(counts.argmax())
+        fraction = float(counts[winner] / members.sum())
+        supported = fraction > minimum_fraction
+        if supported:
+            keep |= members & eligible & (identity == winner)
+        details.append(dict(cluster=int(cluster), members=int(members.sum()),
+                            identity=winner, fraction=fraction, supported=supported))
+    return keep, details
