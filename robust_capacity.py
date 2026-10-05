@@ -12,7 +12,7 @@ import numpy as np
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
                         max_candidates=100, reference_samples=None, birth_order='after_update',
                         known_centers_fixed=False, birth_penalty=None, proposal_block_size=None,
-                        shared_shift_precision=None):
+                        shared_shift_precision=None, shared_shift_warm_start=False):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -29,6 +29,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     if shared_shift_precision is not None and (not np.isfinite(shared_shift_precision)
             or shared_shift_precision <= 0 or known_centers_fixed):
         raise ValueError('Shared shift requires positive precision and movable known centers')
+    if not isinstance(shared_shift_warm_start, bool) or (shared_shift_warm_start and shared_shift_precision is None):
+        raise ValueError('Shared-shift warm start requires enabled shared shift')
     shift = np.zeros(a.shape[1], dtype=np.float64)
     cost = float(penalty if birth_penalty is None else birth_penalty)
     if not np.isfinite(cost) or cost <= 0:
@@ -79,13 +81,9 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 raise RuntimeError('Candidate capacity exhausted; count is censored')
             return np.vstack([mu, x[proposal]])
         return mu
-    history = [dict(step=0, objective=objective(centers), K=0)]
-    converged = False
-    for step in range(1, max_steps+1):
-        before = objective(centers)
-        if birth_order == 'before_update':
-            centers = propose(centers)
-        ids = assign(centers)
+    def update(mu):
+        nonlocal shift
+        ids = assign(mu)
         if shared_shift_precision is not None:
             # Exact joint minimizer of the known-center/shift quadratic for
             # fixed assignments. Empty anchored classes follow the shared shift.
@@ -96,15 +94,41 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
             effective = fractions*mass
             shift = (fractions[:, None]*(sums-mass[:, None]*a)).sum(0)/(shared_shift_precision+effective.sum())
         # Fixed assignments: anchored means minimize the same quadratic objective.
-        for j in range(len(centers)):
+        for j in range(len(mu)):
             members = x[ids == j]
             if j < c:
                 if known_centers_fixed:
                     continue
                 if weight*len(members)+prior[j] > 0:
-                    centers[j] = (weight*members.sum(0)+prior[j]*(a[j]+shift))/(weight*len(members)+prior[j])
+                    mu[j] = (weight*members.sum(0)+prior[j]*(a[j]+shift))/(weight*len(members)+prior[j])
             elif len(members):
-                centers[j] = members.mean(0)
+                mu[j] = members.mean(0)
+        return mu
+
+    # Separate initialization ablation: optimize the identical capped objective
+    # with K=0 before permitting births. Unknowns remain unlabeled and can bias
+    # this initialization; this is not a trusted-known alignment procedure.
+    warm_history = []
+    if shared_shift_warm_start:
+        warm_history.append(dict(step=0, objective=objective(centers), K=0))
+        for warm_step in range(1, max_steps+1):
+            before = objective(centers)
+            centers = update(centers)
+            after = objective(centers)
+            if after > before+tolerance:
+                raise RuntimeError('Warm-start objective increased')
+            warm_history.append(dict(step=warm_step, objective=after, K=0))
+            if before-after <= tolerance:
+                break
+        else:
+            raise RuntimeError('Shared-shift initialization did not converge')
+    history = [dict(step=0, objective=objective(centers), K=0)]
+    converged = False
+    for step in range(1, max_steps+1):
+        before = objective(centers)
+        if birth_order == 'before_update':
+            centers = propose(centers)
+        centers = update(centers)
         # Delete a candidate only if the full penalized objective decreases.
         while len(centers) > c:
             trials = [np.delete(centers, j, axis=0) for j in range(c, len(centers))]
@@ -136,4 +160,6 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 proposal_block_size=proposal_block_size,
                 shared_shift_precision=shared_shift_precision,
                 shared_shift=shift.tolist(),
+                shared_shift_warm_start=shared_shift_warm_start,
+                warm_start_history=warm_history,
                 semantic_unknown_count=None)
