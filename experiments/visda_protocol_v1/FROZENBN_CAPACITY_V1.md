@@ -53,3 +53,7 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 最终持久化确认：Drive API列出train.tar，ID1J3HiW5HDT_S_ciuvMeffYdVkWS52JCmh、大小7698031104；validation.tar，ID1UTxuO7arJ2tqy2iwfjAmKhHRZcKpANqn、大小1023758336。两包均已云端可见，可供新runtime恢复，不仅是DriveFS待上传文件。target准备完整55388图，原source6类79765图；散图仅存Colab本地。随后source3独立启动；新容量与RTA未启动。
 
 新source为exec14，已观察第1轮batch400平均CE0.396204，进程仍running，无新目标成绩。完整RTA结果收集器scripts/collect_visda_capacity_colab.py已准备，只读普通日志报告best/final及同预算差值；K2复用等价固定组，不制造第二个观察；K0明确估计组不运行/失败，不强制K1。一次指标接口检查通过，尚未执行真实VisDA收集、不前向checkpoint。source完成后必须保存模型/特征，然后容量及固定2控制按既定独立排程进行。
+
+恢复阶段已完整完成：exec14 三轮 source CE 分别为 0.244433、0.111253、0.081264，最终源训练准确率 97.4569%，共3738次更新；source/target特征为79765×256与55388×256，不含target标签。这不是目标域性能。exec15完成含模型与特征的恢复归档，已实际下载到本地 pipeline-results/visda-frozenbn-source3-recovery-20261005.zip（214.9 MiB），不同于旧日志-only包；未做hash或checkpoint重评。
+
+在恢复材料保存之后，全量CPU容量推断exec18已启动；固定K2十轮控制独立shell5已启动，已观察TRAIN START。二者共享上述source prior，容量仍使用原source_counts，未推广效果不佳的domain_balanced。当前尚无K结果或完整RTA epoch成绩。estimated组仍等待收敛正K；K2复用控制、K0不强制K1。新runtime保持gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj，不启动第二项GPU训练。
