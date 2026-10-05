@@ -71,3 +71,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 随后在GPU固定组结束后，estimated K8独立shell5已启动，已观察TASK_KONLY_START C6/K8/Q8、53个encoder BN统计保持。共享同一个source3 prior、seed1和10轮预算，仍不传簇身份、不改损失/筛选/预测。当前尚无estimated完整轮次，必须等待后再判断容量改动能否改善或只是同类塌缩；不提前将失败控制替换成更易出好成绩的协议。
 
 事后标签组成诊断（scripts/diagnose_visda_capacity_colab.py）读取已完成的capacity分配，不重新拟合、不前向checkpoint、不反馈训练。已知target34146图中32816（96.10496%）被分进新簇，1298分进已知中心、32为noise；未知target21242图中21039（99.04435%）分进新簇，162分进已知、41为noise。原始类别身份仅在此诊断使用，K/阈值/训练不使用。结果证明“新簇=新语义类别”在这个跨域特征空间不成立；域偏移是合理解释，但具体机制仍需诊断，不能据标签删簇或选阈值。estimated K8继续原设置，暂无完整轮次。完整诊断保存capacity-composition-diagnostic.json并下载pipeline-results/visda-capacity-composition-20261005.json。
+
+进一步几何诊断（scripts/diagnose_visda_geometry_colab.py），仅重建既定source70%anchors并计算已保存特征的距离，不重新聚类/训练。source radius=0.960186；source校准超半径0.30088%，target已知14.21250%、未知45.46182%。target已知最近source中心身份准确率64.81872%；事后距离区分未知AUROC=0.77166（诊断而非拒识成绩）。六个已知中心平方位移仅1.70e-8至9.97e-6。相比最终96.1%已知进入新簇，不能把结果简单解释成绝大多数已知都超出生簇半径；当前带source类计数先验的全局gain建簇目标偏好新簇拟合target结构，而已知中心基本未动。弱先验C20结果已有负证据，不据此自动推广或按target标签挑阈值。结果已下载pipeline-results/visda-capacity-geometry-20261005.json。
