@@ -27,3 +27,13 @@ source launcher：scripts/run_visda_frozenbn_source_colab.py（1fd9885f）；训
 排程修正（未见VisDA K或目标成绩前）：OfficeHome结构10轮已完整结束，GPU释放；fixed2控制只依赖完整source prior，不依赖估计K，因此允许CPU推断仍在运行时独立启动该控制，避免无谓空置GPU。研究参数不变，不串联两项GPU任务。estimated仍须完成收敛正K，K2则复用等价控制，不强制K1；该排程不表示估计已成功。
 
 fixed2已独立shell4启动，已观察train_visda_frozenbn_rta_entry.py进程及TASK_KONLY_START C6/K2/Q8，encoder BN policy53模块保持；路径/content/imp-runs/visda-frozenbn-capacity-10e-v1/fixed2/visda-synthetic2real_seed1。尚无完整epoch指标。CPU容量仍为exec166，独立shell3可检查文件/进程；不得再启动其他GPU训练与本控制竞争。
+
+## 2026-10-05：runtime 丢失与恢复检查
+
+CLI runtime list 已确认没有活跃 runtime，旧 shell4 不存在。现有本地 exec166.ndjson 只有 VISDA_CAPACITY_START，没有 K 或完成事件；因此容量推断状态记为中断/结果未取得，不能宣称收敛。fixed2 只确认启动过，尚无取得的完整 epoch 指标，不能作为已完成实验。
+
+本地 visda-frozenbn-source3-v1-results.zip 保存 source3 的配置、日志和 summary，证明预热及特征提取曾完成，但收集器没有打包 source-final.pt 或 features.npz。两者此前保存在临时 /content；目前没有可用恢复副本的证据。Drive 授权有效，但列 OSDA 文件夹受共享 OAuth 客户端 Drive 查询限额阻止；尚未完成云盘恢复检查，不能断言云盘绝无副本。没有自动创建 runtime、重跑训练或改研究参数。
+
+工程修正已准备 scripts/persist_visda_source_stage_colab.py：未来 source 阶段完成后、容量/RTA 启动前，将 source checkpoint、features、普通日志及协议列表复制到已挂载 MyDrive 的新目录，最后写 recovery-complete.json。无 hash、无 checkpoint 重评、不覆盖旧文件；中断复制不能当完成备份。该脚本尚未在真实 runtime 执行，不能追回已经丢失的数据；它也不提供 RTA 优化器续训，图片和运行环境仍须另行恢复。是否恢复或重跑须在检查现有云盘材料后决定。
+
+后续读取云盘 OSDA 根目录成功，包含 datasets/pretrained/runs；datasets 成功列出 OfficeHome 目录、Office31 archive及旧 manifest，未在该目录列出 VisDA。runs 列表仍因共享客户端查询限额失败，不能排除其下存在恢复材料。新 runtime/重跑尚待用户确认；仅本地准备先验总权重消融，未对正在恢复的 VisDA 研究设置应用修改。

@@ -49,11 +49,14 @@ def estimate_capacity(source, source_labels, target):
     return result, settings
 
 
-def estimate_source_cost_capacity(source, source_labels, target, proposal_block_size=None):
+def estimate_source_cost_capacity(source, source_labels, target, proposal_block_size=None,
+                                  prior_mass_mode='source_counts'):
     """Previously declared source-calibrated birth cost; target labels not accepted."""
     source=np.asarray(source,dtype=np.float64)
     target=np.asarray(target,dtype=np.float64)
     labels=np.asarray(source_labels)
+    if prior_mass_mode not in ('source_counts', 'domain_balanced'):
+        raise ValueError('Unknown prior_mass_mode')
     if proposal_block_size is not None and (isinstance(proposal_block_size,bool)
             or not isinstance(proposal_block_size,(int,np.integer)) or proposal_block_size<1):
         raise ValueError('proposal_block_size must be a positive integer or None')
@@ -85,13 +88,21 @@ def estimate_source_cost_capacity(source, source_labels, target, proposal_block_
             gain[start:end]=reference/len(known)*np.maximum(
                 residual[:,None]-distance(known,known[start:end]),0.).sum(0)
     cost=max(float(gain.max())*(1+1e-6),1e-8)
-    result=fit_robust_capacity(target,anchors,radius,prior_strength=counts,reference_samples=reference,
+    # Default reproduces the original objective. The experimental mode changes
+    # only anchor precision: total source prior mass equals target effective R.
+    # Keep radius, source-calibrated cost and proposal order unchanged.
+    prior = counts if prior_mass_mode == 'source_counts' else counts.astype(np.float64)*reference/counts.sum()
+    result=fit_robust_capacity(target,anchors,radius,prior_strength=prior,reference_samples=reference,
         birth_order='before_update',birth_penalty=cost,proposal_block_size=proposal_block_size)
     if not result['converged']:raise RuntimeError('Unconverged capacity estimate')
-    settings=dict(version='source-calibrated-birth-cost-v1',C=len(classes),K=result['K'],
+    settings=dict(version=('source-calibrated-birth-cost-v1' if prior_mass_mode == 'source_counts'
+        else 'source-calibrated-birth-cost-domain-balanced-v1'),C=len(classes),K=result['K'],
         calibration_seed=2026,anchor_rows=len(train),birth_cost_rows=len(calibration),
         source_rows=len(source),target_rows=len(target),lambda_radius=radius,birth_cost=cost,
         source_prior_counts=counts.tolist(),reference_samples=reference,known_centers_fixed=False,
+        prior_mass_mode=prior_mass_mode,source_prior_precision=np.asarray(prior).tolist(),
+        source_prior_total_mass=float(np.sum(prior)),target_effective_mass=reference,
+        prior_to_target_mass_ratio=float(np.sum(prior)/reference),
         birth_order='before_update',target_labels_used=False,semantic_unknown_count=None,
         proposal_block_size=proposal_block_size,
         zero_capacity_policy='Return zero; never force K1',
