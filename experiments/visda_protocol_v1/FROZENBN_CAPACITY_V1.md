@@ -85,3 +85,18 @@ estimated第4轮完整写出：OS*=55.323466%、UNK=36.523898%、HOS=43.999709%�
 estimated第5轮完整history：OS*=23.557162%、UNK=96.436093%、HOS=37.864806%，累计6605.44秒。已知准确率相对第4轮明显下降、拒识升高，与fixed2的后期过度拒识方向一致；增加K并未消除该趋势，仍不能仅由一轮诊断具体损失或门控因果。训练损失有限、shell5仍running；独立容量exec34仍running，未产生共享偏移K。继续原定十轮，不提前停止或改参数。Drive挂载和两份最终tar文件实际存在，后续runtime应复用缓存。
 
 estimated第6轮完整history：OS*=15.756243%、UNK=99.053755%、HOS=27.187789%，累计7871.21秒，仍运行中。过度拒识进一步加重，目前best仍为第4轮43.999709%；增加K8没有消除固定2已观察到的后期失衡，但尚不证明具体训练模块的因果。完整十轮预算不变、损失有限，独立共享偏移exec34尚未输出K。
+
+## 完整十轮结果（2026-10-05）
+
+两个arm均正常结束，收集器确认每组恰好10轮。普通日志、配置和汇总已实际下载到 `pipeline-results/visda-frozenbn-capacity-10e-v1-results.zip`，独立汇总为 `pipeline-results/visda-capacity-10e-summary.json`。不重复评估checkpoint。
+
+| arm | K | best epoch | best OS* / UNK / HOS (%) | final OS* / UNK / HOS (%) |
+| --- | --- | --- | --- | --- |
+| 固定容量 | 2 | 4 | 53.5501 / 32.6326 / 40.5529 | 0.2115 / 99.9080 / 0.4220 |
+| IMP估计容量 | 8 | 4 | 55.3235 / 36.5239 / 43.9997 | 0.1055 / 99.8934 / 0.2108 |
+
+Best为target标签选择epoch；同一个预声明seed1，没有三seed统计或挑seed。best HOS差+3.44685个百分点，final差−0.21120个百分点。共同source3/frozen encoder BN、Q8、ResNet50与十轮预算；不是完整论文VisDA协议复现，backbone/原论文预算口径仍未解决。
+
+结论：增加容量短程曾改善best，但没有防止后期已知→未知塌缩，不能作为完整自适应unknown成功。下一步定位表示与头/伪标签接口，而不是扩大K或参数网格。原共享偏移CPU支线也已结束且有负结果，详见SHARED_SHIFT_PROXY_V1.md；此前本文件的“仍运行中”均为历史状态。
+
+固定K2 final10是预声明的失败诊断节点，不按target指标挑选。一次完整特征缓存提取已在原训练结束后启动（shell5），source首批前向成功；不训练、不拟合K、不与GPU训练并发。缓存完成与具体几何结论尚待实际输出。
