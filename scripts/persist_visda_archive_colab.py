@@ -35,7 +35,8 @@ else:
 marker = destination/(args.domain+'-saved.json')
 if not marker.exists():
     with marker.open('x') as stream:
-        json.dump(dict(complete=True, archive=final.name, bytes=expected,
+        json.dump(dict(copy_complete=True, archive=final.name, bytes=expected,
+            cloud_upload_confirmation='Pending separate Drive API visibility; DriveFS writes may upload asynchronously',
             source_url='http://csr.bu.edu/ftp/visda17/clf/'+final.name,
             terms='Noncommercial research/education; no redistribution'), stream, indent=2)
-print('VISDA_ARCHIVE_PERSISTED', str(final), flush=True)
+print('VISDA_ARCHIVE_COPY_COMPLETE; cloud upload visibility still needs confirmation', str(final), flush=True)

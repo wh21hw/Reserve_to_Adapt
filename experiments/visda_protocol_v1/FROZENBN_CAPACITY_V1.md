@@ -45,3 +45,7 @@ CLI runtime list 已确认没有活跃 runtime，旧 shell4 不存在。现有�
 VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容量尚未恢复完成。不串联未确认阶段，不将旧源预热日志当新模型。原source3/seed1/ResNet50/frozenBN、Q8、RTA10预算均不变，恢复模型不宣称与丢失模型逐位一致。Drive 挂载 exec5授权超时；收集器新增显式 --include-recovery，完成新source后须下载含source-final.pt/features.npz的恢复包，再启动容量或RTA。默认普通日志包不变；不hash、不重评模型，图片/环境单独恢复。本阶段没有开启新的参数网格或新方法训练。
 
 用户追问是否每次重新下载后，补充数据长期保存路径：MyDrive/OSDA/datasets/visda-syn2real-v1/{train,validation}.tar。scripts/persist_visda_archive_colab.py 单独保存一个已完整下载的压缩包，先复制 .partial、成功后改名，保留既有或中断副本，不hash、不覆盖旧数据。两个 download 脚本在 /content 尚无文件且 Drive 缓存可用时优先复制，不从官网重复下载；未来 runtime 应先挂载 Drive 再恢复数据。当前下载仍使用同一exec10，不中途重启；上述保存尚未执行，Drive挂载仍需新的授权。不得把“保存脚本已准备”当成“8.7 GB数据已经持久保存”。
+
+恢复进展：train exec10完整结束（7698031104 bytes），源6类解包完成79765图；validation 独立shell6下载完整结束（1023758336 bytes），target准备已启动。用户完成授权，挂载exec11正常结束。train复制exec12正常结束，挂载目录中最终文件存在且大小正确，云端目录ID1M-8hf4AXd3wnU3iSOJR5S2QDCQnPqoYJ；第一次Drive API列表仅看到train-saved.json，尚未看到train.tar，后续查询被共享客户端限流。DriveFS可能异步上传，不能把文件系统复制完成当云端已经可恢复。validation复制为exec13。新source/RTA/容量均未启动；先等大文件在Drive API可见，再开始源预热。
+
+保存器完成标记的语义修正：未来版本写copy_complete而非complete，明确cloud_upload_confirmation尚待独立确认；不改写既有标记以伪造状态。本次旧train/validation标记中的complete只证明挂载目录复制结束，最终云端可用性仍需API文件出现。没有做hash或重复数据检查；这是为了避免runtime回收前尚未上传完导致再次重下。
