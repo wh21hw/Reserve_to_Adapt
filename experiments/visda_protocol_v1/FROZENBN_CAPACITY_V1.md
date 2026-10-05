@@ -49,3 +49,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 恢复进展：train exec10完整结束（7698031104 bytes），源6类解包完成79765图；validation 独立shell6下载完整结束（1023758336 bytes），target准备已启动。用户完成授权，挂载exec11正常结束。train复制exec12正常结束，挂载目录中最终文件存在且大小正确，云端目录ID1M-8hf4AXd3wnU3iSOJR5S2QDCQnPqoYJ；第一次Drive API列表仅看到train-saved.json，尚未看到train.tar，后续查询被共享客户端限流。DriveFS可能异步上传，不能把文件系统复制完成当云端已经可恢复。validation复制为exec13。新source/RTA/容量均未启动；先等大文件在Drive API可见，再开始源预热。
 
 保存器完成标记的语义修正：未来版本写copy_complete而非complete，明确cloud_upload_confirmation尚待独立确认；不改写既有标记以伪造状态。本次旧train/validation标记中的complete只证明挂载目录复制结束，最终云端可用性仍需API文件出现。没有做hash或重复数据检查；这是为了避免runtime回收前尚未上传完导致再次重下。
+
+最终持久化确认：Drive API列出train.tar，ID1J3HiW5HDT_S_ciuvMeffYdVkWS52JCmh、大小7698031104；validation.tar，ID1UTxuO7arJ2tqy2iwfjAmKhHRZcKpANqn、大小1023758336。两包均已云端可见，可供新runtime恢复，不仅是DriveFS待上传文件。target准备完整55388图，原source6类79765图；散图仅存Colab本地。随后source3独立启动；新容量与RTA未启动。
