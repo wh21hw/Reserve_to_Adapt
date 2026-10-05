@@ -77,3 +77,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 estimated K8第1轮完整写出：OS*=61.446067%、UNK=0%、HOS=0%，elapsed1569.51秒。训练进程78192仍存在，继续第2轮；第一轮仍为warmup，不能当最终拒识失败。新共享偏移选项仅用于独立source-only CPU代理，当前部署的VisDA聚类/RTA没有应用该改动。代理报告已成功下载pipeline-results/c20-shared-shift-probe-v1.json，详细结果另记SHARED_SHIFT_PROXY_V1.md。
 
 estimated第2轮已完整写出：OS*=60.424391%、UNK=0%、HOS=0%，累计2830.79秒；控制台ce0.032、virtual0.033、ce_ep3.706、adv1.100有限，shell5继续running。当前仍是原版warmup，未知槽尚不能据此判定最终无效。维持十轮、seed1、K8/Q8、共享prior，不根据这两轮指标调参或扩预算。
+
+estimated第3轮完整写出：OS*=59.852570%、UNK=0%、HOS=0%，累计4083.55秒；控制台ce0.023、virtual0.024、ce_ep3.808、adv0.918有限。已进入后续阶段计算，不能将预热三轮0拒识混同最终表现。GPU PID78192仍running；独立共享偏移CPU92073也在计算（约13分钟），尚无新K，不排队kernel exec检查文件。
