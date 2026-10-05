@@ -37,3 +37,9 @@ CLI runtime list 已确认没有活跃 runtime，旧 shell4 不存在。现有�
 工程修正已准备 scripts/persist_visda_source_stage_colab.py：未来 source 阶段完成后、容量/RTA 启动前，将 source checkpoint、features、普通日志及协议列表复制到已挂载 MyDrive 的新目录，最后写 recovery-complete.json。无 hash、无 checkpoint 重评、不覆盖旧文件；中断复制不能当完成备份。该脚本尚未在真实 runtime 执行，不能追回已经丢失的数据；它也不提供 RTA 优化器续训，图片和运行环境仍须另行恢复。是否恢复或重跑须在检查现有云盘材料后决定。
 
 后续读取云盘 OSDA 根目录成功，包含 datasets/pretrained/runs；datasets 成功列出 OfficeHome 目录、Office31 archive及旧 manifest，未在该目录列出 VisDA。runs 列表仍因共享客户端查询限额失败，不能排除其下存在恢复材料。新 runtime/重跑尚待用户确认；仅本地准备先验总权重消融，未对正在恢复的 VisDA 研究设置应用修改。
+
+## 授权恢复（2026-10-05）
+
+用户明确回复“允许”新建 L4、无副本时按原设置恢复必要阶段。runs 目录随后成功读取，仅列出历史 Office31/早期IMP目录，没有列出当前 VisDA/C20 的恢复目录。新 L4 endpoint gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj 已确认 NVIDIA L4，旧 Py3.8/Torch1.7.1环境恢复。C20 frozen-BN source3 已恢复并保存模型/特征到本地，先验权重消融结果不支持 domain_balanced，VisDA 保持原 source_counts 设置。
+
+VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容量尚未恢复完成。不串联未确认阶段，不将旧源预热日志当新模型。原source3/seed1/ResNet50/frozenBN、Q8、RTA10预算均不变，恢复模型不宣称与丢失模型逐位一致。Drive 挂载 exec5授权超时；收集器新增显式 --include-recovery，完成新source后须下载含source-final.pt/features.npz的恢复包，再启动容量或RTA。默认普通日志包不变；不hash、不重评模型，图片/环境单独恢复。本阶段没有开启新的参数网格或新方法训练。
