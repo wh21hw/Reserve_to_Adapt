@@ -32,3 +32,11 @@ source_precision_capacity.estimate_source_cost_capacity 新增 shared_domain_shi
 scripts/infer_visda_shared_shift_colab.py 已准备，未部署/未运行。它只在现有fixed2与estimated均恰好十轮后允许执行，检查的是完成状态而非分数；复用同一全量特征，输出shared-domain-shift-v1新目录，保留失败记录，不覆盖K8。独立部署核心到/content/visda-shared-shift-code-v1，并在Py3.8 CPU子进程中运行；不能替换正在用的visda-capacity-code-v1。K0保持0、未收敛报错，没有自动RTA调用或新的阈值扫描。
 
 完整代理JSON已实际下载pipeline-results/c20-shared-shift-probe-v1.json。下一阶段还没有真实K、标签组成或分类性能证据，不把代理改善写成跨域成功。
+
+## 不重新拟合的组成与真实域假设检查
+
+复用kernel尚存的最后一组282行分配，核对其K/形状/已知误报/隐藏召回与已保存报告一致，保存普通assignment缓存，再作source代理组成诊断，没有重新聚类。3个新槽分别为raw4的7图、raw0的9图+1张已知、raw1的15图；一对一匹配31/51=60.7843%，等于候选召回。候选的语义混合在此不是主要漏检原因，raw2全部10图和raw3全部7图未进入新槽。不能因纯度高宣称恢复5类，K仍欠估。缓存shared-shift-translated-mixed-cache-v1.npz仅源代理，无真实target。
+
+独立VisDA事后已知类均值诊断：source/target同原特征，六个已知类位移范数0.4926–0.8384，共同位移范数0.461809；按类别等权，共同平移能解释49.8437%的均值位移平方和。类位移方向cosine约0.0952–0.7190，说明有共同成分也有明显类别相关变化。该计算使用已知target标签，是oracle机制诊断；计算出的δ绝不进入容量估计/训练/τ校准。未知分离改善、实际无标签δ可识别性及RTA性能仍未验证。
+
+两份普通JSON通过Colab exec输出解析保存在pipeline-results/c20-shared-shift-composition-v1-captured.json、visda-shared-shift-assumption-v1-captured.json。原K8训练不变，τ仍沿先前源域声明，不依据这次target诊断改变方法或参数。此时共享版本全量VisDA推断仍尚未启动。
