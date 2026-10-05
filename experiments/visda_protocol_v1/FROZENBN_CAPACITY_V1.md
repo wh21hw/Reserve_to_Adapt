@@ -69,3 +69,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 固定K2完整10轮正常结束，耗时12920.11秒。目标标签oracle best为第4轮：OS*=53.550094%、UNK=32.632558%、HOS=40.552861%；第10轮final为OS*=0.211454%、UNK=99.907958%、HOS=0.422014%。从第5轮开始明显转向几乎全部拒识，说明固定小K也存在后期塌缩，不能归因于增加K。全部10轮history已下载 pipeline-results/visda-fixed2-restored-20261005-history.jsonl；没有重评checkpoint或事后换seed。
 
 随后在GPU固定组结束后，estimated K8独立shell5已启动，已观察TASK_KONLY_START C6/K8/Q8、53个encoder BN统计保持。共享同一个source3 prior、seed1和10轮预算，仍不传簇身份、不改损失/筛选/预测。当前尚无estimated完整轮次，必须等待后再判断容量改动能否改善或只是同类塌缩；不提前将失败控制替换成更易出好成绩的协议。
+
+事后标签组成诊断（scripts/diagnose_visda_capacity_colab.py）读取已完成的capacity分配，不重新拟合、不前向checkpoint、不反馈训练。已知target34146图中32816（96.10496%）被分进新簇，1298分进已知中心、32为noise；未知target21242图中21039（99.04435%）分进新簇，162分进已知、41为noise。原始类别身份仅在此诊断使用，K/阈值/训练不使用。结果证明“新簇=新语义类别”在这个跨域特征空间不成立；域偏移是合理解释，但具体机制仍需诊断，不能据标签删簇或选阈值。estimated K8继续原设置，暂无完整轮次。完整诊断保存capacity-composition-diagnostic.json并下载pipeline-results/visda-capacity-composition-20261005.json。
