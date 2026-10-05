@@ -22,6 +22,8 @@
 ## 实验范围与报告
 
 - 使用 MurphyLo/colab-cli，新的 GPU 实验至少 L4；不擅自重启或销毁 runtime。
+- 数据集压缩包长期保存到 Google Drive，不能只放在临时 `/content`。新 runtime 先挂载 Drive、检查已有缓存，再复制到本地解压训练；有完整缓存时不从官网下载重复副本。
+- VisDA 缓存目录为 `MyDrive/OSDA/datasets/visda-syn2real-v1`。首次下载后必须实际完成持久保存再视为可复用；保存脚本、临时副本或未完成的 `.partial` 都不算已保存。Drive 授权/容量问题明确报告，不擅自删除旧数据腾空间。
 - 论文三个数据集各一个任务：Office-31 A→W、Office-Home Pr→Rw、VisDA Synthetic→Real。VisDA backbone 口径尚待确认，不伪称已解决。
 - 同设置比较原版固定 K 与估计 K；尽量一次只改一个研究因素。
 - 用户最新目标为尽量得到能对标论文的 best seed，然后固定该 seed 做模块实验。可以将所选 best seed 作为当前实验主结果，但必须说明事后 seed 选择及目标标签选 epoch；既有全部 seed 结果和统计保留，不把单 seed 当三 seed 均值。
