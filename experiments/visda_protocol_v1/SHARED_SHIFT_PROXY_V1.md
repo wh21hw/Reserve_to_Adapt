@@ -40,3 +40,5 @@ scripts/infer_visda_shared_shift_colab.py 已准备，未部署/未运行。它�
 独立VisDA事后已知类均值诊断：source/target同原特征，六个已知类位移范数0.4926–0.8384，共同位移范数0.461809；按类别等权，共同平移能解释49.8437%的均值位移平方和。类位移方向cosine约0.0952–0.7190，说明有共同成分也有明显类别相关变化。该计算使用已知target标签，是oracle机制诊断；计算出的δ绝不进入容量估计/训练/τ校准。未知分离改善、实际无标签δ可识别性及RTA性能仍未验证。
 
 两份普通JSON通过Colab exec输出解析保存在pipeline-results/c20-shared-shift-composition-v1-captured.json、visda-shared-shift-assumption-v1-captured.json。原K8训练不变，τ仍沿先前源域声明，不依据这次target诊断改变方法或参数。此时共享版本全量VisDA推断仍尚未启动。
+
+排程修正（启动前）：共享推断只读冻结source-stage特征，与当前RTA网络/输出/目标成绩无依赖，因此取消等待十轮的串行门槛，改为独立CPU子进程，OPENBLAS/OMP/MKL线程均2。研究规则、全量样本、τ=R和输出目录不变；不新增GPU训练、不读取RTA指标拟合、不传oracleδ。先完成独立核心/入口部署再启动，启动或完成必须以真实CLI状态确认。上文“等待十轮”保留为原排程记录，不是方法要求。
