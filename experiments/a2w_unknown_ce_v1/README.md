@@ -8,4 +8,6 @@
 
 当前runtime没有可直接复用且初始化/BN/预算完全匹配的A→W控制；重新生成一次共享source prior，分别运行两个短程arm。不用历史70轮best或不同配方代替对照。seed3来自此前事后seed选择；报告两组全部10轮、目标标签选出的best以及第10轮final，不当三seed均值，不用target训练标签改模型或选阈值。
 
-数据只从已持久保存的Drive `OSDA/datasets/office31_images.tar`复制到本地解压，不重复公网下载。输出 `/content/imp-runs/a2w-unknown-ce-10e-v1`。状态：准备中，尚无新结果。
+数据只从已持久保存的Drive `OSDA/datasets/office31_images.tar`复制到本地解压，不重复公网下载。输出 `/content/imp-runs/a2w-unknown-ce-10e-v1`。
+
+实现版本 a40458d4，已推送 module_imp。source3已完成，共享958×256 source与564×256 target特征；target标签不进入训练或特征。系数切换build-only通过一次，无重复模型smoke。控制组已在现有L4端点 `gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj` 的shell6启动，前两轮loss有限；尚无完整对照结论。后续off复用同一prior，失败不自动重跑。普通结果压缩包及最终checkpoint保存到Drive `OSDA/runs/a2w-unknown-ce-10e-v1`。

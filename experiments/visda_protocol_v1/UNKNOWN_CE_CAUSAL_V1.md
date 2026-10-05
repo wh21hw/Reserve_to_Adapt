@@ -1,4 +1,6 @@
-# 未知伪标签自举的因果对照（待确认运行）
+# 未知伪标签自举的因果对照（VisDA未启动）
+
+2026-10-05：用户批准改用更快的 Office-31 A→W 两组各10轮。当前执行计划与结果以 `experiments/a2w_unknown_ce_v1/README.md` 为准；本页VisDA候选保留为未运行方案，不再等待本轮VisDA预算，不启动该VisDA arm。
 
 当前状态：脚本已准备；真实control代码的build-only编译通过，prepare-only读取完整control并输出同设置命令。没有模型前向、GPU训练或新结果。用户尚未确认新增约3–4小时L4预算，不能把goal自动续行当作对该询问的回答。
 
