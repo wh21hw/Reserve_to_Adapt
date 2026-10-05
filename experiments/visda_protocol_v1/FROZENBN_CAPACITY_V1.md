@@ -57,3 +57,5 @@ VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容
 恢复阶段已完整完成：exec14 三轮 source CE 分别为 0.244433、0.111253、0.081264，最终源训练准确率 97.4569%，共3738次更新；source/target特征为79765×256与55388×256，不含target标签。这不是目标域性能。exec15完成含模型与特征的恢复归档，已实际下载到本地 pipeline-results/visda-frozenbn-source3-recovery-20261005.zip（214.9 MiB），不同于旧日志-only包；未做hash或checkpoint重评。
 
 在恢复材料保存之后，全量CPU容量推断exec18已启动；固定K2十轮控制独立shell5已启动，已观察TRAIN START。二者共享上述source prior，容量仍使用原source_counts，未推广效果不佳的domain_balanced。当前尚无K结果或完整RTA epoch成绩。estimated组仍等待收敛正K；K2复用控制、K0不强制K1。新runtime保持gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj，不启动第二项GPU训练。
+
+固定K2首轮history已写出：epoch1，OS*=60.873605%、UNK=0%、HOS=0%，累计1570.38秒；控制台CE0.059、virtual0.063等损失有限。此时处于原版预热阶段，未知头尚未完成warm-end初始化，不能据首轮UNK0认定最终拒识失败。继续既定10轮，不调损失/seed/预算。CPU容量进程22657运行约26分钟且持续计算，仍未取得K。
