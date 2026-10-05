@@ -42,3 +42,7 @@ scripts/infer_visda_shared_shift_colab.py 已准备，未部署/未运行。它�
 两份普通JSON通过Colab exec输出解析保存在pipeline-results/c20-shared-shift-composition-v1-captured.json、visda-shared-shift-assumption-v1-captured.json。原K8训练不变，τ仍沿先前源域声明，不依据这次target诊断改变方法或参数。此时共享版本全量VisDA推断仍尚未启动。
 
 排程修正（启动前）：共享推断只读冻结source-stage特征，与当前RTA网络/输出/目标成绩无依赖，因此取消等待十轮的串行门槛，改为独立CPU子进程，OPENBLAS/OMP/MKL线程均2。研究规则、全量样本、τ=R和输出目录不变；不新增GPU训练、不读取RTA指标拟合、不传oracleδ。先完成独立核心/入口部署再启动，启动或完成必须以真实CLI状态确认。上文“等待十轮”保留为原排程记录，不是方法要求。
+
+三份独立代码均已fs上传成功，随后exec34启动CPU推断，PID92073，已观察VISDA_SHARED_SHIFT_START及running，尚无K/完成结果。核心目录/content/visda-shared-shift-code-v1，入口/content/infer_visda_shared_shift_colab.py；输出shared-domain-shift-v1新目录，控制台shared-shift-console.log。协议明确target_labels_used=False、RTA_started=False。源码入口排程版本7098bda4；不将启动当完成。当前GPU仍shell5/78192，K8已完成2轮、继续训练。
+
+CPU推断期间kernel串行，不新exec排队读文件；用exec attach34、shell5快照或独立shell6检查。两项现有工作失败先保留证据，不自动换参数、重跑或销毁runtime。完成后优先保存普通报告及中心/分配；新K的训练收益另需同预算验证，K与已运行组相同则不通过重复训练宣称容量收益。
