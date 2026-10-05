@@ -67,3 +67,9 @@ exec34正常完成，63步收敛、耗时5068.29秒，K=7，估计共享偏移�
 后续不按target语义挑τ、强制K或重扫阈值。当前K8 RTA仍继续十轮，K7没有自动训练。需分别处理容量估计的域偏移/身份问题与RTA后期过度拒识，不能通过直接换K宣称修复。普通容量中心及分配已实际下载pipeline-results/visda-shared-shift-capacity-v1.npz；JSON保存状态以CLI下载完成为准。
 
 两份JSON下载随后均正常结束：pipeline-results/visda-shared-shift-capacity-v1.json和visda-shared-shift-comparison-v1.json，普通结果已持久保存到本地，无需重复拟合。
+
+## 同一目标下的可行点检查
+
+只读保存中心与冻结特征，无目标标签、重聚类或checkpoint前向：共享目标在原K8中心、δ=0时为4297.889114；保持该中心、解析优化δ后为4297.828021（δ范数0.0009684）。共享K7最终为4336.047725，比这个已知可行点高38.219704。新增δ的模型包含δ=0的原模型，因此本次独立优化落入较差局部解；不能把其K减少解释为该目标的更好最优解。
+
+此证据区分了优化和语义两层问题：原K8本身已将96.1%已知误建新簇，改进目标值也不等于正确识别未知。初始化稳定性需要处理，但不能单靠追求更小目标宣称修复语义。scripts/diagnose_visda_shared_objective_colab.py执行完成，保存shared-shift-feasible-objective-v1.json；没有新增容量拟合或改变运行中RTA。
