@@ -11,7 +11,8 @@ import numpy as np
 
 def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=100,
                         max_candidates=100, reference_samples=None, birth_order='after_update',
-                        known_centers_fixed=False, birth_penalty=None, proposal_block_size=None):
+                        known_centers_fixed=False, birth_penalty=None, proposal_block_size=None,
+                        shared_shift_precision=None):
     x, a = np.asarray(target, dtype=np.float64), np.asarray(anchors, dtype=np.float64)
     if (x.ndim != 2 or a.ndim != 2 or not len(x) or not len(a)
             or x.shape[1] != a.shape[1] or not np.isfinite(x).all()
@@ -25,6 +26,10 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
     if reference_samples is not None and (not np.isfinite(reference_samples) or reference_samples <= 0):
         raise ValueError('reference_samples must be finite and positive')
     weight = 1. if reference_samples is None else float(reference_samples)/len(x)
+    if shared_shift_precision is not None and (not np.isfinite(shared_shift_precision)
+            or shared_shift_precision <= 0 or known_centers_fixed):
+        raise ValueError('Shared shift requires positive precision and movable known centers')
+    shift = np.zeros(a.shape[1], dtype=np.float64)
     cost = float(penalty if birth_penalty is None else birth_penalty)
     if not np.isfinite(cost) or cost <= 0:
         raise ValueError('birth_penalty must be finite and positive')
@@ -45,7 +50,8 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
 
     def objective(mu):
         return float(weight*np.minimum(distances(x, mu).min(1), penalty).sum()
-                     + cost*(len(mu)-c) + (prior*((mu[:c]-a)**2).sum(1)).sum())
+                     + cost*(len(mu)-c) + (prior*((mu[:c]-a-shift)**2).sum(1)).sum()
+                     + (0. if shared_shift_precision is None else shared_shift_precision*shift.dot(shift)))
 
     def assign(mu):
         d = distances(x, mu)
@@ -80,6 +86,15 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
         if birth_order == 'before_update':
             centers = propose(centers)
         ids = assign(centers)
+        if shared_shift_precision is not None:
+            # Exact joint minimizer of the known-center/shift quadratic for
+            # fixed assignments. Empty anchored classes follow the shared shift.
+            mass = weight*np.array([(ids == j).sum() for j in range(c)])
+            sums = np.stack([weight*x[ids == j].sum(0) for j in range(c)])
+            denom = mass+prior
+            fractions = np.divide(prior, denom, out=np.zeros(c), where=denom > 0)
+            effective = fractions*mass
+            shift = (fractions[:, None]*(sums-mass[:, None]*a)).sum(0)/(shared_shift_precision+effective.sum())
         # Fixed assignments: anchored means minimize the same quadratic objective.
         for j in range(len(centers)):
             members = x[ids == j]
@@ -87,7 +102,7 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 if known_centers_fixed:
                     continue
                 if weight*len(members)+prior[j] > 0:
-                    centers[j] = (weight*members.sum(0)+prior[j]*a[j])/(weight*len(members)+prior[j])
+                    centers[j] = (weight*members.sum(0)+prior[j]*(a[j]+shift))/(weight*len(members)+prior[j])
             elif len(members):
                 centers[j] = members.mean(0)
         # Delete a candidate only if the full penalized objective decreases.
@@ -119,4 +134,6 @@ def fit_robust_capacity(target, anchors, penalty, prior_strength=5., max_steps=1
                 birth_order=birth_order,
                 known_centers_fixed=bool(known_centers_fixed),
                 proposal_block_size=proposal_block_size,
+                shared_shift_precision=shared_shift_precision,
+                shared_shift=shift.tolist(),
                 semantic_unknown_count=None)
