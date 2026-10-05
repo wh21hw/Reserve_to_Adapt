@@ -50,13 +50,17 @@ def estimate_capacity(source, source_labels, target):
 
 
 def estimate_source_cost_capacity(source, source_labels, target, proposal_block_size=None,
-                                  prior_mass_mode='source_counts'):
+                                  prior_mass_mode='source_counts', shared_domain_shift=False):
     """Previously declared source-calibrated birth cost; target labels not accepted."""
     source=np.asarray(source,dtype=np.float64)
     target=np.asarray(target,dtype=np.float64)
     labels=np.asarray(source_labels)
     if prior_mass_mode not in ('source_counts', 'domain_balanced'):
         raise ValueError('Unknown prior_mass_mode')
+    if not isinstance(shared_domain_shift, bool):
+        raise ValueError('shared_domain_shift must be Boolean')
+    if shared_domain_shift and prior_mass_mode != 'source_counts':
+        raise ValueError('Do not combine shared shift and prior-mass ablation')
     if proposal_block_size is not None and (isinstance(proposal_block_size,bool)
             or not isinstance(proposal_block_size,(int,np.integer)) or proposal_block_size<1):
         raise ValueError('proposal_block_size must be a positive integer or None')
@@ -93,9 +97,11 @@ def estimate_source_cost_capacity(source, source_labels, target, proposal_block_
     # Keep radius, source-calibrated cost and proposal order unchanged.
     prior = counts if prior_mass_mode == 'source_counts' else counts.astype(np.float64)*reference/counts.sum()
     result=fit_robust_capacity(target,anchors,radius,prior_strength=prior,reference_samples=reference,
-        birth_order='before_update',birth_penalty=cost,proposal_block_size=proposal_block_size)
+        birth_order='before_update',birth_penalty=cost,proposal_block_size=proposal_block_size,
+        shared_shift_precision=reference if shared_domain_shift else None)
     if not result['converged']:raise RuntimeError('Unconverged capacity estimate')
-    settings=dict(version=('source-calibrated-birth-cost-v1' if prior_mass_mode == 'source_counts'
+    settings=dict(version=('source-calibrated-birth-cost-shared-domain-shift-v1' if shared_domain_shift
+        else 'source-calibrated-birth-cost-v1' if prior_mass_mode == 'source_counts'
         else 'source-calibrated-birth-cost-domain-balanced-v1'),C=len(classes),K=result['K'],
         calibration_seed=2026,anchor_rows=len(train),birth_cost_rows=len(calibration),
         source_rows=len(source),target_rows=len(target),lambda_radius=radius,birth_cost=cost,
@@ -105,6 +111,9 @@ def estimate_source_cost_capacity(source, source_labels, target, proposal_block_
         prior_to_target_mass_ratio=float(np.sum(prior)/reference),
         birth_order='before_update',target_labels_used=False,semantic_unknown_count=None,
         proposal_block_size=proposal_block_size,
+        shared_domain_shift=shared_domain_shift,
+        shared_shift_precision=reference if shared_domain_shift else None,
+        shared_shift=result['shared_shift'],
         zero_capacity_policy='Return zero; never force K1',
         caveat='Same source maximum initial birth-gain formula as prior controls; empirical objective, not full DP posterior')
     return result,settings

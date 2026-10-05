@@ -22,3 +22,13 @@
 人工平移范数0.376903；新版本全已知估计偏移范数0.179808、恢复误差0.199123，混合范数0.164979、误差0.213863，并未完整恢复偏移。混合隐藏召回比原算法降低，但原算法同时大量误判已知，不可把其较高召回单独当优势。也不能由K3推断恢复五个隐藏语义。
 
 结论限于匹配其假设的共同平移压力测试：共享偏移确实能减少将域位移建模为新簇，并未在原始代理池吞掉已有候选。该结果不验证复杂真实域差异、独立泛化或RTA性能。下一步可做不改网络的真实无标签容量推断，但先等待当前K-only十轮配对，当前训练不变。不得按VisDA标签结果挑τ或扩参数网格。
+
+## 实现与下一阶段
+
+source_precision_capacity.estimate_source_cost_capacity 新增 shared_domain_shift=False；默认仍为当前source_counts版本。True单独启用τ=R，拒绝同时叠加domain_balanced，以免混淆消融。输出独立版本号、τ和δ，半径/成本/source划分/候选优化规则不变。
+
+固定分配下，令 t_c=w n_c，s_c=w Σ_i x_i（成员属于c），h_c=κ_c/(t_c+κ_c)。解析解为 δ=Σ_c h_c(s_c-t_c a_c)/(τ+Σ_c h_c t_c)，μ_c=(s_c+κ_c(a_c+δ))/(t_c+κ_c)。空且无先验的中心保持；本实验κ正。此为二次目标的条件最小值，不等于未知类别的贝叶斯后验，也不保证交替建簇全局最优。
+
+scripts/infer_visda_shared_shift_colab.py 已准备，未部署/未运行。它只在现有fixed2与estimated均恰好十轮后允许执行，检查的是完成状态而非分数；复用同一全量特征，输出shared-domain-shift-v1新目录，保留失败记录，不覆盖K8。独立部署核心到/content/visda-shared-shift-code-v1，并在Py3.8 CPU子进程中运行；不能替换正在用的visda-capacity-code-v1。K0保持0、未收敛报错，没有自动RTA调用或新的阈值扫描。
+
+完整代理JSON已实际下载pipeline-results/c20-shared-shift-probe-v1.json。下一阶段还没有真实K、标签组成或分类性能证据，不把代理改善写成跨域成功。
