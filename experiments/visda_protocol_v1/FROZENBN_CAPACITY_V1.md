@@ -43,3 +43,5 @@ CLI runtime list 已确认没有活跃 runtime，旧 shell4 不存在。现有�
 用户明确回复“允许”新建 L4、无副本时按原设置恢复必要阶段。runs 目录随后成功读取，仅列出历史 Office31/早期IMP目录，没有列出当前 VisDA/C20 的恢复目录。新 L4 endpoint gpu-l4-s-kkb-ass1a1-28xqgmbpgb0gj 已确认 NVIDIA L4，旧 Py3.8/Torch1.7.1环境恢复。C20 frozen-BN source3 已恢复并保存模型/特征到本地，先验权重消融结果不支持 domain_balanced，VisDA 保持原 source_counts 设置。
 
 VisDA 当前仅重新开始官方 train archive 下载，exec10，source/RTA/容量尚未恢复完成。不串联未确认阶段，不将旧源预热日志当新模型。原source3/seed1/ResNet50/frozenBN、Q8、RTA10预算均不变，恢复模型不宣称与丢失模型逐位一致。Drive 挂载 exec5授权超时；收集器新增显式 --include-recovery，完成新source后须下载含source-final.pt/features.npz的恢复包，再启动容量或RTA。默认普通日志包不变；不hash、不重评模型，图片/环境单独恢复。本阶段没有开启新的参数网格或新方法训练。
+
+用户追问是否每次重新下载后，补充数据长期保存路径：MyDrive/OSDA/datasets/visda-syn2real-v1/{train,validation}.tar。scripts/persist_visda_archive_colab.py 单独保存一个已完整下载的压缩包，先复制 .partial、成功后改名，保留既有或中断副本，不hash、不覆盖旧数据。两个 download 脚本在 /content 尚无文件且 Drive 缓存可用时优先复制，不从官网重复下载；未来 runtime 应先挂载 Drive 再恢复数据。当前下载仍使用同一exec10，不中途重启；上述保存尚未执行，Drive挂载仍需新的授权。不得把“保存脚本已准备”当成“8.7 GB数据已经持久保存”。

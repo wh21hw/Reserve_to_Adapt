@@ -9,6 +9,7 @@ root.mkdir(exist_ok=True)
 archive = root/'train.tar'
 expected_bytes = 7698031104  # Official server HEAD, 2026-10-03; no hash gate.
 url = 'http://csr.bu.edu/ftp/visda17/clf/train.tar'
+cached = Path('/content/drive/MyDrive/OSDA/datasets/visda-syn2real-v1/train.tar')
 if shutil.disk_usage(root).free < 2 * expected_bytes + 5 * 1024**3:
     raise RuntimeError('Insufficient free space for archive and extraction')
 launch = root/'download-train-launch.json'
@@ -17,6 +18,11 @@ if not launch.exists():
         stage='Download only, no extraction/training',
         terms='Noncommercial research/education; do not redistribute images',
         source='Official VisionLearningGroup/taskcv-2017-public classification README'), indent=2))
+if not archive.exists() and cached.is_file():
+    if cached.stat().st_size != expected_bytes:
+        raise ValueError('Existing Drive archive incomplete; do not silently download a duplicate')
+    shutil.copyfile(cached, archive)
+    print('VISDA_TRAIN_RESTORED_FROM_DRIVE', str(cached), flush=True)
 if not archive.exists() or archive.stat().st_size != expected_bytes:
     command = ['curl', '--location', '--fail', '--retry', '3', '--connect-timeout', '20',
                '--silent', '--show-error', '--continue-at', '-', '--output', str(archive),
