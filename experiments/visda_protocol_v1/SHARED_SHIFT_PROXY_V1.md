@@ -46,3 +46,5 @@ scripts/infer_visda_shared_shift_colab.py 已准备，未部署/未运行。它�
 三份独立代码均已fs上传成功，随后exec34启动CPU推断，PID92073，已观察VISDA_SHARED_SHIFT_START及running，尚无K/完成结果。核心目录/content/visda-shared-shift-code-v1，入口/content/infer_visda_shared_shift_colab.py；输出shared-domain-shift-v1新目录，控制台shared-shift-console.log。协议明确target_labels_used=False、RTA_started=False。源码入口排程版本7098bda4；不将启动当完成。当前GPU仍shell5/78192，K8已完成2轮、继续训练。
 
 CPU推断期间kernel串行，不新exec排队读文件；用exec attach34、shell5快照或独立shell6检查。两项现有工作失败先保留证据，不自动换参数、重跑或销毁runtime。完成后优先保存普通报告及中心/分配；新K的训练收益另需同预算验证，K与已运行组相同则不通过重复训练宣称容量收益。
+
+完成后比较入口scripts/compare_visda_shared_shift_colab.py已准备、未运行。只读两份完成的capacity/assignment，检查相同target顺序；报告已知误入/身份保留、未知候选覆盖/被已知吸收及未知语义一对一匹配，K0保留为空匹配，不强制新类。目标语义仅事后评分，不重拟合或改变训练。不能只因为K减少就宣称未知建模成功，也不能把聚类匹配当RTA分类性能。当前CPU92073持续计算，K8 GPU78192继续running，未新增训练。
