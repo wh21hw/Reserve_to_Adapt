@@ -31,3 +31,13 @@ CPU独立挂载已看到fixed2/best.pt（104726336字节）与last.pt（21149361
 旧HTTP三个下载过慢，已只终止本地curl客户端PID5520/5562/5565，保留所有.part。新增只读allowlist Range服务PID89372，local18766→remote8766，forward ID2；1MiB试传HTTP206、1048576字节成功。续传handle为fixed2-last22794、fixed2-best87073、refresh-best78224（600秒超时，观察超时不等于进程终止）。refresh-last完整本地副本保持不动。完成后只清理两个自建服务与forward，不重启实例。
 
 用户要求清理Drive，已只读盘点并提出清理旧20e capacity与旧10e identity实验的模型（合计约1.26GB），保留日志、数据包、baseline及本次70轮模型。具体永久删除范围等待用户确认，尚未删除任何文件；一般继续研究授权不代替该确认。
+
+600秒下载已实际超时；curl内部retry可能回退part进度，故停掉唯一仍retry的本地curl PID5873，改为不带--retry的新独立续传。当前handle：fixed2-last58484、fixed2-best27836、refresh-best9948，每次上限1800秒；必须看exit与实际长度，不能按计划判完成。若实际失败，只根据现存part长度重新续传，不覆盖重下，不重复停止runtime。旧handle22794/78224已失败，87073客户端已终止。
+
+初始化缓存诊断已成功完成，与备份并行，结果记录于experiments/a2w_new_slot_init_proxy_v1；source保护guard失败，未修改权重、不启动长训练。
+
+## 最终本地备份状态（已完成）
+
+三个无内部retry续传均exit0/HTTP206：fixed2-last补166050160字节19.33秒、fixed2-best补78753600字节8.84秒、refresh-best补79342400字节8.68秒。最终四个文件长度均与上述源文件长度一致，已以Move-Item去掉.part后缀，四模型本地备份完整，不做hash或重复评分。
+
+只读服务器PID86827/89372已通过命令身份检查后SIGTERM；forward ID1/2均已关闭。T4/CPU原件与实例/挂载未关闭或删除。refresh两模型云端仍未确认，不能将本地备份成功混同云端保存成功。Drive旧实验模型删除仍待具体范围确认。
