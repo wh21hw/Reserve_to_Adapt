@@ -30,3 +30,13 @@ scripts/cache_a2w_current_relation_colab.py：原ResNet50和完整BN→LeakyReLU
 当前10轮只覆盖发布代码前段top16筛选；未来完整结论必须跨过筛选切换并按完整训练预算验证。OfficeHome与VisDA外部验证、VisDA backbone口径、论文对齐以及多seed都仍未完成，不以A→W一次小实验代替毕业设计目标。
 
 无人值守循环和统一evaluator/keep policy尚未确认，已按autoresearch技能发出配置问题；不默认启动无限搜索。当前GPU保持关闭，不因自动续行创建闲置实例。
+
+## 离线比较器已完成，尚未跑真实缓存
+
+scripts/compare_a2w_temporal_capacity_colab.py复用已保存的source3 raw K13/身份匹配K8两个无标签artifact，只对final10缓存执行一次原source-calibrated birth-cost规则，再按同一head-likelihood身份匹配。source99%半径/建簇成本根据当前source重新标定，没有target阈值扫描；因此是同规则跨状态比较，不是数值lambda固定的比较。
+
+temporal_partition_report.py输出K之外的划分变化：只在两边都非noise的样本上计算ARI（不受簇编号排列影响），同时报告共同覆盖、noise变化、未知候选身份变化及共同known上的身份一致率。不能将任意簇ID换位当结构失效，或把减少K当改善；不足两个共同样本时ARI返回未定义，不强填一个好分数。若实际有成员的簇数不足C，保留原推断但身份匹配报告不可用，不强造K1。
+
+一次新统计接口功能检查已在本地CPU完成：编号换位ARI1、交叉重新分组ARI−0.5、noise与共同样本不足分支正确。初次断言因浮点严格等号失败，改用容差断言通过，算法没有因此改动。比较入口AST语法通过；没有重新测试稳定聚类核心、没有GPU或真实checkpoint前向。
+
+当前真实final10特征缓存尚未生成，所以没有新的K、漂移程度或模型效果结论。下一实际动作仍是复用Drive final10模型生成一次冻结缓存，然后运行此纯CPU比较器；不再次训练source或RTA，不把准备完成写成实验完成。需上传source_precision_capacity.py、robust_capacity.py、prototype_identity_reconciliation.py、temporal_partition_report.py及relation_gate.py到运行环境，缓存持久保存后及时关闭实例。
