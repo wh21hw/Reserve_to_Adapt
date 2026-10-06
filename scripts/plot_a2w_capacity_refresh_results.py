@@ -5,6 +5,8 @@ from pathlib import Path
 import sys
 import zipfile
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Remote subprocess must not inherit notebook inline backend.
 import matplotlib.pyplot as plt
 
 

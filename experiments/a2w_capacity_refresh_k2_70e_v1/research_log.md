@@ -15,3 +15,7 @@
 后续现场读取exec31仍running，固定组已完成20/70轮（console Epoch19），loss有限，无终止/OOM证据，容量仍K2；自适应组未启动。不把当前固定组HOS当最终控制或方法效果。
 
 绘图入口改为从实际summary读取initial_K/final_K/epochs及对应arm，不硬编码旧K8→K4/20轮；仅绘完整预声明预算的日志。这样70轮结束后不会误标方法或截断曲线；本地编译通过，尚未生成新结果图，不重评模型。训练相关脚本与运行过程未改。
+
+完成observation：exec31 done且训练/collector成功，两组history1..70、exit0、未超时、普通best/last已Drive保存。固定第10轮推断K5但保持2，自适应第10轮实际2→5，保留两未知行/SGD并新增3随机行。final OS*两组96.2016%，UNK82.6813/82.9086%，HOS88.9305/89.0618%，final ΔHOS+0.1313pp；两组best HOS均89.0618%，epoch59/61。未达+1pp筛查，不提升默认方法，完整向量与前10差异保留，不挑best把末轮隐藏。
+
+累计history训练约75.21分钟，对照此前估计78.04分钟合理。下载summary/2.9MiB ZIP成功，不重复collector/训练/模型评分。绘图环境问题仅限缺本地matplotlib、WSL上传路径和继承inline backend，修复为既有venv/Agg绘制日志曲线，不影响算法或结果。全量结果已得到，按最新用户指令在此之后恢复研究评价；当前等待hook报告后暂停，不重复通知、不擅自关闭T4/CPU。

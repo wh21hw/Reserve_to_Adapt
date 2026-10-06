@@ -1,0 +1,3 @@
+iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	88.93050870939513	-	-	baseline	Fixed K2 final70 HOS percent; complete actual same-budget control	agent	2026-10-06T13:20:22Z
+1	89.06180498801732	0.13129627862219495	+0.14764%	reference	Stage10 K2 to inferred K5; best unchanged; below declared 1pp screen; null-effect evidence retained, no default promotion	agent	2026-10-06T13:20:22Z
