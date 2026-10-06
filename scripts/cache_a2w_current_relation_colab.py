@@ -1,4 +1,4 @@
-"""One frozen final10 cache for a temporal capacity-inference study.
+"""One declared frozen final-state cache for capacity-inference diagnosis.
 
 No SGD, target truth, GMM fitting, K selection, or checkpoint accuracy evaluation.
 Known relation scores are reconstructed under the frozen model, not historical
@@ -39,19 +39,25 @@ def main():
     parser.add_argument('--weights', default='/content/osda-datasets/resnet50-19c8e357.pth')
     parser.add_argument('--output', default='/content/imp-runs/a2w-current-relation-snapshot-v1')
     parser.add_argument('--device', choices=['cpu','cuda'], default='cuda')
+    parser.add_argument('--expected-epoch',type=int,default=10)
+    parser.add_argument('--expected-K',type=int,default=8)
+    parser.add_argument('--drive-output',default='/content/drive/MyDrive/OSDA/runs/a2w-current-relation-snapshot-v1')
     parser.add_argument('--check-only', action='store_true', help='CPU state/interface load, no images/output')
     args = parser.parse_args()
     checkpoint_path, output, data = Path(args.checkpoint), Path(args.output), Path(args.data_root)
     if not checkpoint_path.name.endswith('last.pt'):
         raise ValueError('Use the declared final checkpoint, not oracle best')
     checkpoint = torch.load(str(checkpoint_path),map_location='cpu')
-    if checkpoint['epoch'] != 10 or checkpoint['model']['1.fc.weight'].shape != (18,256):
-        raise ValueError('Require the completed C10/K8 final10 model')
+    if args.expected_epoch < 1 or args.expected_K < 1:
+        raise ValueError('Declare positive final epoch and capacity before extraction')
+    classes = 10+args.expected_K
+    if checkpoint['epoch'] != args.expected_epoch or checkpoint['model']['1.fc.weight'].shape != (classes,256):
+        raise ValueError('Checkpoint differs from the declared final state/head')
     torch.set_num_threads(2)
     sys.path.insert(0,args.code_root)
     from networks import ResNetFc,CLS
     from relation_gate import source_relation_scores
-    model = torch.nn.Sequential(ResNetFc(model_path=args.weights),CLS(2048,18))
+    model = torch.nn.Sequential(ResNetFc(model_path=args.weights),CLS(2048,classes))
     model.load_state_dict(checkpoint['model'],strict=True)
     del checkpoint
     source_rows = [line.rsplit(None,1) for line in
@@ -88,7 +94,7 @@ def main():
                 num_workers=2,pin_memory=args.device=='cuda')
             for images in loader:
                 _,feature,logit,_ = model(images.to(device))
-                if feature.shape[1] != 256 or logit.shape[1] != 18:
+                if feature.shape[1] != 256 or logit.shape[1] != classes:
                     raise ValueError('Unexpected feature/head interface')
                 if not torch.isfinite(feature).all() or not torch.isfinite(logit).all():
                     raise RuntimeError('Nonfinite frozen outputs')
@@ -106,8 +112,8 @@ def main():
     arrays['target_paths'] = np.asarray(target_names)
     output.mkdir(parents=True)
     np.savez_compressed(output/'features.npz',**arrays)
-    manifest = dict(checkpoint=str(checkpoint_path),epoch=10,C=10,K=8,
-        selection='Declared final10 argmax control, never target-oracle best',
+    manifest = dict(checkpoint=str(checkpoint_path),epoch=args.expected_epoch,C=10,K=args.expected_K,
+        selection='Declared last.pt snapshot; actual epoch enforced; never oracle best; filename alone does not prove training-final state',
         target_labels_used=False,training=False,GMM_fitted=False,K_estimated=False,
         reconstruction='Current frozen-model source probability means; not saved historical relation bank/GMM',
         transform='Resize256, CenterCrop224, ToTensor; eval BN; full actual head output',
@@ -115,7 +121,7 @@ def main():
         device=args.device,shuffled=False,seconds=time.time()-started,
         shapes={key:list(value.shape) for key,value in arrays.items()},complete=True)
     (output/'manifest.json').write_text(json.dumps(manifest,indent=2,allow_nan=False))
-    saved = Path('/content/drive/MyDrive/OSDA/runs/a2w-current-relation-snapshot-v1')
+    saved = Path(args.drive_output)
     if not saved.parent.is_dir():
         raise RuntimeError('Drive missing; local cache preserved, do not discard runtime')
     saved.mkdir(exist_ok=False)

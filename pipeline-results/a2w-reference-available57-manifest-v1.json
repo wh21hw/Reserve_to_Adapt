@@ -1,0 +1,55 @@
+{
+  "checkpoint": "/content/drive/MyDrive/OSDA/runs/rta-official-a2w-v2/a2w_seed3/last.pt",
+  "epoch": 57,
+  "C": 10,
+  "K": 2,
+  "selection": "Only currently available last.pt snapshot at epoch57; never oracle best",
+  "target_labels_used": false,
+  "training": false,
+  "GMM_fitted": false,
+  "K_estimated": false,
+  "reconstruction": "Current frozen-model source probability means; not saved historical relation bank/GMM",
+  "transform": "Resize256, CenterCrop224, ToTensor; eval BN; full actual head output",
+  "kl_direction": "source class probability mean || target C-only conditional probability",
+  "device": "cuda",
+  "shuffled": false,
+  "seconds": 7.135837078094482,
+  "shapes": {
+    "source": [
+      958,
+      256
+    ],
+    "source_logits": [
+      958,
+      12
+    ],
+    "target": [
+      564,
+      256
+    ],
+    "target_logits": [
+      564,
+      12
+    ],
+    "source_relation_kl": [
+      958
+    ],
+    "target_relation_kl": [
+      564
+    ],
+    "source_soft_prototypes": [
+      10,
+      10
+    ],
+    "source_labels": [
+      958
+    ],
+    "target_paths": [
+      564
+    ]
+  },
+  "complete": true,
+  "reference_training_budget": 70,
+  "snapshot_is_training_final": false,
+  "provenance_note": "Archived and mounted logs reach70; currently mounted last.pt metadata is57. Cause not established."
+}

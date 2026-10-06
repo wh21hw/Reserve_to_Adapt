@@ -23,3 +23,5 @@
 即时pruning无标签诊断实际完成：564个target预测known/unknown全部不变，unknown223→223；删头本身不解释收益，后续SGD轨迹才产生区别。没有额外图像前向或重新评checkpoint。
 
 评价为kept/exploratory：保留候选实现，不修改默认方法、不宣称胜过K2/论文。40轮预算耗尽，不执行额外confirmation run；较大final增益需要新预算下完整70轮/重复/跨任务确认。完整日志、指标、普通模型、容量缓存已实际保存Drive，小ZIP/汇总/诊断已下载。collector仅字符串续行格式错误，修复并重收集日志，不改变实验或重跑模型。
+
+补充无训练诊断：当前原版seed3 last.pt在T4和CPU独立Drive挂载均为57轮，日志为70轮，原因未定；保留历史成绩，不冒称现有模型final70。明确用available57做一次全量缓存提取和同规则估计，原版K2头对应4个候选未知簇，排除3个未分配点后的known/unknown一致率559/561=99.6435%，不是准确率。簇数不能直接当必需分类输出槽数。新两组20轮权重在CPU挂载也确认epoch20，未评分。详情见reference57_diagnostic.md。下一批预算仍待批准。
