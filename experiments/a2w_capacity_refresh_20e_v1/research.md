@@ -55,7 +55,7 @@
 
 | # | Change | Metric | Result | Timestamp |
 | --- | --- | --- | --- | --- |
-| 0 | 既有T4原argmax K8，10轮参考；不是本批20轮控制 | final HOS86.3354%，OS*96.3023%，UNK78.2380% | reference；已复读本地summary | 2026-10-06 |
+| 0 | 本批fixed8，20轮实际控制 | final HOS76.9941%，OS*99.6667%，UNK62.7251% | baseline；exit0并实际保存Drive | 2026-10-06 |
 
 状态：协议已声明，新的20轮配对尚未启动。没有新训练成绩，也没有确认收益；必须在代码关键接口检查及输入恢复完成后启动。
 
@@ -74,3 +74,11 @@ run_a2w_capacity_refresh_colab.py显式--run才会训练；每arm最多7200秒/�
 实际fixed8 worker PID3607确认存活并已输出Epoch0/1（history为1/2），ce0.489/0.305等loss有限，无OOM；GPU确认为Tesla T4。source shared C10/K8/Q20及encoder BN策略均与声明一致。前两轮在原版warmup，UNK0.036/0.000不能据此判定最终方法失败。第10轮边界尚未执行，refresh arm尚未开始，没有新推断K或最终对照结果；不能将先前final10诊断K4当本批固定设定。
 
 监控：shell12跑串行启动器，查看/content/a2w-capacity-refresh-pair-console.log、各arm/console.log、office31-a2w_seed3/history.jsonl与capacity-after-010/estimate.json即可。正常训练不新排队kernel训练，不重复evaluate checkpoint；远程只读检查可用独立shell或短exec，因为训练在独立shell/venv子进程而非Jupyter串行kernel中。普通20轮模型/日志先逐arm实际保存到Drive，结束运行collector再下载summary/ZIP；CPU实例与挂载保留。目标整体仍未完成。
+
+## 固定组完成，自适应组运行中
+
+09:44 UTC现场检查：fixed8恰好20轮，process-status exit_code0/timed_out=false，启动器已实际复制完整arm到Drive，随后启动refresh worker7929。fixed8在第10轮同样推断K4，但没有应用，最终仍K8；其第20轮OS*=99.6667%、UNK=62.7251%、HOS=76.9941%，历史最高HOS85.8254%。以本批20轮实际控制替换History中的旧10轮参考；旧10轮记录仍在Current Approach背景中，不混比。
+
+自适应组当时完成5轮，尚未到容量更新边界，loss有限/进程存活。不得用未实施变化前的best宣称容量更新改善，也不将未知早期低指标当失败。完整比较待两组20轮结束后进行。
+
+附加无标签解释脚本diagnose_a2w_resize_rejection_colab.py已准备，只在训练完成/模型持久保存后读取第10轮缓存logits及head row_mapping。在纯删减未知行、已知权重不变的情况下重建即时拒识变化，无图像前向/重评checkpoint/调参；不能将softmax分母变小直接解释为更多argmax拒识。后续学习可能改变这一即时结果，必须区分。

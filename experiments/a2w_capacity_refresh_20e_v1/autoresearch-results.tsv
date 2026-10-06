@@ -1,0 +1,2 @@
+iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	76.99405389714937	-	-	baseline	Fixed K8 final20 HOS percent; same-batch control; observed after durable save	agent	2026-10-06T09:44:44Z

@@ -11,3 +11,9 @@
 启动工程记录：T4初次TLS ECONNRESET，仅重连本地CLI daemon1664，无Colab重启；mount exec4授权完成。直接notebook执行launcher被-f参数拒绝，未发生训练；随后shell12固定venv显式--run成功。PID3607对应fixed8实际训练，09:32 UTC已完成前两轮且loss有限，无OOM。
 
 当前评价：未完成。不得把启动成功、早期UNK或本地接口通过写成收益。保持完整预算与单因素设置，结束后报告full best、post-refresh best、final及共同前10轮偏差；目标标签只作评价，不输入K/标定或自动参数搜索。
+
+09:44 UTC更新：fixed8完成并持久保存，final20 HOS76.9941%，已知99.6667%、未知62.7251%，与早期best85.8254%存在明显差距。refresh PID7929已实际运行到第5轮；本次尚未评价方法收益。
+
+仅作后续待检验假设：发布CLS先将bottleneck归一化，后经BN→LeakyReLU→fc打分；容量聚类目前直接用归一化bottleneck的欧氏几何。这两种尺度不等价，不等于已经证实它是退化原因，也不在当前两组间更换度量。
+
+即时纯pruning原理：已知logit固定时，删减未知头只会让最大未知logit不变或下降，所以known→unknown预测翻转不可能仅由删头发生。容量减少若有益，需要后续学习证据。附加解释脚本只从已存logits及状态对应重建该即时影响；不反馈改K/阈值。
