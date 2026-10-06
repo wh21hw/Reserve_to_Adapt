@@ -1,6 +1,6 @@
 # A→W：固定K2与阶段性估K，完整预算对照草案
 
-状态：仅准备，等待用户批准140轮/4小时预算。没有训练进程、结果或收益结论。本文件不是执行授权。
+状态：用户2026-10-06明确“启动。不用找我确认。预算足够”，本批已启动。背景exec31运行串行配对，固定组worker PID44599；尚无完整结果或收益结论。初始声明预算140轮/4小时保持。
 
 ## 要回答的问题
 
@@ -56,4 +56,4 @@
 
 训练和收集命令仅作入口说明，现在未运行。2026-10-06已完成本地三个修改入口的py_compile；现有T4通过colab-cli执行一次`--preset fixed2-70 --build-only`，两个arm均输出`LEGACY_TASK_SOURCE_BUILD_COMPLETE: no model/training executed`，总入口输出`A2W_CAPACITY_PAIR_BUILD_COMPLETE`。检查编译后的70轮/第10轮回调接口，不创建模型、不训练或评价checkpoint。没有hash、额外数据前向或稳定接口重复检查。
 
-新preset、collector与wrapper已上传现有T4的/content。runtime list同时确认原T4和CPU仍保留，不销毁、不创建新实例。预算仍未批准，build-only成功不代表实验已开始或方法有效。
+新preset、collector与wrapper已上传现有T4的/content。runtime list同时确认原T4和CPU仍保留，不销毁、不创建新实例。此前build-only成功不代表方法有效；本次随后由用户明确授权并实际启动训练，当前状态以research.md及日志为准。
