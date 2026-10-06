@@ -1,0 +1,183 @@
+{
+  "epoch": 70,
+  "C": 10,
+  "K": 5,
+  "assignment_epoch": 10,
+  "representation_epoch": 70,
+  "direction_rule": "known-residual",
+  "source_labels_used": true,
+  "stale_membership": true,
+  "prototype_space": "Actual eval BN->LeakyReLU fc input",
+  "norm_rule": "Mean norm of unchanged known10+retained unknown2 rows",
+  "norm": 0.9090468287467957,
+  "supports": [
+    {
+      "row": 12,
+      "members": 53,
+      "nearest_source_class": 3,
+      "distance_to_nearest_known": 12.10692310333252
+    },
+    {
+      "row": 13,
+      "members": 15,
+      "nearest_source_class": 2,
+      "distance_to_nearest_known": 4.719057083129883
+    },
+    {
+      "row": 14,
+      "members": 21,
+      "nearest_source_class": 2,
+      "distance_to_nearest_known": 3.761050224304199
+    }
+  ],
+  "reconstruction_max_abs_error": {
+    "source": 8.58306884765625e-06,
+    "target": 8.58306884765625e-06
+  },
+  "statistics": {
+    "source": {
+      "cases": {
+        "original": {
+          "rows": 958,
+          "full_head_counts": [
+            91,
+            82,
+            94,
+            99,
+            100,
+            101,
+            99,
+            100,
+            94,
+            98,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            556,
+            402,
+            0,
+            0,
+            0
+          ],
+          "unknown_predictions": 0,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        },
+        "prototype": {
+          "rows": 958,
+          "full_head_counts": [
+            91,
+            82,
+            94,
+            99,
+            100,
+            101,
+            99,
+            100,
+            94,
+            98,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            547,
+            393,
+            10,
+            4,
+            4
+          ],
+          "unknown_predictions": 0,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        }
+      },
+      "known_to_unknown": 0,
+      "unknown_to_known": 0,
+      "any_prediction_changes": 0
+    },
+    "target": {
+      "cases": {
+        "original": {
+          "rows": 564,
+          "full_head_counts": [
+            46,
+            21,
+            46,
+            27,
+            27,
+            29,
+            52,
+            31,
+            27,
+            21,
+            104,
+            133,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            240,
+            324,
+            0,
+            0,
+            0
+          ],
+          "unknown_predictions": 237,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        },
+        "prototype": {
+          "rows": 564,
+          "full_head_counts": [
+            46,
+            21,
+            46,
+            27,
+            27,
+            29,
+            52,
+            31,
+            27,
+            21,
+            104,
+            133,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            232,
+            310,
+            10,
+            6,
+            6
+          ],
+          "unknown_predictions": 237,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        }
+      },
+      "known_to_unknown": 0,
+      "unknown_to_known": 0,
+      "any_prediction_changes": 0
+    }
+  },
+  "metric_new_rows_used": 0,
+  "source_rejection_increase_pp": 0.0,
+  "source_guard_at_most_1pp": true,
+  "candidate_has_functional_activation": false,
+  "target_labels_used": false,
+  "new_training": false,
+  "new_image_forward": false,
+  "K_refitted": false,
+  "checkpoint_modified": false,
+  "caveat": "Frozen final-state initialization stress test, not epoch10 training, target accuracy or complete OSDA improvement. Candidate memberships from epoch10 are deliberately held fixed and may be stale."
+}

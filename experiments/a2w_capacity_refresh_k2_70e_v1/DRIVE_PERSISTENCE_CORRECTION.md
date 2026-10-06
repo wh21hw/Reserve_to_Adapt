@@ -41,3 +41,9 @@ CPU独立挂载已看到fixed2/best.pt（104726336字节）与last.pt（21149361
 三个无内部retry续传均exit0/HTTP206：fixed2-last补166050160字节19.33秒、fixed2-best补78753600字节8.84秒、refresh-best补79342400字节8.68秒。最终四个文件长度均与上述源文件长度一致，已以Move-Item去掉.part后缀，四模型本地备份完整，不做hash或重复评分。
 
 只读服务器PID86827/89372已通过命令身份检查后SIGTERM；forward ID1/2均已关闭。T4/CPU原件与实例/挂载未关闭或删除。refresh两模型云端仍未确认，不能将本地备份成功混同云端保存成功。Drive旧实验模型删除仍待具体范围确认。
+
+## 用户确认后永久清理与收工
+
+用户后续明确确认永久删除已列两组旧实验模型；8个文件均通过colab drive delete --permanent成功。总源大小1264945944字节（约1.265GB），CPU独立Drive挂载核实这两目录内.pt已为零，日志/指标/ZIP未删。文件ID：identity组1_LPOSU97kzV405fLbFga2jKp-mbgK2_2、1X-26ZWLzWvxfSVGTjUHSG5vlsLipJ3Ue、1Tq_hL8J5yyeDX2dcwQHcsEvBt6KhDA5P、16Bwgkg0F7sU-kKpcectDQ_BekRShAX5A；20e fixed8组19FOP1jScEWJiXflVzIrvaFfe5_DTNH1L、1jToXT-OLj6aZo30fTlDOM_ds6U_xs2hZ；20e refresh组19iD_EDn_jhqyLopJViHg9hqwdIa0a3nE、1tNBiFU3b-1oLtOHirt-31kpryMkVlw04。永久删除不可从回收站恢复，不作为未来任意清理授权。
+
+关闭前云端已看到fixed2 best/last与refresh best，refresh last仍未确认，但四个模型完整本地副本已保存。用户要求23:10前结束今天实例，T4与CPU destroy均成功（约23:03），不再继续保持本次临时runtime原件。明日如需refresh last从本地备份恢复，不能伪称云端已有。

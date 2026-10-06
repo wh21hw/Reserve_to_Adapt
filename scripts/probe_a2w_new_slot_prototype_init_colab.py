@@ -9,11 +9,13 @@ import torch
 torch.set_num_threads(2)
 parser = argparse.ArgumentParser()
 parser.add_argument('--head-state',required=True,help='Small saved final70 fc/BN subset, not a new model')
+parser.add_argument('--direction',choices=('mean','known-residual'),default='mean')
 args = parser.parse_args()
 run = Path('/content/drive/MyDrive/OSDA/runs/a2w-capacity-refresh-k2-70e-v1/refresh/office31-a2w_seed3')
 cache = Path('/content/drive/MyDrive/OSDA/runs/a2w-capacity-refresh-k2-70e-final-v1')
-output = Path('/content/imp-runs/a2w-new-slot-init-proxy-v1')
-durable = Path('/content/drive/MyDrive/OSDA/runs/a2w-new-slot-init-proxy-v1')
+experiment = 'a2w-new-slot-init-proxy-v1' if args.direction=='mean' else 'a2w-new-slot-known-residual-proxy-v1'
+output = Path('/content/imp-runs')/experiment
+durable = Path('/content/drive/MyDrive/OSDA/runs')/experiment
 if output.exists() or durable.exists():
     raise FileExistsError('Preserve existing single-proxy result')
 manifest = json.loads((cache/'manifest.json').read_text())
@@ -24,6 +26,7 @@ with np.load(cache/'features.npz',allow_pickle=False) as data:
     features = {split:torch.from_numpy(data[split].copy()) for split in ('source','target')}
     cached_logits = {split:torch.from_numpy(data[split+'_logits'].copy()) for split in features}
     paths = data['target_paths'].copy()
+    source_labels = torch.from_numpy(data['source_labels'].copy()).long() if args.direction=='known-residual' else None
 with np.load(run/'capacity-after-010/snapshot.npz',allow_pickle=False) as data:
     if not np.array_equal(paths,data['target_paths']):
         raise ValueError('Candidate membership sample order differs')
@@ -46,16 +49,26 @@ with torch.no_grad():
             raise RuntimeError('Head-space reconstruction mismatch; do not test wrong-space initializer')
     changed_weight = weight.clone()
     norm = weight[:12].norm(dim=1).mean()
+    if args.direction=='known-residual':
+        if source_labels.shape != (len(features['source']),) or set(source_labels.tolist()) != set(range(10)):
+            raise ValueError('Require supervised source labels 0..9 in matching order')
+        known_centers = torch.stack([head_features['source'][source_labels==c].mean(0) for c in range(10)])
     supports = []
     for row in (12,13,14):
         members = head_features['target'][assignments==row]
         if not len(members):
             raise RuntimeError('New candidate has no members')
         center = members.mean(0)
+        support = dict(row=row,members=len(members))
+        if args.direction=='known-residual':
+            nearest = int(((known_centers-center)**2).sum(1).argmin())
+            support['nearest_source_class'] = nearest
+            support['distance_to_nearest_known'] = float((center-known_centers[nearest]).norm())
+            center = center-known_centers[nearest]
         if not torch.isfinite(center).all() or center.norm()<=1e-8:
             raise RuntimeError('Undefined prototype direction')
         changed_weight[row] = center/center.norm()*norm
-        supports.append(dict(row=row,members=len(members)))
+        supports.append(support)
     if not torch.equal(changed_weight[:12],weight[:12]):
         raise RuntimeError('Known or retained unknown rows changed')
     statistics = {}
@@ -81,6 +94,7 @@ source = statistics['source']['cases']
 increase = 100*(source['prototype']['unknown_predictions']-source['original']['unknown_predictions'])/source['original']['rows']
 metric = statistics['target']['cases']['prototype']['new_rows_with_full_winners']
 report = dict(epoch=70,C=10,K=5,assignment_epoch=10,representation_epoch=70,
+    direction_rule=args.direction,source_labels_used=args.direction=='known-residual',
     stale_membership=True,prototype_space='Actual eval BN->LeakyReLU fc input',
     norm_rule='Mean norm of unchanged known10+retained unknown2 rows',norm=float(norm),
     supports=supports,reconstruction_max_abs_error=errors,statistics=statistics,
