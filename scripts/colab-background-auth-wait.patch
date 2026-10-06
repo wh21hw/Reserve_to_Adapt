@@ -4,12 +4,27 @@ Keep any unrelated existing CLI changes. This does not skip Google authorization
 
 --- a/src/daemon/server.ts
 +++ b/src/daemon/server.ts
-@@
+@@ -130,7 +130,9 @@ const TMUX_SESSION_PREFIX = 'cli-';
+ const SHELL_BOOTSTRAP_SETTLE_MS = 400;
+ 
+ const AUTH_POLL_INTERVAL_MS = 5_000;
 -const AUTH_POLL_TIMEOUT_MS = 120_000;
++// Allow a human to finish Drive consent during background executions.
++// This changes only local polling time, not consent or credential validation.
 +const AUTH_POLL_TIMEOUT_MS = 900_000;
+ 
+ async function main() {
+   fs.mkdirSync(CONFIG_DIR, { recursive: true });
 
 --- a/dist/daemon/server.js
 +++ b/dist/daemon/server.js
-@@
+@@ -105,7 +105,8 @@
+ const TMUX_SESSION_PREFIX = 'cli-';
+ const SHELL_BOOTSTRAP_SETTLE_MS = 400;
+ const AUTH_POLL_INTERVAL_MS = 5_000;
 -const AUTH_POLL_TIMEOUT_MS = 120_000;
++// Match the source timeout without changing consent or credential validation.
 +const AUTH_POLL_TIMEOUT_MS = 900_000;
+ async function main() {
+     fs.mkdirSync(CONFIG_DIR, { recursive: true });
+     // Fast exit if a peer daemon is already live — skip the rest of startup.
