@@ -58,3 +58,9 @@ temporal_partition_report.py输出K之外的划分变化：只在两边都非noi
 现已仅将这两处本机常量改为900_000（15分钟），保留原5秒轮询、凭证校验、人工同意流程和其他既有CLI修改。Node --check通过；重新读取两处常量确认修改。现有后台进程没有被粗暴终止，新启动daemon使用新设置；尚未以真实Google授权验证15分钟完整流程或Google侧URL有效期，不能声称OAuth链接保证15分钟有效。
 
 保留最小修复记录scripts/colab-background-auth-wait.patch，便于重建CLI时恢复。没有修改RTA模型、数据、训练设置或已有结果，也未新开实例来测试等待计时。真实缓存提取仍需人完成新的Drive授权；本次进展是消除过短的本地等待窗口，不是产生模型实验成绩。
+
+## 2026-10-06 人在线恢复成功
+
+新标准CPU端点m-s-kkb-use1b1-3hr6nb4xjabhs，mount exec1在用户完成同意后实际返回Mounted at /content/drive及IMP_DRIVE_MOUNTED。依赖已安装，代码、Drive缓存Office31数据与预训练权重恢复完成；真实argmax-last.pt的final10/C10/K8接口检查通过，无图像前向或重复评估。shell10已启动一次CPU冻结缓存提取，日志/content/a2w-current-cache-console.log；尚未产生当前K/漂移结果，没有重训。
+
+用户最新明确要求保留实例，空闲希望CPU，不要反复关闭导致授权；当前已是CPU，将保留该实例及挂载，不执行先前文档中本小诊断结束即销毁的安排。CLI runtime命令当前没有原地切换硬件接口，不能承诺GPU转CPU保留原VM/挂载。新约定同步AGENTS.md。
