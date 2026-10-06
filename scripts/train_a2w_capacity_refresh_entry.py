@@ -3,8 +3,9 @@ import os
 from pathlib import Path
 
 apply = os.environ['RTA_APPLY_CAPACITY_REFRESH']
-if apply not in ('0','1') or os.environ.get('RTA_EPOCHS') != '20':
-    raise ValueError('Require declared fixed/refresh20 arms')
+epochs = int(os.environ['RTA_EPOCHS'])
+if apply not in ('0','1') or epochs not in (20,70):
+    raise ValueError('Require declared fixed/refresh20 or70 arms')
 if os.environ.get('RTA_CLUSTER_LABELS') or os.environ.get('RTA_UNKNOWN_CE_WEIGHT'):
     raise ValueError('This is capacity-only, not identity-label/CE ablation')
 original = Path('/content/train_legacy_task_entry.py')
@@ -13,7 +14,7 @@ anchor = "compiled = compile(source, str(root/'main.py'), 'exec')"
 if entry.count(anchor) != 1:
     raise ValueError('Unexpected stable legacy wrapper boundary')
 patch = '''
-replace_once('while epoch <20:', ''' + repr('''while epoch <20:
+replace_once('while epoch <''' + str(epochs) + ''':', ''' + repr('''while epoch <''' + str(epochs) + ''':
     if epoch == 10:
         from capacity_refresh_boundary import refresh_boundary
         refresh_boundary(net,cls,optimizer_cls,args,epoch,apply='''+str(apply=='1')+''')

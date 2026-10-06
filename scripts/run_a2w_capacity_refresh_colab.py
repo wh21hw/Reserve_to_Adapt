@@ -1,4 +1,4 @@
-"""A single declared fixed8/refresh20 pair, serial, no automatic retries."""
+"""A bounded capacity-only pair; presets isolate budgets and output paths."""
 import argparse
 import json
 import os
@@ -16,28 +16,38 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--build-only',action='store_true')
     parser.add_argument('--run',action='store_true')
+    parser.add_argument('--preset',choices=['fixed8-20','fixed2-70'],default='fixed8-20')
     args = parser.parse_args()
     if args.build_only == args.run:
         raise ValueError('Choose exactly one build-only/run mode')
-    root = Path('/content/imp-runs/a2w-capacity-refresh-20e-v1')
-    prior = root/'source/source-final.pt'
+    epochs,initial_K,run_name = ((20,8,'a2w-capacity-refresh-20e-v1')
+        if args.preset == 'fixed8-20' else (70,2,'a2w-capacity-refresh-k2-70e-v1'))
+    arms = ('fixed'+str(initial_K),'refresh')
+    root = Path('/content/imp-runs')/run_name
+    source_root = Path('/content/imp-runs/a2w-capacity-refresh-20e-v1/source')
+    prior = source_root/'source-final.pt'
     data = Path('/content/osda-office31-a2w-v1')
     if args.run:
-        summary = json.loads((root/'source/summary.json').read_text())
+        summary = json.loads((source_root/'summary.json').read_text())
         if not summary['complete'] or (summary['known_classes'],summary['epochs']) != (10,3):
             raise ValueError('Require completed shared C10 source3')
         if not prior.is_file() or not torch.cuda.is_available():
             raise RuntimeError('Missing shared prior or GPU; no CPU training fallback')
+        saved = Path('/content/drive/MyDrive/OSDA/runs')/run_name
+        if not saved.parent.is_dir():
+            raise RuntimeError('Drive unavailable before training')
+        if any((base/arm).exists() for base in (root,saved) for arm in arms):
+            raise FileExistsError('Preserve existing local/Drive arms; do not train over old results')
     started = time.monotonic()
-    for arm,apply in (('fixed8','0'),('refresh','1')):
+    for arm,apply in zip(arms,('0','1')):
         output = root/arm
         command = ['/content/rta-py38/bin/python','-u','/content/train_a2w_capacity_refresh_entry.py',
-            '--task','office31-a2w','--shared_classes','10','--all_classes','18',
+            '--task','office31-a2w','--shared_classes','10','--all_classes',str(10+initial_K),
             '--virtual-clusters','20','--source',str(data/'amazon_0-9_train_all.txt'),
             '--target',str(data/'webcam_0-9_20-30_test.txt'),'--data_dir',str(data),
             '--log_dir',str(output),'--name','seed3','--batch_size','64',
             '--learning_rate','0.00005']
-        overrides = dict(RTA_SEED='3',RTA_EPOCHS='20',RTA_FREEZE_ENCODER_BN='1',
+        overrides = dict(RTA_SEED='3',RTA_EPOCHS=str(epochs),RTA_FREEZE_ENCODER_BN='1',
             RTA_APPLY_CAPACITY_REFRESH=apply,KONLY_SOURCE_PRIOR=str(prior),
             RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
             OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2',PYTHONPATH='/content')
@@ -48,18 +58,19 @@ def main():
             env['LEGACY_TASK_BUILD_ONLY'] = '1'
             subprocess.run(command,env=env,cwd='/content/rta-legacy-l4-bridge-v1',check=True)
             continue
-        output.mkdir(exist_ok=False)
-        launch = dict(task='Office31 A->W',arm=arm,C=10,initial_K=8,Q=20,seed=3,
-            epochs=20,source_epochs=3,source_prior=str(prior),command=command,environment=overrides,
+        output.mkdir(parents=True,exist_ok=False)
+        launch = dict(task='Office31 A->W',arm=arm,C=10,initial_K=initial_K,Q=20,seed=3,
+            epochs=epochs,source_epochs=3,source_prior=str(prior),command=command,environment=overrides,
             runtime_environment=dict(python=sys.version,torch=torch.__version__,numpy=np.__version__,
                 cuda=torch.version.cuda,gpu=torch.cuda.get_device_name()),
             refresh_completed_epochs=[10],apply_capacity=apply=='1',
             inference='Frozen source-calibrated-birth-cost-v1 + known-head identity reconciliation',
             losses='Original released-code RTA; no new losses, gate, identity training labels or prediction rule',
-            initialization='Shared source3 prior, initial C10+K8 and original warm-end K-means',
+            initialization='Shared source3 prior, initial C10+K'+str(initial_K)+' and original warm-end K-means',
             head_resize='Known and matched unknown weights/SGD preserved; no scheduler/warmup reset',
-            selection='Previously posthoc-selected seed3; target-oracle best descriptive, final20 also reported',
-            budget_seconds=7200,caveat='Single-seed exploratory pair, not semantic count or full70 proof')
+            selection='Previously posthoc-selected seed3; target-oracle best descriptive, final'+str(epochs)+' also reported',
+            budget_seconds=7200,total_budget_seconds=14400,preset=args.preset,
+            caveat='Single-seed capacity-only pair with extra C-only source3/frozen BN; not semantic count or exact paper reproduction')
         (output/'launch.json').write_text(json.dumps(launch,indent=2))
         timeout_flag = threading.Event()
         remaining = min(7200,14400-(time.monotonic()-started))
@@ -90,9 +101,9 @@ def main():
         if status or timeout_flag.is_set():
             raise RuntimeError('Arm failed/budget expired; preserve evidence, no retry')
         history = [json.loads(line) for line in (output/'office31-a2w_seed3/history.jsonl').read_text().splitlines()]
-        if [row['epoch'] for row in history] != list(range(1,21)):
-            raise RuntimeError('Incomplete declared twenty epochs')
-        saved = Path('/content/drive/MyDrive/OSDA/runs/a2w-capacity-refresh-20e-v1')
+        if [row['epoch'] for row in history] != list(range(1,epochs+1)):
+            raise RuntimeError('Incomplete declared epoch budget')
+        saved = Path('/content/drive/MyDrive/OSDA/runs')/run_name
         if not saved.parent.is_dir():
             raise RuntimeError('Drive unavailable; keep local result, no next arm')
         import shutil
