@@ -58,3 +58,11 @@
 | 0 | 既有T4原argmax K8，10轮参考；不是本批20轮控制 | final HOS86.3354%，OS*96.3023%，UNK78.2380% | reference；已复读本地summary | 2026-10-06 |
 
 状态：协议已声明，新的20轮配对尚未启动。没有新训练成绩，也没有确认收益；必须在代码关键接口检查及输入恢复完成后启动。
+
+## 实现与恢复进度
+
+2026-10-06：capacity_refresh_boundary.py与隔离训练wrapper已实现。真实final10无标签缓存/已保存CLS和SGD的单次CPU接口检查通过：K8→K4，已知权重/动量保持，4个未知对应行保持，classifier alias与optimizer参数替换正确。未重新图像前向、重新拟合缓存K或训练。两arm实际patch build-only编译通过。当前检查只证明接口，不预设训练时K4。
+
+新T4端点gpu-t4-s-kkb-ass1c1-1lpayjb3tm80f，CPU仍在。最初本地daemon TLS连接ECONNRESET，mount exec1/3在执行前crashed；无训练/数据提取，因此不是OOM或模型失败。确认只有该新T4本地daemon1664且无运行任务后仅终止本地连接进程、重新连接，没有重启/销毁Colab实例。新的mount exec4已生成授权URL并等待用户同意，shell12可用；依赖安装进行中。基础代码/19.9KiB支持包/恢复脚本已成功上传，数据仍将从Drive缓存复制，不公网下载。
+
+run_a2w_capacity_refresh_colab.py显式--run才会训练；每arm最多7200秒/总14400秒，失败保存状态后停止，不自动重试或切换配置；每arm完整20轮后普通模型/日志/容量缓存实际复制到Drive，再进入下一arm。collector只读取20轮history、best/final、post-refresh best与K轨迹，保留共同前10轮偏差，不重评checkpoint。当前尚未执行--run，无新成绩。
