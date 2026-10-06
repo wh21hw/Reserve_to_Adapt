@@ -1,0 +1,175 @@
+{
+  "epoch": 70,
+  "C": 10,
+  "K": 5,
+  "assignment_epoch": 10,
+  "representation_epoch": 70,
+  "stale_membership": true,
+  "prototype_space": "Actual eval BN->LeakyReLU fc input",
+  "norm_rule": "Mean norm of unchanged known10+retained unknown2 rows",
+  "norm": 0.9090468287467957,
+  "supports": [
+    {
+      "row": 12,
+      "members": 53
+    },
+    {
+      "row": 13,
+      "members": 15
+    },
+    {
+      "row": 14,
+      "members": 21
+    }
+  ],
+  "reconstruction_max_abs_error": {
+    "source": 8.58306884765625e-06,
+    "target": 8.58306884765625e-06
+  },
+  "statistics": {
+    "source": {
+      "cases": {
+        "original": {
+          "rows": 958,
+          "full_head_counts": [
+            91,
+            82,
+            94,
+            99,
+            100,
+            101,
+            99,
+            100,
+            94,
+            98,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            556,
+            402,
+            0,
+            0,
+            0
+          ],
+          "unknown_predictions": 0,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        },
+        "prototype": {
+          "rows": 958,
+          "full_head_counts": [
+            91,
+            82,
+            0,
+            98,
+            99,
+            101,
+            99,
+            100,
+            93,
+            98,
+            0,
+            0,
+            2,
+            12,
+            83
+          ],
+          "unknown_only_counts": [
+            110,
+            55,
+            683,
+            12,
+            98
+          ],
+          "unknown_predictions": 97,
+          "new_row_predictions": 97,
+          "new_rows_with_full_winners": 3
+        }
+      },
+      "known_to_unknown": 97,
+      "unknown_to_known": 0,
+      "any_prediction_changes": 97
+    },
+    "target": {
+      "cases": {
+        "original": {
+          "rows": 564,
+          "full_head_counts": [
+            46,
+            21,
+            46,
+            27,
+            27,
+            29,
+            52,
+            31,
+            27,
+            21,
+            104,
+            133,
+            0,
+            0,
+            0
+          ],
+          "unknown_only_counts": [
+            240,
+            324,
+            0,
+            0,
+            0
+          ],
+          "unknown_predictions": 237,
+          "new_row_predictions": 0,
+          "new_rows_with_full_winners": 0
+        },
+        "prototype": {
+          "rows": 564,
+          "full_head_counts": [
+            46,
+            21,
+            0,
+            27,
+            27,
+            29,
+            52,
+            31,
+            27,
+            21,
+            75,
+            119,
+            43,
+            16,
+            30
+          ],
+          "unknown_only_counts": [
+            98,
+            182,
+            238,
+            16,
+            30
+          ],
+          "unknown_predictions": 283,
+          "new_row_predictions": 89,
+          "new_rows_with_full_winners": 3
+        }
+      },
+      "known_to_unknown": 46,
+      "unknown_to_known": 0,
+      "any_prediction_changes": 89
+    }
+  },
+  "metric_new_rows_used": 3,
+  "source_rejection_increase_pp": 10.12526096033403,
+  "source_guard_at_most_1pp": false,
+  "candidate_has_functional_activation": true,
+  "target_labels_used": false,
+  "new_training": false,
+  "new_image_forward": false,
+  "K_refitted": false,
+  "checkpoint_modified": false,
+  "caveat": "Frozen final-state initialization stress test, not epoch10 training, target accuracy or complete OSDA improvement. Candidate memberships from epoch10 are deliberately held fixed and may be stale."
+}

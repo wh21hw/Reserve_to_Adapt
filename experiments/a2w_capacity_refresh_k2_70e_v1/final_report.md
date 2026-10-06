@@ -12,7 +12,7 @@ Office31 A→W，958 source/564 target，C10、Q20、seed3（历史事后选择�
 
 两组从K2开始，保持原版RTA损失、warm-end K-means、未知候选筛选、未知槽argmax伪标签及最终C+K argmax。不用簇ID训练、不按IMP方向初始化、不加loss。两组第10轮均提取当前全量特征并按相同source-only规则估K5；固定组不应用，自适应组应用一次后保持K5。
 
-exec31实际done，训练及自动collector成功；fixed2 worker44599与refresh worker59042均exit0、timed_out=false，两组history恰为1..70。各组普通best/last与日志、边界缓存、summary及结果ZIP已实际保存Drive。没有重新评价checkpoint、hash验证或重训。
+exec31实际done，训练及自动collector成功；fixed2 worker44599与refresh worker59042均exit0、timed_out=false，两组history恰为1..70。日志/缓存/summary/ZIP已收集，训练侧复制到Drive挂载返回成功，但随后独立CPU挂载发现大模型缺失、DriveFS明确报用户存储quotaExceeded。因此普通模型云端持久保存未完成，正在一次本地备份，详见DRIVE_PERSISTENCE_CORRECTION.md。没有重新评价checkpoint、hash验证或重训。
 
 累计history训练时间：2246.52秒+2265.86秒=75.21分钟（不等同于精确端到端墙钟含所有IO）；此前根据15轮估计整批78.04分钟，数量级吻合。
 
@@ -51,6 +51,6 @@ final差值：OS*0pp、UNK+0.2273pp、HOS+0.1313pp。best差值三项均0pp。�
 
 ## 保存与绘图
 
-Drive：`OSDA/runs/a2w-capacity-refresh-k2-70e-v1`；本地`pipeline-results/a2w-capacity-refresh-k2-70e-v1-{summary.json,results.zip}`。完整日志与无标签边界NPZ在结果ZIP，普通模型留Drive，不重复下载大文件。
+Drive：`OSDA/runs/a2w-capacity-refresh-k2-70e-v1`；本地`pipeline-results/a2w-capacity-refresh-k2-70e-v1-{summary.json,results.zip}`。完整日志与无标签边界NPZ在结果ZIP。普通模型因Drive满而尚未云端保存，保留T4原始文件并一次备份至`pipeline-results/a2w-capacity-refresh-k2-70e-v1-models`；不把part文件当完成，不重复例行传大文件。
 
 训练/汇总代码版本afb3331a及已记录启动4d85d43b，绘图改造bbf66389。绘图仅读取已有日志：本地bundled Python没有matplotlib，改用既有Colab venv；上传技能样式时修正WSL路径，随后显式Agg避免继承notebook inline backend。上述工程问题不影响已完成训练/指标，不重跑任何模型。曲线由实际K和70轮metadata生成，不硬编码旧K8→K4。

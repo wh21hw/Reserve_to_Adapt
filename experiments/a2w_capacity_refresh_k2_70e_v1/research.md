@@ -45,7 +45,9 @@ background exec31启动venv子进程，父控制台`/content/a2w-capacity-refres
 
 | # | Change | Metric | Result | Timestamp |
 | --- | --- | --- | --- | --- |
-| 0 | 同前置固定K2，70轮控制 | final HOS88.9305%，best89.0618% | 完整70轮、exit0、Drive已保存 | 2026-10-06 |
+| 0 | 同前置固定K2，70轮控制 | final HOS88.9305%，best89.0618% | 完整70轮、exit0；日志已保存，模型Drive上传因quota阻塞 | 2026-10-06 |
 | 1 | 初始K2，第10轮后K2→估计K5，70轮 | final89.0618%，Δ+0.1313pp；best89.0618%，Δ0pp | 近似零效果，未达+1pp筛查，不晋升默认 | 2026-10-06 |
 
 状态：本批实际完成，exec31训练及自动collector成功，两组均70完整轮。完整向量、前10偏差、迁移和保存证据见final_report.md。总体未知建模研究仍未完成，没有新训练启动。
+
+保存更正：随后CPU独立挂载缺失大模型，T4 DriveFS明确用户storage quotaExceeded。此前挂载存在不等于云端持久上传，模型仍保留T4原始目录并正在一次本地备份，见DRIVE_PERSISTENCE_CORRECTION.md；研究成绩不改，不删云盘或重训。
