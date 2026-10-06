@@ -72,6 +72,13 @@ def main():
         raise RuntimeError('CUDA unavailable; do not silently change device')
     device = torch.device(args.device)
     model.to(device).eval()
+    # The released ResNet helper allocates these constants with .cuda().
+    # Keep exactly its ImageNet normalization, but allocate on the chosen
+    # inference device; no architecture, checkpoint weight or training change.
+    model[0].mean = torch.as_tensor(np.asarray([0.485,0.456,0.406],dtype=np.float32)
+        .reshape((1,3,1,1)),device=device)
+    model[0].std = torch.as_tensor(np.asarray([0.229,0.224,0.225],dtype=np.float32)
+        .reshape((1,3,1,1)),device=device)
     started, arrays = time.time(), {}
     with torch.no_grad():
         for split,names in [('source',source_names),('target',target_names)]:

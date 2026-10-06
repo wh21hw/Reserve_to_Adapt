@@ -40,3 +40,11 @@ temporal_partition_report.py输出K之外的划分变化：只在两边都非noi
 一次新统计接口功能检查已在本地CPU完成：编号换位ARI1、交叉重新分组ARI−0.5、noise与共同样本不足分支正确。初次断言因浮点严格等号失败，改用容差断言通过，算法没有因此改动。比较入口AST语法通过；没有重新测试稳定聚类核心、没有GPU或真实checkpoint前向。
 
 当前真实final10特征缓存尚未生成，所以没有新的K、漂移程度或模型效果结论。下一实际动作仍是复用Drive final10模型生成一次冻结缓存，然后运行此纯CPU比较器；不再次训练source或RTA，不把准备完成写成实验完成。需上传source_precision_capacity.py、robust_capacity.py、prototype_identity_reconciliation.py、temporal_partition_report.py及relation_gate.py到运行环境，缓存持久保存后及时关闭实例。
+
+## 实际恢复进展
+
+2026-10-06，通过CLI检查确认无在线runtime；Drive直读API仍返回共享client项目202264815644的Queries quota错误，不是用户Drive磁盘容量不足。仅需一次前向，本批改用标准CPU实例m-s-kkb-usw4a1-1tx31818s2ldc，实测0.08 CCU/hr，shell9；挂载exec1已请求用户授权。CPU推理会比GPU慢，但没有新训练或模型设置改变。
+
+原ResNet源码get_mean/get_std强制.cuda()，缓存入口已在推理设备上显式分配相同float32 ImageNet常数；仅设备分配兼容修复，不改变架构、权重或归一化数值。恢复入口scripts/restore_a2w_temporal_snapshot_colab.py只读取既有Drive数据/权重/argmax-last.pt，未重训source。首个setup文件上传fetch failed，已成功重传；之前python因此找不到文件，未发生任何训练/提取，重新运行依赖安装不改变实验设置。
+
+代码/辅助包已上传。当前等待Drive授权与依赖安装完成，尚未提取final10缓存、估计当前K或产生漂移数值；不要从准备过程声称假设已验证。完成后保存小缓存、离线比较结果到Drive并关闭CPU实例。
