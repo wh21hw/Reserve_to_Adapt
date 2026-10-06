@@ -66,3 +66,11 @@
 新T4端点gpu-t4-s-kkb-ass1c1-1lpayjb3tm80f，CPU仍在。最初本地daemon TLS连接ECONNRESET，mount exec1/3在执行前crashed；无训练/数据提取，因此不是OOM或模型失败。确认只有该新T4本地daemon1664且无运行任务后仅终止本地连接进程、重新连接，没有重启/销毁Colab实例。新的mount exec4已生成授权URL并等待用户同意，shell12可用；依赖安装进行中。基础代码/19.9KiB支持包/恢复脚本已成功上传，数据仍将从Drive缓存复制，不公网下载。
 
 run_a2w_capacity_refresh_colab.py显式--run才会训练；每arm最多7200秒/总14400秒，失败保存状态后停止，不自动重试或切换配置；每arm完整20轮后普通模型/日志/容量缓存实际复制到Drive，再进入下一arm。collector只读取20轮history、best/final、post-refresh best与K轨迹，保留共同前10轮偏差，不重评checkpoint。当前尚未执行--run，无新成绩。
+
+## 训练已实际启动
+
+2026-10-06 09:32 UTC现场检查：mount exec4实际done，依赖安装与Drive缓存恢复均成功。一次直接exec --file调用启动器被notebook的-f参数挡住（exec5 SystemExit2），未创建训练arm或模型；改用固定venv在shell12显式执行`/content/rta-py38/bin/python -u /content/run_a2w_capacity_refresh_colab.py --run > /content/a2w-capacity-refresh-pair-console.log 2>&1`，不修改研究设置、不重跑已发生的训练。
+
+实际fixed8 worker PID3607确认存活并已输出Epoch0/1（history为1/2），ce0.489/0.305等loss有限，无OOM；GPU确认为Tesla T4。source shared C10/K8/Q20及encoder BN策略均与声明一致。前两轮在原版warmup，UNK0.036/0.000不能据此判定最终方法失败。第10轮边界尚未执行，refresh arm尚未开始，没有新推断K或最终对照结果；不能将先前final10诊断K4当本批固定设定。
+
+监控：shell12跑串行启动器，查看/content/a2w-capacity-refresh-pair-console.log、各arm/console.log、office31-a2w_seed3/history.jsonl与capacity-after-010/estimate.json即可。正常训练不新排队kernel训练，不重复evaluate checkpoint；远程只读检查可用独立shell或短exec，因为训练在独立shell/venv子进程而非Jupyter串行kernel中。普通20轮模型/日志先逐arm实际保存到Drive，结束运行collector再下载summary/ZIP；CPU实例与挂载保留。目标整体仍未完成。
