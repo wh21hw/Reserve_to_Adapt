@@ -1,0 +1,15 @@
+Local MurphyLo/colab-cli compatibility change for this project's human Drive consent.
+Apply within the CLI checkout, not the RTA training repository.
+Keep any unrelated existing CLI changes. This does not skip Google authorization.
+
+--- a/src/daemon/server.ts
++++ b/src/daemon/server.ts
+@@
+-const AUTH_POLL_TIMEOUT_MS = 120_000;
++const AUTH_POLL_TIMEOUT_MS = 900_000;
+
+--- a/dist/daemon/server.js
++++ b/dist/daemon/server.js
+@@
+-const AUTH_POLL_TIMEOUT_MS = 120_000;
++const AUTH_POLL_TIMEOUT_MS = 900_000;

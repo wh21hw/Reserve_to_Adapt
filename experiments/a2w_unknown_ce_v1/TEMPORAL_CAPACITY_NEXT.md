@@ -50,3 +50,11 @@ temporal_partition_report.py输出K之外的划分变化：只在两边都非noi
 代码/辅助包已上传。当前等待Drive授权与依赖安装完成，尚未提取final10缓存、估计当前K或产生漂移数值；不要从准备过程声称假设已验证。完成后保存小缓存、离线比较结果到Drive并关闭CPU实例。
 
 随后实查：依赖安装完成，但mount exec1在2m2s以Authorization timed out终止，未读取模型或数据。不存在新提取结果需要保存；既有checkpoint/数据/结构artifact仍在Drive，代码在Git。为避免空耗，已请求销毁该CPU实例，不连续刷新授权或自动新建runtime。上述授权URL与端点不再可用；下一次需要人在线及时完成新挂载授权后才能实际提取缓存。这是访问阻碍，不是模型失败或新结果。
+
+## 授权等待窗口的直接原因已修复
+
+只读检查发现本机Murphy CLI的src/daemon/server.ts及dist/daemon/server.js将后台授权轮询窗口硬编码AUTH_POLL_TIMEOUT_MS=120_000。超时由daemon主动发送Authorization timed out，因此Python _message的900秒设置不足以延长它。CLI exec --help也没有授权等待时长选项。
+
+现已仅将这两处本机常量改为900_000（15分钟），保留原5秒轮询、凭证校验、人工同意流程和其他既有CLI修改。Node --check通过；重新读取两处常量确认修改。现有后台进程没有被粗暴终止，新启动daemon使用新设置；尚未以真实Google授权验证15分钟完整流程或Google侧URL有效期，不能声称OAuth链接保证15分钟有效。
+
+保留最小修复记录scripts/colab-background-auth-wait.patch，便于重建CLI时恢复。没有修改RTA模型、数据、训练设置或已有结果，也未新开实例来测试等待计时。真实缓存提取仍需人完成新的Drive授权；本次进展是消除过短的本地等待窗口，不是产生模型实验成绩。
