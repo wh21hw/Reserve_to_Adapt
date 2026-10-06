@@ -1,0 +1,52 @@
+{
+  "checkpoint": "/content/imp-runs/a2w-capacity-refresh-k2-70e-v1/refresh/office31-a2w_seed3/last.pt",
+  "epoch": 70,
+  "C": 10,
+  "K": 5,
+  "selection": "Declared final checkpoint, never target-oracle best",
+  "target_labels_used": false,
+  "training": false,
+  "GMM_fitted": false,
+  "K_estimated": false,
+  "reconstruction": "Current frozen-model source probability means; not saved historical relation bank/GMM",
+  "transform": "Resize256, CenterCrop224, ToTensor; eval BN; full actual head output",
+  "kl_direction": "source class probability mean || target C-only conditional probability",
+  "device": "cuda",
+  "shuffled": false,
+  "seconds": 9.047469854354858,
+  "shapes": {
+    "source": [
+      958,
+      256
+    ],
+    "source_logits": [
+      958,
+      15
+    ],
+    "target": [
+      564,
+      256
+    ],
+    "target_logits": [
+      564,
+      15
+    ],
+    "source_relation_kl": [
+      958
+    ],
+    "target_relation_kl": [
+      564
+    ],
+    "source_soft_prototypes": [
+      10,
+      10
+    ],
+    "source_labels": [
+      958
+    ],
+    "target_paths": [
+      564
+    ]
+  },
+  "complete": true
+}

@@ -1,0 +1,162 @@
+{
+  "checkpoint": "/content/imp-runs/a2w-capacity-refresh-k2-70e-v1/refresh/office31-a2w_seed3/last.pt",
+  "epoch": 70,
+  "C": 10,
+  "K": 5,
+  "new_rows": [
+    12,
+    13,
+    14
+  ],
+  "retained_rows": [
+    10,
+    11
+  ],
+  "target_labels_used": false,
+  "accuracy_evaluated": false,
+  "new_training": false,
+  "K_refitted": false,
+  "splits": {
+    "target": {
+      "rows": 564,
+      "full_head_winners": [
+        46,
+        21,
+        46,
+        27,
+        27,
+        29,
+        52,
+        31,
+        27,
+        21,
+        104,
+        133,
+        0,
+        0,
+        0
+      ],
+      "unknown_only_winners": [
+        240,
+        324,
+        0,
+        0,
+        0
+      ],
+      "predicted_unknown_rows": 237,
+      "new_rows_full_winners": 0,
+      "new_rows_unknown_only_winners": 0,
+      "deleting_new_rows_changes_any_prediction": 0,
+      "deleting_new_rows_changes_binary_rejection": 0,
+      "new_row_max_logit_margin_over_retained_unknown": [
+        -2.197298288345337,
+        -1.086852788925171,
+        -1.4306344985961914
+      ]
+    },
+    "source": {
+      "rows": 958,
+      "full_head_winners": [
+        91,
+        82,
+        94,
+        99,
+        100,
+        101,
+        99,
+        100,
+        94,
+        98,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "unknown_only_winners": [
+        556,
+        402,
+        0,
+        0,
+        0
+      ],
+      "predicted_unknown_rows": 0,
+      "new_rows_full_winners": 0,
+      "new_rows_unknown_only_winners": 0,
+      "deleting_new_rows_changes_any_prediction": 0,
+      "deleting_new_rows_changes_binary_rejection": 0,
+      "new_row_max_logit_margin_over_retained_unknown": [
+        -1.1914774179458618,
+        -0.16338017582893372,
+        -0.8246224522590637
+      ]
+    }
+  },
+  "caveat": "One frozen center-crop eval snapshot, not the historical training augmentation/BN/gate stream. No claim that an unused eval row never had gradients or positive pseudo-labels during training.",
+  "epoch10_candidate_to_final_head": [
+    {
+      "candidate_id": 10,
+      "rows": 76,
+      "final_known_predictions": 0,
+      "final_unknown_slot_counts": [
+        76,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "candidate_id": 11,
+      "rows": 134,
+      "final_known_predictions": 23,
+      "final_unknown_slot_counts": [
+        1,
+        110,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "candidate_id": 12,
+      "rows": 53,
+      "final_known_predictions": 4,
+      "final_unknown_slot_counts": [
+        26,
+        23,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "candidate_id": 13,
+      "rows": 15,
+      "final_known_predictions": 15,
+      "final_unknown_slot_counts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "candidate_id": 14,
+      "rows": 21,
+      "final_known_predictions": 21,
+      "final_unknown_slot_counts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "hypothesis_tests": {
+    "H1_unused_new_rows_falsified": false,
+    "H2_new_rows_have_final_functional_use_falsified": true
+  }
+}
