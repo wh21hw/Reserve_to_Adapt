@@ -1,2 +1,3 @@
 iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
 0	76.99405389714937	-	-	baseline	Fixed K8 final20 HOS percent; same-batch control; observed after durable save	agent	2026-10-06T09:44:44Z
+1	85.10417205834402	8.110118161194645	+10.53%	kept	Stage10 K8 to inferred K4 final20; exploratory implementation retained, not default promotion	agent	2026-10-06T10:06:20Z

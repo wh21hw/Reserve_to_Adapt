@@ -56,6 +56,7 @@
 | # | Change | Metric | Result | Timestamp |
 | --- | --- | --- | --- | --- |
 | 0 | 本批fixed8，20轮实际控制 | final HOS76.9941%，OS*99.6667%，UNK62.7251% | baseline；exit0并实际保存Drive | 2026-10-06 |
+| 1 | 第10轮后K8→估计K4，20轮完整候选 | final HOS85.1042%；ΔHOS+8.1101pp、ΔUNK+11.7097pp、ΔOS*−0.3226pp | 初步支持，保留探索实现，不晋升默认方法 | 2026-10-06 |
 
 状态：协议已声明，新的20轮配对尚未启动。没有新训练成绩，也没有确认收益；必须在代码关键接口检查及输入恢复完成后启动。
 
@@ -82,3 +83,11 @@ run_a2w_capacity_refresh_colab.py显式--run才会训练；每arm最多7200秒/�
 自适应组当时完成5轮，尚未到容量更新边界，loss有限/进程存活。不得用未实施变化前的best宣称容量更新改善，也不将未知早期低指标当失败。完整比较待两组20轮结束后进行。
 
 附加无标签解释脚本diagnose_a2w_resize_rejection_colab.py已准备，只在训练完成/模型持久保存后读取第10轮缓存logits及head row_mapping。在纯删减未知行、已知权重不变的情况下重建即时拒识变化，无图像前向/重评checkpoint/调参；不能将softmax分母变小直接解释为更多argmax拒识。后续学习可能改变这一即时结果，必须区分。
+
+## 本批结束：40轮预算完成，整体目标未完成
+
+refresh亦正常20轮exit0，无OOM/NaN；K8→K4更新后保持K4，模型/日志实际保存Drive。collector修复一次纯字符串续行错误后成功汇总完整20轮及设置，未重训/重评checkpoint。summary和3.0MiB ZIP均已下载本地pipeline-results；即时pruning报告已保存Drive与本地。
+
+final HOS差值+8.1101pp，best差值仅+0.4004pp。前10轮最大三指标偏差1.7045pp，第10轮预先已有HOS+0.7337pp；不能称严格确定性因果对照。即时删头全部564个known/unknown预测均不变（unknown223→223），支持将收益归于后续学习而非立即改变拒识。完整表、边界与后续安排见final_report.md。
+
+本批max_iterations1已完成，不自动追加训练/扩矩阵，不将总体目标标完成。用户无人值守意图保留；下一批固定K2/阶段性容量70轮预算与是否释放闲置T4已询问，当前CPU与T4仍保留，不擅自销毁。

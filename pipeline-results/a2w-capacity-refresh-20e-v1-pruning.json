@@ -1,0 +1,16 @@
+{
+  "target_labels_used": false,
+  "new_training": false,
+  "new_forward": false,
+  "checkpoint_reevaluated": false,
+  "old_K": 8,
+  "new_K": 4,
+  "interpretation": "Immediate pruning only; not final OSDA accuracy, probability-aggregation prediction, or proof of post-update training outcome",
+  "available": true,
+  "rows": 564,
+  "before_unknown": 223,
+  "immediately_after_unknown": 223,
+  "unknown_to_known": 0,
+  "known_to_unknown": 0,
+  "unchanged": 564
+}

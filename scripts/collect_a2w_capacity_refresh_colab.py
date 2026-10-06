@@ -49,6 +49,15 @@ report['best_refresh_minus_fixed_pp'] = {key:100*(candidate['best'][key]-base['b
     for key in ('OS_star','UNK','HOS')}
 report['warmup_max_abs_delta_pp'] = max(100*abs(a[key]-b[key])
     for a,b in zip(histories[0][:10],histories[1][:10]) for key in ('OS_star','unknown','HOS'))
+report['pre_refresh_epoch10_difference_pp'] = {
+    key:100*(metric(histories[1][9])[key]-metric(histories[0][9])[key])
+    for key in ('OS_star','UNK','HOS')}
+report['final_minus_pre_refresh_difference_pp'] = {
+    key:report['final_refresh_minus_fixed_pp'][key]-report['pre_refresh_epoch10_difference_pp'][key]
+    for key in ('OS_star','UNK','HOS')}
+report['trajectory_comparison_caveat'] = (
+    'Pre-refresh trajectories are not identical; differences-of-differences '
+    'are descriptive only, not an unbiased causal estimator or significance test.')
 report['runtime_environment'] = launches[0]['runtime_environment']
 report['manual_support_screen'] = dict(
     final_HOS_gain_at_least_1pp=report['final_refresh_minus_fixed_pp']['HOS']>=1,
