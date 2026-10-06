@@ -1,0 +1,716 @@
+{
+  "task": "Office31 A->W",
+  "new_training": false,
+  "new_image_forward": false,
+  "target_labels_posthoc_only": true,
+  "capacity_artifact": "/content/drive/MyDrive/OSDA/runs/a2w-temporal-capacity-v1",
+  "partitions": {
+    "final10_raw": {
+      "known_as_unknown_fraction": 0.07796610169491526,
+      "unknown_as_unknown_fraction": 0.8736059479553904,
+      "unknown_absorbed_by_known_fraction": 0.12639405204460966,
+      "known_identity_accuracy": 0.9186440677966101,
+      "known_noise_fraction": 0.0,
+      "unknown_noise_fraction": 0.0,
+      "occupied_clusters": 14,
+      "clusters": [
+        {
+          "identity": 0,
+          "size": 44,
+          "known_rows": 29,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "0": 29,
+            "24": 8,
+            "30": 7
+          }
+        },
+        {
+          "identity": 1,
+          "size": 21,
+          "known_rows": 21,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "1": 21
+          }
+        },
+        {
+          "identity": 2,
+          "size": 45,
+          "known_rows": 30,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "2": 30,
+            "21": 15
+          }
+        },
+        {
+          "identity": 3,
+          "size": 27,
+          "known_rows": 27,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 27
+          }
+        },
+        {
+          "identity": 4,
+          "size": 28,
+          "known_rows": 28,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "2": 1,
+            "4": 27
+          }
+        },
+        {
+          "identity": 5,
+          "size": 28,
+          "known_rows": 28,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "5": 28
+          }
+        },
+        {
+          "identity": 6,
+          "size": 35,
+          "known_rows": 35,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "6": 35
+          }
+        },
+        {
+          "identity": 7,
+          "size": 31,
+          "known_rows": 30,
+          "unknown_rows": 1,
+          "semantic_counts": {
+            "7": 30,
+            "29": 1
+          }
+        },
+        {
+          "identity": 8,
+          "size": 27,
+          "known_rows": 27,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "8": 27
+          }
+        },
+        {
+          "identity": 9,
+          "size": 20,
+          "known_rows": 17,
+          "unknown_rows": 3,
+          "semantic_counts": {
+            "9": 17,
+            "27": 3
+          }
+        },
+        {
+          "identity": 10,
+          "size": 68,
+          "known_rows": 0,
+          "unknown_rows": 68,
+          "semantic_counts": {
+            "20": 32,
+            "25": 11,
+            "26": 25
+          }
+        },
+        {
+          "identity": 11,
+          "size": 82,
+          "known_rows": 9,
+          "unknown_rows": 73,
+          "semantic_counts": {
+            "5": 2,
+            "6": 7,
+            "24": 32,
+            "27": 27,
+            "30": 14
+          }
+        },
+        {
+          "identity": 12,
+          "size": 79,
+          "known_rows": 5,
+          "unknown_rows": 74,
+          "semantic_counts": {
+            "9": 5,
+            "21": 1,
+            "23": 27,
+            "28": 24,
+            "29": 22
+          }
+        },
+        {
+          "identity": 13,
+          "size": 29,
+          "known_rows": 9,
+          "unknown_rows": 20,
+          "semantic_counts": {
+            "6": 1,
+            "9": 8,
+            "22": 20
+          }
+        }
+      ]
+    },
+    "final10_matched": {
+      "known_as_unknown_fraction": 0.07796610169491526,
+      "unknown_as_unknown_fraction": 0.8736059479553904,
+      "unknown_absorbed_by_known_fraction": 0.12639405204460966,
+      "known_identity_accuracy": 0.9186440677966101,
+      "known_noise_fraction": 0.0,
+      "unknown_noise_fraction": 0.0,
+      "occupied_clusters": 14,
+      "clusters": [
+        {
+          "identity": 0,
+          "size": 44,
+          "known_rows": 29,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "0": 29,
+            "24": 8,
+            "30": 7
+          }
+        },
+        {
+          "identity": 1,
+          "size": 21,
+          "known_rows": 21,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "1": 21
+          }
+        },
+        {
+          "identity": 2,
+          "size": 45,
+          "known_rows": 30,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "2": 30,
+            "21": 15
+          }
+        },
+        {
+          "identity": 3,
+          "size": 27,
+          "known_rows": 27,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 27
+          }
+        },
+        {
+          "identity": 4,
+          "size": 28,
+          "known_rows": 28,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "2": 1,
+            "4": 27
+          }
+        },
+        {
+          "identity": 5,
+          "size": 28,
+          "known_rows": 28,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "5": 28
+          }
+        },
+        {
+          "identity": 6,
+          "size": 35,
+          "known_rows": 35,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "6": 35
+          }
+        },
+        {
+          "identity": 7,
+          "size": 31,
+          "known_rows": 30,
+          "unknown_rows": 1,
+          "semantic_counts": {
+            "7": 30,
+            "29": 1
+          }
+        },
+        {
+          "identity": 8,
+          "size": 27,
+          "known_rows": 27,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "8": 27
+          }
+        },
+        {
+          "identity": 9,
+          "size": 20,
+          "known_rows": 17,
+          "unknown_rows": 3,
+          "semantic_counts": {
+            "9": 17,
+            "27": 3
+          }
+        },
+        {
+          "identity": 10,
+          "size": 68,
+          "known_rows": 0,
+          "unknown_rows": 68,
+          "semantic_counts": {
+            "20": 32,
+            "25": 11,
+            "26": 25
+          }
+        },
+        {
+          "identity": 11,
+          "size": 82,
+          "known_rows": 9,
+          "unknown_rows": 73,
+          "semantic_counts": {
+            "5": 2,
+            "6": 7,
+            "24": 32,
+            "27": 27,
+            "30": 14
+          }
+        },
+        {
+          "identity": 12,
+          "size": 79,
+          "known_rows": 5,
+          "unknown_rows": 74,
+          "semantic_counts": {
+            "9": 5,
+            "21": 1,
+            "23": 27,
+            "28": 24,
+            "29": 22
+          }
+        },
+        {
+          "identity": 13,
+          "size": 29,
+          "known_rows": 9,
+          "unknown_rows": 20,
+          "semantic_counts": {
+            "6": 1,
+            "9": 8,
+            "22": 20
+          }
+        }
+      ]
+    },
+    "source3_raw": {
+      "known_as_unknown_fraction": 0.7932203389830509,
+      "unknown_as_unknown_fraction": 1.0,
+      "unknown_absorbed_by_known_fraction": 0.0,
+      "known_identity_accuracy": 0.20677966101694914,
+      "known_noise_fraction": 0.0,
+      "unknown_noise_fraction": 0.0,
+      "occupied_clusters": 18,
+      "clusters": [
+        {
+          "identity": 1,
+          "size": 21,
+          "known_rows": 21,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "1": 21
+          }
+        },
+        {
+          "identity": 3,
+          "size": 3,
+          "known_rows": 3,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 3
+          }
+        },
+        {
+          "identity": 4,
+          "size": 22,
+          "known_rows": 22,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "4": 22
+          }
+        },
+        {
+          "identity": 7,
+          "size": 2,
+          "known_rows": 2,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "7": 2
+          }
+        },
+        {
+          "identity": 9,
+          "size": 13,
+          "known_rows": 13,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "9": 13
+          }
+        },
+        {
+          "identity": 10,
+          "size": 43,
+          "known_rows": 0,
+          "unknown_rows": 43,
+          "semantic_counts": {
+            "20": 32,
+            "25": 11
+          }
+        },
+        {
+          "identity": 11,
+          "size": 116,
+          "known_rows": 13,
+          "unknown_rows": 103,
+          "semantic_counts": {
+            "6": 8,
+            "9": 5,
+            "21": 1,
+            "23": 25,
+            "24": 1,
+            "27": 28,
+            "28": 24,
+            "29": 22,
+            "30": 2
+          }
+        },
+        {
+          "identity": 12,
+          "size": 31,
+          "known_rows": 10,
+          "unknown_rows": 21,
+          "semantic_counts": {
+            "6": 1,
+            "9": 9,
+            "22": 20,
+            "23": 1
+          }
+        },
+        {
+          "identity": 13,
+          "size": 35,
+          "known_rows": 35,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "2": 31,
+            "4": 4
+          }
+        },
+        {
+          "identity": 14,
+          "size": 33,
+          "known_rows": 33,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "6": 33
+          }
+        },
+        {
+          "identity": 15,
+          "size": 15,
+          "known_rows": 0,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "21": 15
+          }
+        },
+        {
+          "identity": 16,
+          "size": 34,
+          "known_rows": 33,
+          "unknown_rows": 1,
+          "semantic_counts": {
+            "4": 1,
+            "5": 29,
+            "9": 3,
+            "23": 1
+          }
+        },
+        {
+          "identity": 17,
+          "size": 43,
+          "known_rows": 2,
+          "unknown_rows": 41,
+          "semantic_counts": {
+            "5": 1,
+            "6": 1,
+            "24": 32,
+            "30": 9
+          }
+        },
+        {
+          "identity": 18,
+          "size": 29,
+          "known_rows": 27,
+          "unknown_rows": 2,
+          "semantic_counts": {
+            "8": 27,
+            "30": 2
+          }
+        },
+        {
+          "identity": 19,
+          "size": 24,
+          "known_rows": 24,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 24
+          }
+        },
+        {
+          "identity": 20,
+          "size": 25,
+          "known_rows": 0,
+          "unknown_rows": 25,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "identity": 21,
+          "size": 45,
+          "known_rows": 29,
+          "unknown_rows": 16,
+          "semantic_counts": {
+            "0": 29,
+            "24": 7,
+            "27": 1,
+            "30": 8
+          }
+        },
+        {
+          "identity": 22,
+          "size": 30,
+          "known_rows": 28,
+          "unknown_rows": 2,
+          "semantic_counts": {
+            "7": 28,
+            "27": 1,
+            "29": 1
+          }
+        }
+      ]
+    },
+    "source3_matched": {
+      "known_as_unknown_fraction": 0.26101694915254237,
+      "unknown_as_unknown_fraction": 0.929368029739777,
+      "unknown_absorbed_by_known_fraction": 0.07063197026022305,
+      "known_identity_accuracy": 0.711864406779661,
+      "known_noise_fraction": 0.0,
+      "unknown_noise_fraction": 0.0,
+      "occupied_clusters": 18,
+      "clusters": [
+        {
+          "identity": 0,
+          "size": 45,
+          "known_rows": 29,
+          "unknown_rows": 16,
+          "semantic_counts": {
+            "0": 29,
+            "24": 7,
+            "27": 1,
+            "30": 8
+          }
+        },
+        {
+          "identity": 1,
+          "size": 21,
+          "known_rows": 21,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "1": 21
+          }
+        },
+        {
+          "identity": 2,
+          "size": 35,
+          "known_rows": 35,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "2": 31,
+            "4": 4
+          }
+        },
+        {
+          "identity": 3,
+          "size": 3,
+          "known_rows": 3,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 3
+          }
+        },
+        {
+          "identity": 4,
+          "size": 22,
+          "known_rows": 22,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "4": 22
+          }
+        },
+        {
+          "identity": 5,
+          "size": 34,
+          "known_rows": 33,
+          "unknown_rows": 1,
+          "semantic_counts": {
+            "4": 1,
+            "5": 29,
+            "9": 3,
+            "23": 1
+          }
+        },
+        {
+          "identity": 6,
+          "size": 33,
+          "known_rows": 33,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "6": 33
+          }
+        },
+        {
+          "identity": 7,
+          "size": 2,
+          "known_rows": 2,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "7": 2
+          }
+        },
+        {
+          "identity": 8,
+          "size": 29,
+          "known_rows": 27,
+          "unknown_rows": 2,
+          "semantic_counts": {
+            "8": 27,
+            "30": 2
+          }
+        },
+        {
+          "identity": 9,
+          "size": 13,
+          "known_rows": 13,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "9": 13
+          }
+        },
+        {
+          "identity": 10,
+          "size": 43,
+          "known_rows": 0,
+          "unknown_rows": 43,
+          "semantic_counts": {
+            "20": 32,
+            "25": 11
+          }
+        },
+        {
+          "identity": 11,
+          "size": 116,
+          "known_rows": 13,
+          "unknown_rows": 103,
+          "semantic_counts": {
+            "6": 8,
+            "9": 5,
+            "21": 1,
+            "23": 25,
+            "24": 1,
+            "27": 28,
+            "28": 24,
+            "29": 22,
+            "30": 2
+          }
+        },
+        {
+          "identity": 12,
+          "size": 31,
+          "known_rows": 10,
+          "unknown_rows": 21,
+          "semantic_counts": {
+            "6": 1,
+            "9": 9,
+            "22": 20,
+            "23": 1
+          }
+        },
+        {
+          "identity": 13,
+          "size": 15,
+          "known_rows": 0,
+          "unknown_rows": 15,
+          "semantic_counts": {
+            "21": 15
+          }
+        },
+        {
+          "identity": 14,
+          "size": 43,
+          "known_rows": 2,
+          "unknown_rows": 41,
+          "semantic_counts": {
+            "5": 1,
+            "6": 1,
+            "24": 32,
+            "30": 9
+          }
+        },
+        {
+          "identity": 15,
+          "size": 24,
+          "known_rows": 24,
+          "unknown_rows": 0,
+          "semantic_counts": {
+            "3": 24
+          }
+        },
+        {
+          "identity": 16,
+          "size": 25,
+          "known_rows": 0,
+          "unknown_rows": 25,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "identity": 17,
+          "size": 30,
+          "known_rows": 28,
+          "unknown_rows": 2,
+          "semantic_counts": {
+            "7": 28,
+            "27": 1,
+            "29": 1
+          }
+        }
+      ]
+    }
+  },
+  "caveat": "No target-fitted K, threshold or hyperparameter; descriptive on this already observed task/seed. Cluster detection is not RTA accuracy and does not establish stale-label causality."
+}

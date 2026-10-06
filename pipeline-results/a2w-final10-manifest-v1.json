@@ -1,0 +1,52 @@
+{
+  "checkpoint": "/content/drive/MyDrive/OSDA/runs/a2w-reconciled-identity-10e-v1/argmax-last.pt",
+  "epoch": 10,
+  "C": 10,
+  "K": 8,
+  "selection": "Declared final10 argmax control, never target-oracle best",
+  "target_labels_used": false,
+  "training": false,
+  "GMM_fitted": false,
+  "K_estimated": false,
+  "reconstruction": "Current frozen-model source probability means; not saved historical relation bank/GMM",
+  "transform": "Resize256, CenterCrop224, ToTensor; eval BN; full actual head output",
+  "kl_direction": "source class probability mean || target C-only conditional probability",
+  "device": "cpu",
+  "shuffled": false,
+  "seconds": 406.2422742843628,
+  "shapes": {
+    "source": [
+      958,
+      256
+    ],
+    "source_logits": [
+      958,
+      18
+    ],
+    "target": [
+      564,
+      256
+    ],
+    "target_logits": [
+      564,
+      18
+    ],
+    "source_relation_kl": [
+      958
+    ],
+    "target_relation_kl": [
+      564
+    ],
+    "source_soft_prototypes": [
+      10,
+      10
+    ],
+    "source_labels": [
+      958
+    ],
+    "target_paths": [
+      564
+    ]
+  },
+  "complete": true
+}

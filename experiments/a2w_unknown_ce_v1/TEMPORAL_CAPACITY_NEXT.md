@@ -64,3 +64,46 @@ temporal_partition_report.py输出K之外的划分变化：只在两边都非noi
 新标准CPU端点m-s-kkb-use1b1-3hr6nb4xjabhs，mount exec1在用户完成同意后实际返回Mounted at /content/drive及IMP_DRIVE_MOUNTED。依赖已安装，代码、Drive缓存Office31数据与预训练权重恢复完成；真实argmax-last.pt的final10/C10/K8接口检查通过，无图像前向或重复评估。shell10已启动一次CPU冻结缓存提取，日志/content/a2w-current-cache-console.log；尚未产生当前K/漂移结果，没有重训。
 
 用户最新明确要求保留实例，空闲希望CPU，不要反复关闭导致授权；当前已是CPU，将保留该实例及挂载，不执行先前文档中本小诊断结束即销毁的安排。CLI runtime命令当前没有原地切换硬件接口，不能承诺GPU转CPU保留原VM/挂载。新约定同步AGENTS.md。
+
+## 实际诊断完成：K与成员归属都变了，但不是全方向改善
+
+冻结缓存已完整生成，CPU前向406.24秒；958×256 source、564×256 target、完整18维logits、source关系模板均有限。没有训练、重评checkpoint准确率或GMM拟合。缓存先实际复制到Drive `OSDA/runs/a2w-current-relation-snapshot-v1`，然后只读取缓存进行容量推断；小缓存与manifest亦已下载本地pipeline-results。CPU实例与挂载按用户最新要求保留。
+
+预热source3和RTA final10遵循同一source-calibrated-birth-cost规则：source分层随机划分seed2026、667个anchor样本、144个birth-cost样本、相同类先验计数/总质量、移动已知中心、birth-first、全target564张、proposal_block_size64。没有target标签参与阈值、K、身份匹配或配置选择。初次结果保存Drive后，独立事后评估才读取target truth。
+
+| 模型状态 | 原始新建簇K | 匹配已知后K | 有成员的总簇数 | 已知误入未知候选 | 未知进入未知候选 | 未知被已知簇吸收 | 已知身份准确率 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| source3 | 13 | 8 | 18 | 26.1017% | 92.9368% | 7.0632% | 71.1864% |
+| RTA final10 | 4 | 4 | 14 | 7.7966% | 87.3606% | 12.6394% | 91.8644% |
+
+两边全564张共同有分配，noise为0，划分ARI=0.673826（忽略任意簇编号置换）。匹配已知身份后87/564=15.4255%改变已知/未知候选状态；共同known样本身份一致率97.3684%。这说明早期结构并非在训练后原封不动，但不证明它是固定簇监督退化的原因：本次提取的是argmax控制组final10，不是identity组的完整训练轨迹。
+
+当前4个候选未知簇大小68/82/79/29，分别含0/9/5/9个真实已知样本。第一个簇混合了未知语义20、25、26；另外三个也有多种未知语义或已知混入。10个已知身份均匹配到原已知锚点，不再需要像source3那样用新簇补回空锚点。然而34/269个未知被已知簇吸收，source3是19/269。K4不是恢复了真实未知语义数，也不是无代价的已知保护。
+
+这些是簇结构诊断，不是新的OS*/UNK/HOS训练成绩；不要把87.3606%当RTA的UNK准确率。目标真值仅用于事后解释已经固定的结果，不回流到K估计。
+
+## 新发现：数值标定本身强烈改变容量
+
+同规则跨状态比较并不固定数值lambda。source半径从0.566554变为0.938595，建簇成本从0.189747变为0.368069。因此不能把K减少直接归因为更好对齐或未知只剩4个语义。
+
+追加一个明确单因素离线控制：保持当前final10的source/target特征、当前source anchors/先验、完整样本、当前分类头匹配规则不变，仅将半径/建簇成本这一个标定块换成已保存source3数值；不扫阈值、不新增前向/训练、不看目标HOS选配置。
+
+| 特征及分类头状态 | 数值标定块 | 原始K | 匹配后K |
+| --- | --- | ---: | ---: |
+| source3 | source3标定 | 13 | 8 |
+| final10 | source3标定（离线控制） | 9 | 9 |
+| final10 | final10 source重新标定 | 4 | 4 |
+
+同一final10空间上K9与K4的区别说明标定块对推断结果有直接影响；不能将二者差值称为未知语义数量变化。控制K9有14个noise，共同分配550/564，ARI=0.867131；它不是自动晋升的替代方案，也没有做其训练或事后质量择优。当前代码没有显式保证归一化bottleneck的source类内距离在RTA过程中缩小；当前半径上升提示这一几何假设需要实证，不等于分类头已知准确率必然下降。
+
+## 与研究目标的关系与下一步
+
+1. 继续保留原未知CE：先前关闭CE使拒识消失，本轮没有改变该结论。
+2. 不再把source3的簇身份当永久正确监督。当前表示下已知身份更清楚，值得单独检验更新时机；但未知仍有合并/被吸收，不能只追求K下降。
+3. 若训练验证，最干净的下一对照是相同初始K8、相同source/早期训练预算，原机制继续固定K8 versus 预声明节点按同规则更新K；只改变容量，不同时加簇伪标签、保护loss、概率聚合或IMP头权重初始化。当前节点得到K4只能作为这一规则的实际输出，不按真实11类改成K11，也不因离线控制得到K9就择优调阈值。
+4. 仅将argmax final10 checkpoint当共同起点不自动等于精确训练续跑：虽然已保存三个optimizer和discriminator，训练关系库/GMM、调度步数与随机状态也需有明确恢复口径。应优先在一次新配对训练中共享同一早期状态再分支，或者完整披露共同近似恢复，不能静默重置后声称严格反事实。
+5. OfficeHome/VisDA与论文完整预算验证仍未完成。本次不是提升证明，不能以A→W一次缓存诊断完成整个研究目标。
+
+实际输出：`pipeline-results/a2w-temporal-capacity-v1-summary.json`、`a2w-temporal-capacity-posthoc-v1.json`、`a2w-temporal-calibration-v1-summary.json`，对应clusters以及完整final10缓存本地/Drive均保留。CPU与之前CUDA提取可能存在数值差异；同空间K9/K4控制都使用同一CPU缓存，不受跨设备前向差异影响。代码入口分别为compare_a2w_temporal_capacity_colab.py、score_a2w_temporal_structure_posthoc_colab.py、probe_a2w_temporal_calibration_colab.py。
+
+正式无人值守autoresearch循环仍未启动。为后续训练明确询问逐组人工review/无人值守预算，以及人工综合评价/已有机械evaluator；在答复前不自行扩大矩阵或长时自动搜索。本次已完成诊断和保存不受此限制。

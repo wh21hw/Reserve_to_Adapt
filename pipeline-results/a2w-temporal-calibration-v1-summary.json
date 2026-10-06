@@ -1,0 +1,51 @@
+{
+  "target_labels_used": false,
+  "new_training": false,
+  "new_forward": false,
+  "factor": "Source-calibrated numeric radius/birth-cost block only",
+  "current_recalibrated": {
+    "raw_K": 4,
+    "matched_K": 4,
+    "lambda_radius": 0.9385954922749117,
+    "birth_cost": 0.3680691976586118
+  },
+  "current_with_source3_calibration": {
+    "raw_K": 9,
+    "matched_K": 9,
+    "lambda_radius": 0.5665536626262961,
+    "birth_cost": 0.18974670241122132,
+    "counts": [
+      1,
+      21,
+      11,
+      27,
+      27,
+      25,
+      1,
+      31,
+      27,
+      12,
+      67,
+      62,
+      68,
+      21,
+      40,
+      20,
+      31,
+      43,
+      15
+    ]
+  },
+  "partition_drift": {
+    "rows": 564,
+    "jointly_assigned_rows": 550,
+    "jointly_assigned_fraction": 0.975177304964539,
+    "adjusted_rand_on_jointly_assigned": 0.8671311609325374,
+    "noise_status_changed_fraction": 0.024822695035460994,
+    "unknown_candidate_status_changed_fraction": 0.23581560283687944,
+    "known_identity_agreement_on_both_known": 1.0,
+    "target_labels_used": false,
+    "interpretation": "ARI ignores ID permutations; high drift is not evidence of worse semantics or a cause of accuracy loss. Noise excluded from ARI and coverage reported separately."
+  },
+  "caveat": "Descriptive calibration counterfactual, not a new tuned method. No claim that stale numeric calibration is preferable or that K equals true class count."
+}
