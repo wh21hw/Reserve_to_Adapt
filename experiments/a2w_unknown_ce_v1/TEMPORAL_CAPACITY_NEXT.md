@@ -48,3 +48,5 @@ temporal_partition_report.py输出K之外的划分变化：只在两边都非noi
 原ResNet源码get_mean/get_std强制.cuda()，缓存入口已在推理设备上显式分配相同float32 ImageNet常数；仅设备分配兼容修复，不改变架构、权重或归一化数值。恢复入口scripts/restore_a2w_temporal_snapshot_colab.py只读取既有Drive数据/权重/argmax-last.pt，未重训source。首个setup文件上传fetch failed，已成功重传；之前python因此找不到文件，未发生任何训练/提取，重新运行依赖安装不改变实验设置。
 
 代码/辅助包已上传。当前等待Drive授权与依赖安装完成，尚未提取final10缓存、估计当前K或产生漂移数值；不要从准备过程声称假设已验证。完成后保存小缓存、离线比较结果到Drive并关闭CPU实例。
+
+随后实查：依赖安装完成，但mount exec1在2m2s以Authorization timed out终止，未读取模型或数据。不存在新提取结果需要保存；既有checkpoint/数据/结构artifact仍在Drive，代码在Git。为避免空耗，已请求销毁该CPU实例，不连续刷新授权或自动新建runtime。上述授权URL与端点不再可用；下一次需要人在线及时完成新挂载授权后才能实际提取缓存。这是访问阻碍，不是模型失败或新结果。
