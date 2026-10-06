@@ -19,9 +19,14 @@ def main():
     from style_presets import rcparams
     rcparams()
     report = json.loads(Path(args.summary).read_text())
+    initial_K,epochs = report['initial_K'],report['epochs']
+    fixed_arm = 'fixed'+str(initial_K)
+    if fixed_arm not in report['arms'] or 'refresh' not in report['arms']:
+        raise ValueError('Require both declared arms in the actual summary')
+    final_K = report['arms']['refresh']['final']['K']
     output = Path(args.output)
     output.mkdir(parents=True,exist_ok=True)
-    base = 100*report['arms']['fixed8']['final']['HOS']
+    base = 100*report['arms'][fixed_arm]['final']['HOS']
     candidate = 100*report['arms']['refresh']['final']['HOS']
     screen = report['manual_support_screen']
     supported = all(screen[key] for key in ('final_HOS_gain_at_least_1pp',
@@ -33,24 +38,26 @@ def main():
                edgecolors='#009E73' if supported else '#D55E00',s=65,zorder=3)
     ax.plot([0,1],np.maximum.accumulate([base,candidate]),color='#999999',ls=':',label='Observed envelope')
     ax.axhline(base+1,color='#D55E00',ls='--',label='Exploratory +1pp screen')
-    ax.set_xticks([0,1]);ax.set_xticklabels(['0: fixed K8','1: stage10 refresh'])
+    ax.set_xticks([0,1]);ax.set_xticklabels(['0: fixed K'+str(initial_K),'1: stage10 refresh'])
     ax.set_ylabel('Final HOS (%)');ax.set_title('A→W capacity refresh, seed3')
     ax.set_ylim(min(base,candidate)-3,max(base+1,candidate)+4)
     ax.legend(fontsize=10)
     fig.tight_layout();fig.savefig(output/'progress.png');plt.close(fig)
     with zipfile.ZipFile(args.archive) as bundle:
         histories = {}
-        for arm in ('fixed8','refresh'):
+        for arm in (fixed_arm,'refresh'):
             name=arm+'/office31-a2w_seed3/history.jsonl'
             histories[arm]=[json.loads(line) for line in bundle.read(name).decode().splitlines()]
+            if [row['epoch'] for row in histories[arm]] != list(range(1,epochs+1)):
+                raise ValueError('Only plot the declared complete budget')
     fig,axes = plt.subplots(1,3,figsize=(12,3.5),sharex=True)
     for ax,key,title in zip(axes,('OS_star','unknown','HOS'),('OS*','UNK','HOS')):
-        for arm,color,label in (('fixed8','#0072B2','Fixed K8'),
-                                ('refresh','#D55E00','K8→K4 after epoch10')):
+        for arm,color,label in ((fixed_arm,'#0072B2','Fixed K'+str(initial_K)),
+                                ('refresh','#D55E00','K'+str(initial_K)+'→K'+str(final_K)+' after epoch10')):
             rows=histories[arm]
             ax.plot([r['epoch'] for r in rows],[100*r[key] for r in rows],color=color,label=label)
         ax.axvline(10.5,color='#888888',ls='--',lw=1)
-        ax.set_title(title);ax.set_xlabel('Completed RTA epoch');ax.set_xlim(1,20)
+        ax.set_title(title);ax.set_xlabel('Completed RTA epoch');ax.set_xlim(1,epochs)
     axes[0].set_ylabel('Macro accuracy (%)')
     axes[-1].legend(fontsize=9,loc='lower right')
     fig.tight_layout();fig.savefig(output/'epoch-trajectories.png');plt.close(fig)
