@@ -8,7 +8,9 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import numpy as np
+import torch
 
 parser = argparse.ArgumentParser()
 parser.add_argument('arm', choices=['argmax', 'identity'])
@@ -46,6 +48,8 @@ environment = dict(RTA_SEED='3', RTA_EPOCHS='10', RTA_FREEZE_ENCODER_BN='1',
 if args.arm == 'identity':
     environment['RTA_CLUSTER_LABELS'] = str(artifact)
 manifest = dict(base, arm=args.arm, K=8, command=command, environment=environment,
+    runtime_environment=dict(python=sys.version, torch=torch.__version__, numpy=np.__version__,
+        cuda=torch.version.cuda, gpu=torch.cuda.get_device_name() if torch.cuda.is_available() else None),
     cluster_artifact=str(artifact), capacity_source=str(probe/'settings.json'),
     research_change='K8 argmax versus K8 fixed cluster identity labels on original selected candidates only',
     purpose='Separate capacity from identity transport; K2 comparison is background/capacity context',

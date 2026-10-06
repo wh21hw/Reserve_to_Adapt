@@ -50,3 +50,5 @@ artifact已保存但未输入任何训练。匹配在source3空间完成，后�
 2026-10-05后续：两个K8 arm的隔离launcher和日志collector已准备（scripts/run_a2w_reconciled_identity_colab.py、collect_a2w_reconciled_identity_colab.py），默认prepare-only，明确--run才会训练。WSL Python已做一次AST语法检查，尚未在真实runtime编译身份patch或跑训练。用户已同意后续做实验，但要求先关闭所有实例节省积分；当前不启动这两组。之后恢复同一source checkpoint与无标签artifact，不重新训练source或根据目标标签改K。
 
 当前GPU策略由用户更新为能用T4就用T4，不再强制至少L4。恢复时先依据实际显存决定设备；这会与历史L4结果产生环境差异，需披露。K8两组必须用同一种GPU，不能一组T4一组L4后声称干净消融；若T4不够，不通过偷偷减batch改变研究设置。
+
+2026-10-06：用户明确恢复研究，开始恢复本批T4，端点gpu-t4-s-kkb-usw4a1-1aub4wll4xfhh、shell7。Python3.8旧版依赖安装完成（与前批相同版本），尚未训练或测试实际显存。mount exec1因Google授权超时而终止，不是OOM/模型失败，不据此换GPU。待完成挂载后用scripts/restore_a2w_reconciled_inputs_colab.py恢复Drive缓存与共享prior，无需重训source。两组manifest新增实际GPU/软件版本；旧K2是L4结果，只作背景，不能与新T4 K8构成干净容量消融。collector保存best及last再释放runtime。

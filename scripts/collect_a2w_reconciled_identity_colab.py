@@ -27,7 +27,7 @@ for arm in ('argmax','identity'):
     histories.append(rows)
     report['arms'][arm] = dict(best=metric(max(rows,key=lambda r:r['HOS'])), final=metric(rows[-1]))
 base, candidate = launches
-for key in ('source_prior','initialization','encoder_bn','cluster_artifact','capacity_source'):
+for key in ('source_prior','initialization','encoder_bn','cluster_artifact','capacity_source','runtime_environment'):
     if base[key] != candidate[key]:
         raise ValueError('Unmatched shared factor: '+key)
 expected = dict(base['environment'], RTA_CLUSTER_LABELS=base['cluster_artifact'])
@@ -59,7 +59,8 @@ report['warmup_max_abs_delta_pp'] = max(abs(row[k]) for row in report['identity_
     for k in ('OS_star','UNK','HOS'))
 historical = json.loads(Path('/content/imp-runs/a2w-unknown-ce-10e-v1/summary.json').read_text())
 report['k2_context'] = dict(result=historical['arms']['control'],
-    note='Compare K2 with K8 argmax for capacity context only. K8 identity versus K2 changes two factors.')
+    note='Historical K2 ran on L4; if this pair uses T4, hardware also differs. Background only, not a clean K-only ablation. K8 identity versus K2 changes multiple factors.')
+report['runtime_environment'] = base['runtime_environment']
 destination, archive = root/'summary.json', Path('/content/a2w-reconciled-identity-10e-v1-results.zip')
 if destination.exists() or archive.exists():
     raise FileExistsError('Preserve existing result')
@@ -72,5 +73,6 @@ drive = Path('/content/drive/MyDrive/OSDA/runs/a2w-reconciled-identity-10e-v1')
 drive.mkdir(exist_ok=False)
 shutil.copyfile(archive,drive/archive.name)
 for arm in ('argmax','identity'):
-    shutil.copyfile(root/arm/'office31-a2w_seed3/last.pt',drive/(arm+'-last.pt'))
+    for filename in ('best.pt','last.pt'):
+        shutil.copyfile(root/arm/'office31-a2w_seed3'/filename,drive/(arm+'-'+filename))
 print('A2W_K8_PAIR_COLLECTED',json.dumps(report),flush=True)
