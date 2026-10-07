@@ -27,6 +27,8 @@ control,candidate=args.arms
 colors={control:'#0072B2',candidate:'#D55E00'}
 names={control:'RTA self-label' if control=='self_label' else 'Confidence calibration',
        candidate:'Current IMP label' if candidate=='structure_label' else 'Structure-supported calibration'}
+if control=='batch_bn':
+    names={control:'Original head batch statistics',candidate:'Fixed head running statistics'}
 if control=='bottleneck':
     names={control:'IMP: bottleneck256',candidate:'IMP: encoder2048'}
 if control=='screened':

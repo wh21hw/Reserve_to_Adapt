@@ -1,1 +1,3 @@
 iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	0.6923653106	-	-	baseline	Original head BN statistics; same commonwarm4	manual	2026-10-07
+1	0.7434874808	0.0511221702	7.38%	guard_violation	Fixed running statistics; known loss5.9892pp; not promoted	manual	2026-10-07

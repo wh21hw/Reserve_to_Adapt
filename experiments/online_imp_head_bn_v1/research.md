@@ -28,3 +28,5 @@
 已启动：a0991367，exec27/launcher54725，shell13，控制台`/content/online-head-bn-console.log`。固定统计/affine梯度/同样本batch不变性检查通过；生成训练代码检查首次缺RTA_EPOCHS，补齐后通过，无失败训练/重复warm。5分钟hook已替换旧exec23通知。
 
 实测：batch_bn epoch5 elapsed40.9633s、epoch6 elapsed77.6068s，近期每轮36.64s。按同速两arm共约7.5–8分钟，当前剩余约6分钟；fixed组改模式/K后重估，不将ETA当硬截止。控制组已完整跑过两续训轮，K36→35，无启动错误。
+
+完成：exec27/collector exit0，两组epoch5–10各完整6轮，耗时224.36/229.94秒。batch final98.3441/53.4242/69.2365；fixed92.3548/62.2183/74.3487（OS*/UNK/HOS%），Δ−5.9892/+8.7941/+5.1122pp。guard失败，不推广；两组fullbest均共同warm4，fixed post4best9 HOS79.5166。进入簇身份稳定性排查，不调整BN动量/扫阈值。
