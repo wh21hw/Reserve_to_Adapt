@@ -30,9 +30,10 @@ for arm,label,color in zip(arms,labels,colors):
     final=summary[arm]['final']
     axes[1,1].scatter(100*final['OS_star'],100*final['unknown'],s=90,color=color,label=label)
     axes[1,1].annotate('HOS %.2f'%(100*final['HOS']),
-        (100*final['OS_star'],100*final['unknown']),xytext=(-6,10),textcoords='offset points',ha='right')
+        (100*final['OS_star'],100*final['unknown']),xytext=(8,-18) if arm=='entropy0' else (-6,10),
+        textcoords='offset points',ha='left' if arm=='entropy0' else 'right')
 axes[0,0].legend(fontsize=9)
-axes[1,1].set(title='Final working points; higher/right is better',xlabel='Known accuracy (%)',ylabel='Unknown recall (%)')
+axes[1,1].set(title='Final OS*/UNK tradeoff',xlabel='Known accuracy (%)',ylabel='Unknown recall (%)')
 axes[1,1].legend(fontsize=9,loc='best')
 fig.suptitle('Office31 A→W | Only candidate-known entropy strength differs; reliable union fixed')
 output=Path(args.output)

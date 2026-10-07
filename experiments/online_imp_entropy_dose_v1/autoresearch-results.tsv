@@ -1,0 +1,4 @@
+iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	0.7346143568	-	-	baseline	Reliable union with full candidate-known entropy gamma1 final10	manual	2026-10-07
+1	0.7704183540	0.0358039972	4.87%	kept	Gamma0.5 worthwhile known-unknown tradeoff; candidate pending full budget	manual	2026-10-07
+2	0.8125733948	0.0779590380	10.61%	kept	Gamma0 highest HOS with known cost4.215pp; not universal optimum	manual	2026-10-07
