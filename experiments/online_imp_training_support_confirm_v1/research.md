@@ -28,3 +28,7 @@
 已启动：8b92b200，exec43/shell13，`/content/online-training-support-confirm-console.log`；仅控制面新增安全独立run-name，其它训练文件复用稳定版本，不重跑合成接口检查。5分钟hook已恢复为本批，不重复旧exec40通知。
 
 launcher82176。rta_only epoch6 elapsed79.3434s、epoch7 elapsed116.1382s，近期36.79秒/轮，预计整批约8分钟、当前剩约6分钟；union阶段重估。已完整三续训轮，无报错，loss有限。
+
+完成：exec43/collector0，两组各epoch5–10完整，229.20/235.19秒。control final97.6774/54.3523/69.8415，union96.7679/60.6717/74.5819（OS*/UNK/HOS%）。Δ−0.9096/+6.3194/+4.7404pp，第二次也通过；边界余量仅0.09pp，不夸称完全无损。两次都留存，不挑第一次。fullbest两组仍共同warm4，post4best5 HOS75.3200/75.3096。
+
+第二次新增197实际曝光（181unknown/16known），独立76unknown/5known；独立unknown结构监督138→152。ARI .47069→.49456/NMI .69469→.71404，本次增加但首次下降，不声称已稳定提升语义结构。下一阶段方法不变，预声明完整70轮配对验证持续性，当前不做第三次短程确认或新参数网格。
