@@ -24,3 +24,5 @@
 ## History
 
 预声明。第一次final control97.3441/49.8748/65.9564，union97.1115/58.1918/72.7749；fullbest共同warm4，post4best5/75.3200和5/75.3096。新增194次，其中unknown177/known17；独立unknown结构覆盖136→152，但ARI/NMI未改善，不能宣称恢复真实类别。
+
+已启动：8b92b200，exec43/shell13，`/content/online-training-support-confirm-console.log`；仅控制面新增安全独立run-name，其它训练文件复用稳定版本，不重跑合成接口检查。5分钟hook已恢复为本批，不重复旧exec40通知。
