@@ -9,6 +9,7 @@ if source.count(anchor)!=1:
     raise RuntimeError('Unexpected online structure initialization')
 source=source.replace(anchor,anchor+'''
 online_structure.calibration_mode = os.environ['ONLINE_CALIBRATION_MODE']
+online_structure.teacher_space = os.environ.get('ONLINE_TEACHER_SPACE','bottleneck')
 if os.environ.get('ONLINE_FORK_INPUT'):
     from online_imp_fork import restore_fork
     epoch,gmm,nomatch=restore_fork(os.environ['ONLINE_FORK_INPUT'],net,cls,discriminator,

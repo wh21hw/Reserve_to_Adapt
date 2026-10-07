@@ -16,7 +16,7 @@ from alternating_konly import _FrozenImages
 from source_anchored_imp import SourceAnchoredIMP
 
 
-def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence'):
+def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence', allow_zero=False):
     if calibration_mode not in ('confidence','structure_supported'):
         raise ValueError('Unknown target calibration support policy')
     anchors = torch.stack([source[source_labels == c].mean(0) for c in range(known)])
@@ -56,7 +56,7 @@ def infer_structure(source, source_labels, target, target_logits, known, calibra
     centers = torch.cat([result['known_prototypes'], result['candidate_prototypes']])
     assignments = result['responsibilities'].argmax(1).numpy()
     occupied = np.unique(assignments[assignments >= known])
-    if not len(occupied):
+    if not len(occupied) and not allow_zero:
         raise RuntimeError('IMP inferred no occupied unknown structure; do not force K1')
     mapping = {int(old): known + j for j, old in enumerate(occupied)}
     assignments = np.asarray([mapping.get(int(a), int(a)) for a in assignments], dtype=np.int64)
@@ -128,6 +128,7 @@ class OnlineStructure:
     def __init__(self, args, use_labels):
         self.args, self.use_labels = args, use_labels
         self.calibration_mode = 'confidence'
+        self.teacher_space = 'bottleneck'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -148,20 +149,40 @@ class OnlineStructure:
                 loader = DataLoader(_FrozenImages(names, self.args.data_dir), batch_size=64,
                     shuffle=False, num_workers=4, pin_memory=True,
                     generator=torch.Generator().manual_seed(7102026+offset))
-                features, logits = [], []
+                features, logits, backbone = [], [], []
                 for images in loader:
-                    _, feature, logit, _ = net(images.to(device))
+                    raw, feature, logit, _ = net(images.to(device))
                     features.append(feature.cpu()); logits.append(logit.cpu())
+                    if self.teacher_space == 'backbone':
+                        backbone.append(torch.nn.functional.normalize(raw,dim=1,eps=1e-8).cpu())
                 arrays[split], arrays[split+'_logits'] = torch.cat(features), torch.cat(logits)
+                if backbone:
+                    arrays[split+'_backbone'] = torch.cat(backbone)
                 if not torch.isfinite(arrays[split]).all() or not torch.isfinite(arrays[split+'_logits']).all():
                     raise RuntimeError('Nonfinite online feature extraction')
         finally:
             for module, mode in modes:
                 module.training = mode
-        assignments, candidates, reliable, report = infer_structure(arrays['source'],
-            self.source_labels, arrays['target'], arrays['target_logits'], self.args.shared_classes,
+        if self.teacher_space not in ('bottleneck','backbone'):
+            raise ValueError('Unknown IMP teacher feature space')
+        key = '_backbone' if self.teacher_space == 'backbone' else ''
+        assignments, candidates, reliable, report = infer_structure(arrays['source'+key],
+            self.source_labels, arrays['target'+key], arrays['target_logits'], self.args.shared_classes,
             self.calibration_mode)
         support_mask = report.pop('_target_support_mask')
+        virtual = candidates[torch.from_numpy(reliable)]
+        if self.teacher_space == 'backbone':
+            # RTA virtual directions stay in its256-dimensional feature space.
+            # No2048 prototype is installed in a256-dimensional head/virtual dot.
+            _, virtual_candidates, virtual_reliable, virtual_report = infer_structure(arrays['source'],
+                self.source_labels, arrays['target'], arrays['target_logits'], self.args.shared_classes,
+                self.calibration_mode, allow_zero=True)
+            virtual = virtual_candidates[torch.from_numpy(virtual_reliable)]
+            report['virtual_threshold'] = virtual_report['threshold']
+            report['virtual_candidate_count'] = virtual_report['K']
+        report.update(V=len(virtual),teacher_space=self.teacher_space,
+            teacher_dimension=int(arrays['source'+key].shape[1]),virtual_space='bottleneck256',
+            label_reliable_candidates=int(reliable.sum()))
         change = None if self.assignments is None else float((assignments != self.assignments).mean())
         report['transport'] = transport_head(cls, optimizer.optimizer, self.args.shared_classes,
             assignments, None if reset_correspondence else self.assignments,
@@ -169,6 +190,8 @@ class OnlineStructure:
         self.assignments, self.reliable = assignments, reliable
         self.args.all_classes = cls.fc.out_features
         self.counts = np.zeros(cls.fc.out_features-self.args.shared_classes, dtype=np.int64)
+        self.selected_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
+        self.overridden_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
         self.overridden = self.selected = 0
         report.update(epoch=epoch+1, refresh_seconds=time.monotonic()-started,
             use_structure_labels=self.use_labels, raw_assignment_change_fraction=change,
@@ -179,14 +202,15 @@ class OnlineStructure:
         with (path/'online-structure-history.jsonl').open('a') as stream:
             stream.write(json.dumps(report, allow_nan=False)+'\n')
         np.savez_compressed(path/'current-structure.npz', assignments=assignments,
-            reliable=reliable, target_paths=np.asarray(self.target_names), target_support_mask=support_mask)
+            reliable=reliable, target_paths=np.asarray(self.target_names), target_support_mask=support_mask,
+            teacher_space=np.asarray(self.teacher_space))
         config_path = path/'config.json'
         config = json.loads(config_path.read_text())
         config.update(all_classes=self.args.all_classes, design='online-imp-structure-v1',
             use_structure_labels=self.use_labels, refresh='Every epoch, current complete eval features')
         config_path.write_text(json.dumps(config, indent=2))
         print('ONLINE_IMP_REFRESH', json.dumps(report), flush=True)
-        return candidates[torch.from_numpy(reliable)].to(device)
+        return virtual.to(device)
 
     def labels(self, indices, fallback):
         ids = self.assignments[np.asarray(indices)]
@@ -199,6 +223,10 @@ class OnlineStructure:
         self.selected += len(ids)
         self.overridden += int(mask.sum()) if self.use_labels else 0
         self.counts += np.bincount(labels.cpu().numpy()-known, minlength=len(self.counts))
+        if hasattr(self,'selected_by_sample'):
+            np.add.at(self.selected_by_sample,np.asarray(indices),1)
+            if self.use_labels:
+                np.add.at(self.overridden_by_sample,np.asarray(indices)[mask],1)
         return labels
 
     def finish_epoch(self, epoch):
@@ -207,3 +235,6 @@ class OnlineStructure:
         with (Path(self.args.log_dir)/'online-label-history.jsonl').open('a') as stream:
             stream.write(json.dumps(row)+'\n')
         print('ONLINE_IMP_LABEL_USAGE', json.dumps(row), flush=True)
+        np.savez_compressed(Path(self.args.log_dir)/('sample-exposure-%03d.npz'%(epoch+1)),
+            selected=self.selected_by_sample,overridden=self.overridden_by_sample,
+            target_paths=np.asarray(self.target_names),unknown_ce_active=np.asarray(epoch>3))
