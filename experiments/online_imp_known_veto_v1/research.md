@@ -26,3 +26,7 @@
 ## History
 
 预声明，尚未启动，复用挂载T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke和完整共同warm4；上一标签覆盖+0.9871pp不晋升。
+
+已启动：代码b2272ab8，background exec17，独立shell13，控制台`/content/online-known-veto-console.log`，root`/content/imp-runs/online-imp-known-veto-v1`。新weight接口一次通过，不改原tensor/assignments；原Entropy/BCE均按batch N平均，权重全0有效。模型不复制Drive；hook已替换17，每5分钟安静检查，不重复旧结果。
+
+rta_known已完成epoch5–7，elapsed113.2秒、近期36.66秒/轮；总批预计约7.5–8.5分钟。按imp_veto实际阶段再估时，ETA不是硬截止。

@@ -26,3 +26,5 @@
 ## History
 
 已预声明；复用T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke。上一特征层试验不晋升（OS*−1.10pp guard）；本批仍256，并修正采样RNG耦合，两组共享修改。
+
+完成：代码f7563ac7/exec14/launcher30342，两个续训6均exit0，collector done。finalHOS67.7184→68.7055%，Δ+0.9871pp未达+1筛查；独立未知结构标签138→190，但错误已知覆盖7→96次，ARI近乎不变。不能说更多标签有效解决。下一因素是known目标权重与IMP身份协调，单独新目录，不延长本批。
