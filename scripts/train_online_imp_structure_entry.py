@@ -44,7 +44,7 @@ online_structure = OnlineStructure(args, os.environ['ONLINE_STRUCTURE_LABELS']==
     return source
 
 
-if __name__ == '__main__':
+def build_training_source():
     original = Path('/content/train_legacy_task_entry.py')
     entry = original.read_text()
     # Local frozen baseline already has an env-defined loop, not the original
@@ -57,6 +57,11 @@ if __name__ == '__main__':
     namespace = dict(__name__='online_builder', __file__=str(original))
     exec(compile(entry.split(boundary)[0], str(original), 'exec'), namespace)
     source = patch(namespace['source'], int(os.environ['RTA_EPOCHS']))
+    return source, namespace
+
+
+if __name__ == '__main__':
+    source, namespace = build_training_source()
     compiled = compile(source, '<online-imp-rta>', 'exec')
     if os.environ.get('LEGACY_TASK_BUILD_ONLY') == '1':
         print('ONLINE_IMP_BUILD_COMPLETE; no training executed')

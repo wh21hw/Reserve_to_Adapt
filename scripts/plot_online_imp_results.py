@@ -14,6 +14,7 @@ parser.add_argument('--archive',required=True)
 parser.add_argument('--summary',required=True)
 parser.add_argument('--output',required=True)
 parser.add_argument('--style-root',required=True)
+parser.add_argument('--arms',nargs=2,default=['self_label','structure_label'])
 args=parser.parse_args()
 sys.path.insert(0,args.style_root)
 from style_presets import rcparams
@@ -22,11 +23,13 @@ summary=json.loads(Path(args.summary).read_text())
 output=Path(args.output)
 output.mkdir(parents=True,exist_ok=True)
 fig,axes=plt.subplots(2,3,figsize=(15,8),layout='constrained')
-colors={'self_label':'#0072B2','structure_label':'#D55E00'}
-names={'self_label':'RTA self-label','structure_label':'Current IMP label'}
+control,candidate=args.arms
+colors={control:'#0072B2',candidate:'#D55E00'}
+names={control:'RTA self-label' if control=='self_label' else 'Confidence calibration',
+       candidate:'Current IMP label' if candidate=='structure_label' else 'Structure-supported calibration'}
 with zipfile.ZipFile(args.archive) as bundle:
     for arm in colors:
-        rows=[json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/history.jsonl').decode().splitlines()]
+        rows=summary[arm].get('history') or [json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/history.jsonl').decode().splitlines()]
         x=[r['epoch'] for r in rows]
         for ax,key,title in zip(axes[0],('HOS','OS_star','unknown'),('HOS','Known accuracy (OS*)','Unknown recall (UNK)')):
             ax.plot(x,[100*r[key] for r in rows],marker='o',ms=4,color=colors[arm],label=names[arm])
@@ -42,19 +45,19 @@ for ax in axes.flat:
     ax.axvspan(.5,4.5,color='#999999',alpha=.12,zorder=0)
     ax.set_xlim(.5,10.5)
 axes[0,0].legend(fontsize=10,loc='lower right')
-fig.suptitle('Office31 A→W | Shared online IMP backbone; only unknown labels differ',fontsize=17)
+fig.suptitle('Office31 A→W | '+('Only unknown labels differ' if control=='self_label' else 'Common warm state; only calibration support differs'),fontsize=17)
 fig.savefig(output/'epoch-trajectories.png',dpi=180)
 plt.close(fig)
 scores=[100*summary[a]['final']['HOS'] for a in colors]
 guard=all(summary['final_delta_pp'][key]>=-1 for key in ('OS_star','unknown'))
 kept=guard and summary['final_delta_pp']['HOS']>=1
 fig,ax=plt.subplots(figsize=(8,4.5),layout='constrained')
-ax.scatter([0],[scores[0]],color=colors['self_label'],s=100,label='Shared-framework control')
-ax.scatter([1],[scores[1]],facecolors=colors['structure_label'] if kept else 'none',
-    edgecolors=colors['structure_label'],linewidths=2,s=100,label='Structure labels: '+('kept' if kept else 'not promoted'))
+ax.scatter([0],[scores[0]],color=colors[control],s=100,label='Shared-framework control')
+ax.scatter([1],[scores[1]],facecolors=colors[candidate] if kept else 'none',
+    edgecolors=colors[candidate],linewidths=2,s=100,label='Candidate: '+('kept' if kept else 'not promoted'))
 ax.plot([0,1],np.maximum.accumulate(scores),color='#444444',ls=':',label='Best observed (not significance)')
 ax.axhline(scores[0]+1,color='#666666',ls='--',label='Exploratory +1pp screen')
-ax.set(xticks=[0,1],xticklabels=['Self-label','IMP label'],ylabel='Final HOS (%)',title='One declared label-source comparison')
+ax.set(xticks=[0,1],xticklabels=[names[control],names[candidate]],ylabel='Final HOS (%)',title='One declared factor comparison')
 ax.legend(fontsize=10)
 fig.savefig(output/'progress.png',dpi=180)
 plt.close(fig)

@@ -14,6 +14,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--archive',required=True)
 parser.add_argument('--target-list',required=True)
 parser.add_argument('--output',required=True)
+parser.add_argument('--arms',nargs=2,default=['self_label','structure_label'])
 args=parser.parse_args()
 rows=[line.rsplit(None,1) for line in Path(args.target_list).read_text().splitlines() if line.strip()]
 paths=[row[0] for row in rows]
@@ -22,11 +23,12 @@ is_known=truth<10
 report=dict(stage='Start of epoch10, not final10 network',target_truth_used='Posthoc annotation only',
     actual_selected_sample_exposure_available=False,arms={})
 with zipfile.ZipFile(args.archive) as bundle:
-    for arm in ('self_label','structure_label'):
+    for arm in args.arms:
         with np.load(io.BytesIO(bundle.read(arm+'/office31-a2w_seed3/current-structure.npz'))) as data:
             if data['target_paths'].tolist()!=paths:
                 raise ValueError('Snapshot and posthoc target paths differ')
             assignment=data['assignments']; reliable=data['reliable']
+            support_mask=data['target_support_mask'] if 'target_support_mask' in data.files else None
         clusters=[]
         for j in range(len(reliable)):
             mask=assignment==10+j
@@ -42,5 +44,10 @@ with zipfile.ZipFile(args.archive) as bundle:
             known_reliable_candidate_fraction=float(eligible[is_known].mean()),
             unknown_reliable_candidate_fraction=float(eligible[~is_known].mean()),
             known_retained_identity_accuracy=float((assignment[is_known]==truth[is_known]).mean()))
+        if support_mask is not None:
+            report['arms'][arm]['calibration_support']=dict(count=int(support_mask.sum()),
+                known_count=int((support_mask&is_known).sum()),unknown_count=int((support_mask&~is_known).sum()),
+                unknown_fraction=float((support_mask&~is_known).sum()/max(int(support_mask.sum()),1)),
+                true_known_coverage=float(support_mask[is_known].mean()))
 Path(args.output).write_text(json.dumps(report,indent=2,allow_nan=False))
 print(json.dumps({arm:{k:v for k,v in values.items() if k!='clusters'} for arm,values in report['arms'].items()},indent=2))

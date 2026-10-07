@@ -16,13 +16,27 @@ from alternating_konly import _FrozenImages
 from source_anchored_imp import SourceAnchoredIMP
 
 
-def infer_structure(source, source_labels, target, target_logits, known):
+def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence'):
+    if calibration_mode not in ('confidence','structure_supported'):
+        raise ValueError('Unknown target calibration support policy')
     anchors = torch.stack([source[source_labels == c].mean(0) for c in range(known)])
     src_dist = (source - anchors[source_labels]).square().sum(1)
     distances = (target[:, None] - anchors[None]).square().sum(-1)
     confidence, predicted = target_logits[:, :known].softmax(1).max(1)
     support = ((confidence >= .8) & (target_logits.argmax(1) < known)
                & (distances.argmin(1) == predicted))
+    support_before = int(support.sum())
+    preliminary_known = None
+    if calibration_mode == 'structure_supported':
+        # Same CURRENT coordinates, source-only initial scale. This is another
+        # source-anchored geometric vote, not independent semantic evidence.
+        initial_radius = max(float(np.quantile(src_dist.numpy(), .99)),1e-8)
+        initial_variance = max(float(src_dist.mean())/source.shape[1],1e-8)
+        preliminary = SourceAnchoredIMP(initial_radius,initial_variance,prior_strength=5.,
+            steps=5,max_prototypes=100,known_centers_fixed=False).fit(target,anchors,birth_strategy='farthest')
+        initial_assignment = preliminary['responsibilities'].argmax(1)
+        preliminary_known = int((initial_assignment < known).sum())
+        support &= initial_assignment == predicted
     radii, counts, residuals = [], [], [src_dist]
     for c in range(known):
         src_radius = max(float(np.quantile(src_dist[source_labels == c].numpy(), .99)), 1e-8)
@@ -54,7 +68,9 @@ def infer_structure(source, source_labels, target, target_logits, known):
         variance=variance, class_radii=radii, target_support_per_known=counts,
         target_support_count=int(support.sum()), raw_candidates=result['candidate_count'],
         prior_strength=5., steps=5, target_labels_used=False,
-        candidate_count_is_semantic_count=False)
+        candidate_count_is_semantic_count=False, calibration_mode=calibration_mode,
+        target_support_before_structure=support_before, preliminary_known_members=preliminary_known,
+        _target_support_mask=support.numpy())
     return assignments, candidates, reliable, report
 
 
@@ -111,6 +127,7 @@ def transport_head(cls, optimizer, known, assignments, previous, old_probabiliti
 class OnlineStructure:
     def __init__(self, args, use_labels):
         self.args, self.use_labels = args, use_labels
+        self.calibration_mode = 'confidence'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -142,7 +159,9 @@ class OnlineStructure:
             for module, mode in modes:
                 module.training = mode
         assignments, candidates, reliable, report = infer_structure(arrays['source'],
-            self.source_labels, arrays['target'], arrays['target_logits'], self.args.shared_classes)
+            self.source_labels, arrays['target'], arrays['target_logits'], self.args.shared_classes,
+            self.calibration_mode)
+        support_mask = report.pop('_target_support_mask')
         change = None if self.assignments is None else float((assignments != self.assignments).mean())
         report['transport'] = transport_head(cls, optimizer.optimizer, self.args.shared_classes,
             assignments, None if reset_correspondence else self.assignments,
@@ -160,7 +179,7 @@ class OnlineStructure:
         with (path/'online-structure-history.jsonl').open('a') as stream:
             stream.write(json.dumps(report, allow_nan=False)+'\n')
         np.savez_compressed(path/'current-structure.npz', assignments=assignments,
-            reliable=reliable, target_paths=np.asarray(self.target_names))
+            reliable=reliable, target_paths=np.asarray(self.target_names), target_support_mask=support_mask)
         config_path = path/'config.json'
         config = json.loads(config_path.read_text())
         config.update(all_classes=self.args.all_classes, design='online-imp-structure-v1',
