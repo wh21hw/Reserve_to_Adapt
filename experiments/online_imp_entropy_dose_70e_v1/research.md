@@ -27,3 +27,7 @@
 预声明，未启动。短程gamma1/half/zero final OS*/UNK/HOS=97.1382/59.0648/73.4614，94.8535/64.8620/77.0418，92.9232/72.1939/81.2573%；zero有更高HOS/ARI/NMI但known误结构标签更多。完整gamma1独立背景final99.6667/56.9958/72.5200，不能混称同批。
 
 已启动：代码0e051825，exec47/launcher152769/shell13，console /content/online-entropy-dose-70e-console.log，现有T4/mount/cache保留。10分钟hook已替换短程hook，算法接口不重测，观察实际近期轮间elapsed再更新ETA。
+
+完成：两组完整5–70+shared4、collector0。half final OS*/UNK/HOS97.4086/67.3161/79.6136%，zero85.6462/89.2638/87.4176%；zero−half−11.7624/+21.9477/+7.8039pp，互不支配的取舍。best half12 HOS82.3078、zero20 HOS90.2942。zero语义指标较好但误known结构曝光276→2968、新增入口污染3.31%→11.64%，不能只挑best。详见final_report.md。
+
+用户最新暂停主动目标：仅收集本批并报告；hook暂停，不继续规划/检索/新实验，不关闭实例，等待用户恢复。
