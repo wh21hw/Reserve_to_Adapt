@@ -16,7 +16,7 @@ from alternating_konly import _FrozenImages
 from source_anchored_imp import SourceAnchoredIMP
 
 
-def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence', allow_zero=False):
+def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence', allow_zero=False, initial_candidates=None):
     if calibration_mode not in ('confidence','structure_supported'):
         raise ValueError('Unknown target calibration support policy')
     anchors = torch.stack([source[source_labels == c].mean(0) for c in range(known)])
@@ -52,7 +52,7 @@ def infer_structure(source, source_labels, target, target_logits, known, calibra
     radius = float(np.average(radii, weights=np.bincount(source_labels.numpy(), minlength=known)))
     variance = max(float(torch.cat(residuals).mean()) / source.shape[1], 1e-8)
     result = SourceAnchoredIMP(radius, variance, prior_strength=5., steps=5,
-        max_prototypes=100, known_centers_fixed=False).fit(target, anchors, birth_strategy='farthest')
+        max_prototypes=100, known_centers_fixed=False).fit(target, anchors, birth_strategy='farthest',initial_candidates=initial_candidates)
     centers = torch.cat([result['known_prototypes'], result['candidate_prototypes']])
     assignments = result['responsibilities'].argmax(1).numpy()
     occupied = np.unique(assignments[assignments >= known])
@@ -69,9 +69,37 @@ def infer_structure(source, source_labels, target, target_logits, known, calibra
         target_support_count=int(support.sum()), raw_candidates=result['candidate_count'],
         prior_strength=5., steps=5, target_labels_used=False,
         candidate_count_is_semantic_count=False, calibration_mode=calibration_mode,
+        initial_candidate_count=0 if initial_candidates is None else len(initial_candidates),
         target_support_before_structure=support_before, preliminary_known_members=preliminary_known,
         _target_support_mask=support.numpy())
     return assignments, candidates, reliable, report
+
+
+def current_member_centers(features, previous, known):
+    """Re-embed old memberships in CURRENT coordinates; never reuse stale vectors."""
+    if previous is None:return None
+    previous=np.asarray(previous)
+    if previous.shape!=(len(features),):raise ValueError('Previous membership row mismatch')
+    ids=np.unique(previous[previous>=known])
+    if not len(ids):return features.new_empty((0,features.shape[1]))
+    return torch.stack([features[torch.from_numpy(previous==c)].mean(0) for c in ids])
+
+
+def membership_stability(current,previous,known):
+    """Known identities fixed; optimally match unknown IDs without target truth."""
+    if previous is None:return dict(matched_assignment_change_fraction=None,unknown_status_change_fraction=None)
+    current,previous=np.asarray(current),np.asarray(previous)
+    if current.shape!=previous.shape:raise ValueError('Membership shape mismatch')
+    old_ids=np.unique(previous[previous>=known]);new_ids=np.unique(current[current>=known])
+    overlap=np.asarray([[np.sum((current==n)&(previous==o)) for o in old_ids] for n in new_ids],dtype=np.int64).reshape(len(new_ids),len(old_ids))
+    rows,cols=linear_sum_assignment(-overlap)
+    known_retained=int(np.sum((current<known)&(previous<known)&(current==previous)))
+    unknown_retained=int(overlap[rows,cols].sum())
+    both_unknown=int(np.sum((current>=known)&(previous>=known)))
+    return dict(matched_assignment_change_fraction=1-(known_retained+unknown_retained)/len(current),
+        unknown_status_change_fraction=float(((current>=known)!=(previous>=known)).mean()),
+        matched_unknown_retention_given_both_unknown=None if not both_unknown else unknown_retained/both_unknown,
+        stability_target_semantics_used=False)
 
 
 @torch.no_grad()
@@ -136,6 +164,7 @@ class OnlineStructure:
         self.known_veto = False
         self.known_scope = 'none'
         self.veto_eligibility = 'raw'
+        self.initialization_mode = 'source_only'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -173,9 +202,12 @@ class OnlineStructure:
         if self.teacher_space not in ('bottleneck','backbone'):
             raise ValueError('Unknown IMP teacher feature space')
         key = '_backbone' if self.teacher_space == 'backbone' else ''
+        if self.initialization_mode not in ('source_only','current_members'):
+            raise ValueError('Unknown structure initialization mode')
+        initial=current_member_centers(arrays['target'+key],self.assignments,self.args.shared_classes) if self.initialization_mode=='current_members' else None
         assignments, candidates, reliable, report = infer_structure(arrays['source'+key],
             self.source_labels, arrays['target'+key], arrays['target_logits'], self.args.shared_classes,
-            self.calibration_mode)
+            self.calibration_mode,initial_candidates=initial)
         support_mask = report.pop('_target_support_mask')
         virtual = candidates[torch.from_numpy(reliable)]
         if self.teacher_space == 'backbone':
@@ -192,6 +224,8 @@ class OnlineStructure:
             label_reliable_candidates=int(reliable.sum()),label_scope=self.label_scope,
             label_eligible_candidates=len(reliable) if self.label_scope=='all_candidates' else int(reliable.sum()))
         change = None if self.assignments is None else float((assignments != self.assignments).mean())
+        report.update(membership_stability(assignments,self.assignments,self.args.shared_classes),
+            initialization_mode=self.initialization_mode)
         report['transport'] = transport_head(cls, optimizer.optimizer, self.args.shared_classes,
             assignments, None if reset_correspondence else self.assignments,
             arrays['target_logits'].softmax(1))
@@ -216,6 +250,8 @@ class OnlineStructure:
         np.savez_compressed(path/'current-structure.npz', assignments=assignments,
             reliable=reliable, target_paths=np.asarray(self.target_names), target_support_mask=support_mask,
             teacher_space=np.asarray(self.teacher_space),label_scope=np.asarray(self.label_scope))
+        np.savez_compressed(path/('structure-membership-%03d.npz'%(epoch+1)),
+            assignments=assignments,reliable=reliable,target_paths=np.asarray(self.target_names))
         config_path = path/'config.json'
         config = json.loads(config_path.read_text())
         config.update(all_classes=self.args.all_classes, design='online-imp-structure-v1',

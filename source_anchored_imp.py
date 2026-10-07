@@ -47,7 +47,7 @@ class SourceAnchoredIMP:
 
     @torch.no_grad()
     def fit(self, target_features, source_centers, known_compatibility=None,
-            birth_unknown_min=0.5, birth_strategy='sequential'):
+            birth_unknown_min=0.5, birth_strategy='sequential', initial_candidates=None):
         for values in [target_features, source_centers]:
             if values.ndim != 2 or not values.is_floating_point() or min(values.shape) < 1:
                 raise ValueError('Expected non-empty floating-point matrices')
@@ -57,6 +57,12 @@ class SourceAnchoredIMP:
             raise ValueError('Feature dimensions differ')
         if target_features.dtype != source_centers.dtype or target_features.device != source_centers.device:
             raise ValueError('Input dtype and device must match')
+        if initial_candidates is not None:
+            if (initial_candidates.ndim != 2 or initial_candidates.shape[1] != target_features.shape[1]
+                    or initial_candidates.dtype != target_features.dtype
+                    or initial_candidates.device != target_features.device
+                    or not torch.isfinite(initial_candidates).all()):
+                raise ValueError('Initial candidates must match current feature coordinates/dtype/device')
         known_count = len(source_centers)
         if not math.isfinite(birth_unknown_min) or not 0 <= birth_unknown_min <= 1:
             raise ValueError('birth_unknown_min must be in [0,1]')
@@ -84,7 +90,9 @@ class SourceAnchoredIMP:
         if known_count > self.max_prototypes:
             raise ValueError('Capacity is smaller than the known prototype count')
         anchors = source_centers.clone()
-        centers = anchors.clone()
+        centers = anchors.clone() if initial_candidates is None else torch.cat([anchors,initial_candidates.detach().clone()])
+        if len(centers)>self.max_prototypes:
+            raise ValueError('Initial prototypes exceed capacity')
         history = []
         for iteration in range(self.steps):
             if birth_strategy == 'farthest':

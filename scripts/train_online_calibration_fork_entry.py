@@ -14,6 +14,7 @@ online_structure.label_scope = os.environ.get('ONLINE_LABEL_SCOPE','screened')
 online_structure.known_veto = os.environ.get('ONLINE_KNOWN_VETO','0')=='1'
 online_structure.known_scope = os.environ.get('ONLINE_KNOWN_SCOPE','both' if online_structure.known_veto else 'none')
 online_structure.veto_eligibility = os.environ.get('ONLINE_VETO_ELIGIBILITY','raw')
+online_structure.initialization_mode = os.environ.get('ONLINE_IMP_INITIALIZATION','source_only')
 if os.environ.get('ONLINE_FORK_INPUT'):
     from online_imp_fork import restore_fork
     epoch,gmm,nomatch=restore_fork(os.environ['ONLINE_FORK_INPUT'],net,cls,discriminator,
