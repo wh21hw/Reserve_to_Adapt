@@ -24,3 +24,5 @@
 ## History
 
 预声明，尚未启动。整体未知结构目标和三数据集验证仍未完成。
+
+已启动：代码9c9c6103，T4复用，exec20/launcher43715/shell13，控制台`/content/online-known-components-console.log`。模块权重路由四种情况一次检查通过；训练母进程确认running。两新续训6，旧参考不重跑，正常hook5分钟安静检查；不能重复旧exec17结果。
