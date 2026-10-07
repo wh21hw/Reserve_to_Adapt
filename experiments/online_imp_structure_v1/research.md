@@ -31,3 +31,5 @@
 Drive已挂载，环境和缓存恢复完成，针对性身份迁移/当前缓存特征及真实入口编译检查通过。第一次启动在模型加载时因本地控制副本的`weights_only=False`参数与torch1.7不兼容失败，0训练轮；只删除该兼容参数，保留startup-failed目录，修复后启动同设置，不作失败算法重跑。新T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke。
 
 运行入口background exec5；self_label worker PID4595，独立shell13；控制台`/content/online-imp-pair-console-r1.log`。每arm目录`/content/imp-runs/online-imp-structure-v1/{self_label,structure_label}/office31-a2w_seed3`。第1轮前首次当前结构估计K17/V3，刷新8.72秒，target可信支持0，因此本次阈值实际回退source校准，不伪称target校正已生效；后续每轮记录支持数。初始K2是建头占位，实际第1轮已经按IMP调整17，不能沿用旧K2→5口径。
+
+前三轮完成elapsed41.3/78.1/113.8秒，近期35.7–36.8秒/epoch；预计两组总训练约12–15分钟（不是硬截止）。K轨迹17→38→35，第4轮开始K33/V18、target支持268，阈值的target校正此时有数据支持，但支持正确性未证明。原有rta-baseline hook已更新为本批5分钟等待，正常安静，完成收集后报告。不把K抖动当作语义类别数确实变化；跨轮成员传递与最终槽支持需要结果分析。
