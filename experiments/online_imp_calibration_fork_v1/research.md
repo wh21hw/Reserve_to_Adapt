@@ -29,3 +29,5 @@
 已预声明，尚未启动。训练复用已挂载T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke。研究整体仍含OfficeHome Pr→Rw和VisDA VGGNet口径任务，本批A→W不能代替全目标。
 
 已启动，训练代码4ed649f5，background exec8/launcher12643/独立shell13；控制台`/content/online-calibration-fork-console.log`。共同warm4完成155.5秒，K34/V20；真实恢复检查exit0且没有新history，分类动量设备/形状和CPU RNG检查通过。confidence分支正在epoch5起继续；以实际history近期轮间差值重估两分支ETA，原预算不变。旧批exec5已完成，本hook已替换为本批每5分钟等待，不能重复旧结果通知。
+
+confidence完成epoch5–7共117.0秒、近期37.04秒/轮；总批预计10–12分钟。structure_support额外初步IMP的实际耗时需换组后重估。支持接口缓存检查不增支持集合/维度/有限值通过，不把旧缓存327→327当本批效果。
