@@ -30,22 +30,27 @@ with zipfile.ZipFile(args.archive) as bundle:
             assignment=data['assignments']; reliable=data['reliable']
             support_mask=data['target_support_mask'] if 'target_support_mask' in data.files else None
             teacher_space=str(data['teacher_space'].item()) if 'teacher_space' in data.files else 'bottleneck'
+            label_scope=str(data['label_scope'].item()) if 'label_scope' in data.files else 'screened'
         clusters=[]
         for j in range(len(reliable)):
             mask=assignment==10+j
             clusters.append(dict(slot=10+j,members=int(mask.sum()),known_members=int((mask&is_known).sum()),
-                unknown_members=int((mask&~is_known).sum()),label_eligible=bool(reliable[j]),
+                unknown_members=int((mask&~is_known).sum()),label_eligible=bool(reliable[j]) or label_scope=='all_candidates',
                 virtual_eligible=bool(reliable[j]) if teacher_space=='bottleneck' else None,
                 semantic_counts={str(c):int((mask&(truth==c)).sum()) for c in np.unique(truth[mask])}))
         candidate=assignment>=10
         eligible=np.zeros(len(assignment),dtype=bool)
-        eligible[candidate]=reliable[assignment[candidate]-10]
+        eligible[candidate]=True if label_scope=='all_candidates' else reliable[assignment[candidate]-10]
+        geometric=np.zeros(len(assignment),dtype=bool)
+        geometric[candidate]=reliable[assignment[candidate]-10]
         report['arms'][arm]=dict(clusters=clusters,
-            teacher_space=teacher_space,
+            teacher_space=teacher_space,label_scope=label_scope,
             known_candidate_fraction=float(candidate[is_known].mean()),
             unknown_candidate_fraction=float(candidate[~is_known].mean()),
-            known_reliable_candidate_fraction=float(eligible[is_known].mean()),
-            unknown_reliable_candidate_fraction=float(eligible[~is_known].mean()),
+            known_reliable_candidate_fraction=float(geometric[is_known].mean()),
+            unknown_reliable_candidate_fraction=float(geometric[~is_known].mean()),
+            known_label_eligible_fraction=float(eligible[is_known].mean()),
+            unknown_label_eligible_fraction=float(eligible[~is_known].mean()),
             known_retained_identity_accuracy=float((assignment[is_known]==truth[is_known]).mean()))
         if support_mask is not None:
             report['arms'][arm]['calibration_support']=dict(count=int(support_mask.sum()),

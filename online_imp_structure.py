@@ -91,7 +91,10 @@ def transport_head(cls, optimizer, known, assignments, previous, old_probabiliti
     similarity = overlap / np.maximum(denom, 1e-12)
     rows, cols = linear_sum_assignment(-similarity)
     pairs = [(known+int(r), known+int(c)) for r, c in zip(rows, cols) if overlap[r, c] > 0]
-    replacement = nn.Linear(old.in_features, known+new_k, bias=False).to(old.weight)
+    # Head size must not perturb later DataLoader/augmentation CPU RNG streams.
+    # Init remains stochastic from the current state, but restores that stream.
+    with torch.random.fork_rng(devices=[]):
+        replacement = nn.Linear(old.in_features, known+new_k, bias=False).to(old.weight)
     replacement.weight[:known].copy_(old.weight[:known])
     scale = old.weight.norm(dim=1).mean()
     replacement.weight[known:].mul_(scale / replacement.weight[known:].norm(dim=1, keepdim=True).clamp_min(1e-8))
@@ -129,6 +132,7 @@ class OnlineStructure:
         self.args, self.use_labels = args, use_labels
         self.calibration_mode = 'confidence'
         self.teacher_space = 'bottleneck'
+        self.label_scope = 'screened'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -182,7 +186,8 @@ class OnlineStructure:
             report['virtual_candidate_count'] = virtual_report['K']
         report.update(V=len(virtual),teacher_space=self.teacher_space,
             teacher_dimension=int(arrays['source'+key].shape[1]),virtual_space='bottleneck256',
-            label_reliable_candidates=int(reliable.sum()))
+            label_reliable_candidates=int(reliable.sum()),label_scope=self.label_scope,
+            label_eligible_candidates=len(reliable) if self.label_scope=='all_candidates' else int(reliable.sum()))
         change = None if self.assignments is None else float((assignments != self.assignments).mean())
         report['transport'] = transport_head(cls, optimizer.optimizer, self.args.shared_classes,
             assignments, None if reset_correspondence else self.assignments,
@@ -203,7 +208,7 @@ class OnlineStructure:
             stream.write(json.dumps(report, allow_nan=False)+'\n')
         np.savez_compressed(path/'current-structure.npz', assignments=assignments,
             reliable=reliable, target_paths=np.asarray(self.target_names), target_support_mask=support_mask,
-            teacher_space=np.asarray(self.teacher_space))
+            teacher_space=np.asarray(self.teacher_space),label_scope=np.asarray(self.label_scope))
         config_path = path/'config.json'
         config = json.loads(config_path.read_text())
         config.update(all_classes=self.args.all_classes, design='online-imp-structure-v1',
@@ -216,7 +221,11 @@ class OnlineStructure:
         ids = self.assignments[np.asarray(indices)]
         known = self.args.shared_classes
         mask = ids >= known
-        mask[mask] &= self.reliable[ids[mask]-known]
+        scope=getattr(self,'label_scope','screened')
+        if scope=='screened':
+            mask[mask] &= self.reliable[ids[mask]-known]
+        elif scope!='all_candidates':
+            raise ValueError('Unknown structure label coverage policy')
         labels = fallback.detach().clone()
         if self.use_labels:
             labels[torch.as_tensor(mask, device=labels.device)] = torch.as_tensor(ids[mask], device=labels.device)
