@@ -1,0 +1,24 @@
+{
+  "purpose": "Individual vs collective unknown competition, no alternative rule fitted or accuracy optimization",
+  "targets_used": "Evaluation annotations only",
+  "arms": {
+    "bottleneck": {
+      "K": 18,
+      "collective_unknown_exceeds_known_but_no_individual_wins": 34,
+      "split_fraction_all": 0.06028368794326241,
+      "split_fraction_true_unknown": 0.09665427509293681,
+      "split_fraction_true_known": 0.02711864406779661,
+      "source_calibrated_readout_threshold_available": false,
+      "caveat": "A mass competition event is not proof that a changed rule preserves known boundaries"
+    },
+    "backbone": {
+      "K": 22,
+      "collective_unknown_exceeds_known_but_no_individual_wins": 21,
+      "split_fraction_all": 0.03723404255319149,
+      "split_fraction_true_unknown": 0.06319702602230483,
+      "split_fraction_true_known": 0.013559322033898305,
+      "source_calibrated_readout_threshold_available": false,
+      "caveat": "A mass competition event is not proof that a changed rule preserves known boundaries"
+    }
+  }
+}

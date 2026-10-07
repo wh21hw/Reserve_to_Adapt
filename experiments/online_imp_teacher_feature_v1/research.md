@@ -29,3 +29,5 @@
 ## History
 
 已预声明，尚未启动；复用挂载T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke和共同warm4，不重复下载。
+
+已完成：训练13fd0471，background exec11/launcher20984，续训221.9/237.6秒，exit0/collector done。真实2048接口检查0训练轮，K29/virtual256/head256，通过；formal finalHOS67.9826%→72.1028%、Δ+4.1202pp但OS*−1.1008pp违反guard，ARI/NMI下降，不晋升高维方案。结构标签实际仅61独立未知/4语义类，中心筛查覆盖瓶颈是下一因素。完整数据见final_report.md；原hook必须换新handle，不重复旧exec8/11结果。
