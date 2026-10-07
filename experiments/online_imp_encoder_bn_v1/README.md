@@ -16,3 +16,19 @@
 ## 状态
 
 已启动：T4 gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke，exec49/launcher219942/shell13，console /content/online-encoder-bn-console.log。frozen_encoder已进入epoch5，现有Drive挂载与共同warm状态复用成功。5分钟临时hook已开启，结果后报告并停止此批等待；不关闭实例。
+
+## 完整结果（2026-10-07）
+
+两组各完成epoch5–10，包含共同warm1–4后有效10轮。各process exit_code=0且timed_out=false，自动collector=0。新增训练耗时225.88+231.34=457.22秒，约7.62分钟。电脑已保存summary与301KiB结果ZIP，挂载Drive目录下summary/results.zip可见；API配额原因未独立确认云端同步。模型仍保留runtime，实例未关闭。
+
+| 设置与选取 | epoch | OS* % | UNK % | HOS % |
+|---|---:|---:|---:|---:|
+| frozen_encoder fullbest/post4best/final | 10 | 90.81295 | 73.87845 | 81.47505 |
+| normal_encoder fullbest（共同warm） | 4 | 86.40217 | 73.91034 | 79.66956 |
+| normal_encoder post4best/final | 10 | 91.65767 | 69.73366 | 79.20655 |
+
+normal−frozen final OS*/UNK/HOS=+0.84472/−4.14479/−2.26851个百分点，两者已知/未知指标互不支配，但当前综合HOS下降。fullbest选择以HOS为准，normal共享warm4的best不能声称来自恢复BN后的训练。
+
+frozen完整K范围17–38、final18，V范围3–20、final7；normal完整K范围17–45、final35，V范围3–20、final8。final unknown prediction ARI/NMI为frozen0.666921/0.796077、normal0.523105/0.726228。这里评价的是未知分类槽的语义分组，不能把K直接称真实类别数。
+
+结论：本次短程恢复encoder BN没有提高HOS，未知拒识与语义分组指标也下降；仅据此不扩跑长程。不能推断所有正常BN方案必然失败，更不能归因于GPU。PPT主进度页继续使用已验证的训练支持模块增益，本批作为兼容性诊断备份。含IMP历史best90.2942仍未超过论文93.0%。不启动新训练，等待文稿与下一明确实验计划。
