@@ -33,3 +33,5 @@ Drive已挂载，环境和缓存恢复完成，针对性身份迁移/当前缓�
 运行入口background exec5；self_label worker PID4595，独立shell13；控制台`/content/online-imp-pair-console-r1.log`。每arm目录`/content/imp-runs/online-imp-structure-v1/{self_label,structure_label}/office31-a2w_seed3`。第1轮前首次当前结构估计K17/V3，刷新8.72秒，target可信支持0，因此本次阈值实际回退source校准，不伪称target校正已生效；后续每轮记录支持数。初始K2是建头占位，实际第1轮已经按IMP调整17，不能沿用旧K2→5口径。
 
 前三轮完成elapsed41.3/78.1/113.8秒，近期35.7–36.8秒/epoch；预计两组总训练约12–15分钟（不是硬截止）。K轨迹17→38→35，第4轮开始K33/V18、target支持268，阈值的target校正此时有数据支持，但支持正确性未证明。原有rta-baseline hook已更新为本批5分钟等待，正常安静，完成收集后报告。不把K抖动当作语义类别数确实变化；跨轮成员传递与最终槽支持需要结果分析。
+
+完成：两arm各10轮exit0，exec5自动collector成功，总训练12.56分钟。final自举75.2402% vs结构76.4282%，Δ+1.1880pp，但前4偏差7.4872pp，不能确证标签收益。监督确实接通，active阶段899/1341次替换；校准支持至少20–23%污染下界。完整向量/边界见final_report.md。下一批共同warm状态分叉，只改target校准支持资格，单独目录预声明，不延长本批。
