@@ -45,10 +45,12 @@ if control=='entropy_veto':
     names={control:'Entropy-only veto',candidate:'Alignment-only veto'}
 if control=='raw_entropy':
     names={control:'Raw-candidate entropy veto',candidate:'Screened-candidate entropy veto'}
+last_epoch=0
 with zipfile.ZipFile(args.archive) as bundle:
     for arm in colors:
         rows=summary[arm].get('history') or [json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/history.jsonl').decode().splitlines()]
         x=[r['epoch'] for r in rows]
+        last_epoch=max(last_epoch,max(x))
         for ax,key,title in zip(axes[0],('HOS','OS_star','unknown'),('HOS','Known accuracy (OS*)','Unknown recall (UNK)')):
             ax.plot(x,[100*r[key] for r in rows],marker='o',ms=4,color=colors[arm],label=names[arm])
             ax.set(title=title,ylabel='Percent',xlabel='Epoch',ylim=(0,100))
@@ -61,7 +63,7 @@ with zipfile.ZipFile(args.archive) as bundle:
         axes[1,2].set(title='Slots receiving pseudo-labels',ylabel='Count (not semantic classes)',xlabel='Epoch')
 for ax in axes.flat:
     ax.axvspan(.5,4.5,color='#999999',alpha=.12,zorder=0)
-    ax.set_xlim(.5,10.5)
+    ax.set_xlim(.5,last_epoch+.5)
 axes[0,0].legend(fontsize=10,loc='lower right')
 factor='Only unknown labels differ' if control=='self_label' else 'Common warm state; only IMP feature layer differs' if control=='bottleneck' else 'Common warm state; only calibration support differs'
 if control=='batch_bn': factor='Common warm state; only classifier BN statistics differ'

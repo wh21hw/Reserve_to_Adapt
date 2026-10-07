@@ -1,7 +1,7 @@
-"""Posthoc semantic annotation of saved epoch10-start memberships only.
+"""Posthoc semantic annotation of the last saved epoch-start memberships.
 
 Never imported by training; does not select thresholds, K or configurations.
-No model evaluation. It cannot reveal actual per-sample training exposure.
+No model evaluation. Uses recorded CE exposure, not unrecorded image-seen counts.
 """
 import argparse
 import io
@@ -20,10 +20,12 @@ rows=[line.rsplit(None,1) for line in Path(args.target_list).read_text().splitli
 paths=[row[0] for row in rows]
 truth=np.asarray([int(row[1]) for row in rows])
 is_known=truth<10
-report=dict(stage='Start of epoch10, not final10 network',target_truth_used='Posthoc annotation only',
+report=dict(stage='Last saved epoch-start memberships, not final network features',target_truth_used='Posthoc annotation only',
     actual_selected_sample_exposure_available=False,arms={})
 with zipfile.ZipFile(args.archive) as bundle:
     for arm in args.arms:
+        history=[json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/online-structure-history.jsonl').decode().splitlines()]
+        snapshot_epoch=history[-1]['epoch']
         with np.load(io.BytesIO(bundle.read(arm+'/office31-a2w_seed3/current-structure.npz'))) as data:
             if data['target_paths'].tolist()!=paths:
                 raise ValueError('Snapshot and posthoc target paths differ')
@@ -44,6 +46,7 @@ with zipfile.ZipFile(args.archive) as bundle:
         geometric=np.zeros(len(assignment),dtype=bool)
         geometric[candidate]=reliable[assignment[candidate]-10]
         report['arms'][arm]=dict(clusters=clusters,
+            snapshot_epoch=snapshot_epoch,snapshot_stage='Start of epoch%d, not final%d network'%(snapshot_epoch,snapshot_epoch),
             teacher_space=teacher_space,label_scope=label_scope,
             known_candidate_fraction=float(candidate[is_known].mean()),
             unknown_candidate_fraction=float(candidate[~is_known].mean()),
@@ -69,7 +72,8 @@ with zipfile.ZipFile(args.archive) as bundle:
             alignment_effective=np.zeros(len(truth),dtype=np.float64)
             split_objectives=False
             final_exposure=None
-            for name in sorted(exposure_files):
+            final_exposure_epoch=None
+            for name in sorted(exposure_files,key=lambda item:int(Path(item).stem.rsplit('-',1)[1])):
                 with np.load(io.BytesIO(bundle.read(name))) as exposure:
                     if exposure['target_paths'].tolist()!=paths:raise ValueError('Exposure target paths differ')
                     if not bool(exposure['unknown_ce_active']):continue
@@ -85,6 +89,7 @@ with zipfile.ZipFile(args.archive) as bundle:
                         entropy_effective+=exposure['entropy_weight_effective']
                         alignment_effective+=exposure['alignment_weight_effective']
                     final_exposure={key:exposure[key].copy() for key in ('selected','overridden')}
+                    final_exposure_epoch=int(Path(name).stem.rsplit('-',1)[1])
             report['arms'][arm]['active_exposure']=dict(
                 selected_total=int(selected.sum()),selected_known=int(selected[is_known].sum()),
                 selected_unknown=int(selected[~is_known].sum()),
@@ -119,7 +124,8 @@ with zipfile.ZipFile(args.archive) as bundle:
                         removed_true_unknown_weight=float(removed[~is_known].sum()),
                         remaining_true_unknown_weight=float(effective[~is_known].sum()))
             if final_exposure is not None:
-                report['arms'][arm]['epoch10_exposure']=dict(
+                if final_exposure_epoch!=snapshot_epoch:raise ValueError('Last exposure and membership epochs differ')
+                report['arms'][arm]['epoch%d_exposure'%final_exposure_epoch]=dict(
                     unknown_label_eligible_members=int((eligible&~is_known).sum()),
                     unknown_eligible_without_ce=int((eligible&~is_known&(final_exposure['selected']==0)).sum()),
                     known_overrides=int(final_exposure['overridden'][is_known].sum()),
