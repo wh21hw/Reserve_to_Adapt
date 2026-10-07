@@ -28,3 +28,5 @@
 已启动：b2325543，T4复用，exec32，shell13，`/content/online-member-init-console.log`。一次当前坐标/置换不变/出生/剪除与训练代码生成检查通过，无预热重跑。5分钟hook已恢复并替换为本批，不监控旧exec27。
 
 launcher60073。普通结构记录新增每轮成员NPZ用于结束后对齐诊断，不重新评模型。commonwarm4旧记录缺匹配后变率，只比较续训5–10阶段。
+
+实测source_only epoch7 elapsed114.2131s、epoch8 elapsed150.0261s，近期35.81秒/轮。按相近速度本批合计约7.5–8分钟、当前剩约5分钟；current_members改K后重估。控制组已完成epoch8，无错误。
