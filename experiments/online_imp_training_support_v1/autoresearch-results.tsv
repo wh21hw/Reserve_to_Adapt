@@ -1,1 +1,3 @@
 iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	0.6595643444	-	-	baseline	Original RTA unknown selector in source-only IMP framework	manual	2026-10-07
+1	0.7277491131	0.0681847687	10.34%	kept	Reliable teacher union passes short-run guard; provisional candidate pending confirmation	manual	2026-10-07

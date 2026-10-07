@@ -30,3 +30,7 @@
 launcher71996。实测rta_only epoch7 elapsed113.9388s、epoch8 elapsed149.4899s，近期35.55秒/轮，按此速总约7.5–8分钟、剩约5分钟；union组改变选中人口后重估。控制已完成epoch8，无错误。
 
 此pilot从共享warm4之后启用入口变化。若进入完整从头训练，必须明确仅在warm4后启用扩展；warm期间即使unknown CE系数0，选中子batch前向仍会影响CLS BN，不能未经处理声称共享预热。当前不为此重跑warm或改正在运行的代码。
+
+完成：exec40/collector0，两arm各epoch5–10完整，222.70/224.21秒。rta_only final97.3441/49.8748/65.9564；union97.1115/58.1918/72.7749（OS*/UNK/HOS%），Δ−0.2326/+8.3170/+6.8185pp，同批guard通过，保留为候选而非已证明最佳方法。source_only旧参考70.3694下union HOS+2.4055、known−0.5659pp，但跨进程旧control UNK有明显漂移，需同设置确认。两组fullbest仍warm4；post4best5 HOS75.3200/75.3096。
+
+实际新增194次CE曝光：177unknown/17known，独立73unknown/5known；总独立unknown结构训练覆盖136→152。误known结构标签7→35，纯度并非100%；最终ARI .48581→.47769、NMI .70993→.70695，语义分组改善未证明。先确认同配置收益，不立刻把此10轮单seed结果当论文/三任务结论，不叠加新损失或阈值。
