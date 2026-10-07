@@ -30,3 +30,5 @@
 已启动：代码b2272ab8，background exec17，独立shell13，控制台`/content/online-known-veto-console.log`，root`/content/imp-runs/online-imp-known-veto-v1`。新weight接口一次通过，不改原tensor/assignments；原Entropy/BCE均按batch N平均，权重全0有效。模型不复制Drive；hook已替换17，每5分钟安静检查，不重复旧结果。
 
 rta_known已完成epoch5–7，elapsed113.2秒、近期36.66秒/轮；总批预计约7.5–8.5分钟。按imp_veto实际阶段再估时，ETA不是硬截止。
+
+完成：exec17/collector成功，final HOS70.2602→79.6681%、UNK+15.1486pp但OS*−5.4101pp触发guard，不晋升。屏蔽382真实未知和161真实已知加权曝光，下一项仅entropy/仅alignment分解，同warm参考，见final_report。

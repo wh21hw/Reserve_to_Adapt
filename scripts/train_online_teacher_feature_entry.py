@@ -9,8 +9,14 @@ exec(compile(base.split(boundary)[0],'<feature-builder>','exec'),namespace)
 source=namespace['source']
 anchor='            feature_otherep = torch.index_select(ft1, 0, r.view(-1))'
 if source.count(anchor)!=1: raise RuntimeError('Unexpected target selection boundary')
-source=source.replace(anchor,'''            weight = online_structure.known_weights(target_indices.cpu().numpy(),weight)
+source=source.replace(anchor,'''            entropy_weight,alignment_weight = online_structure.objective_weights(target_indices.cpu().numpy(),weight)
 '''+anchor)
+anchor='            entropy = EntropyLoss(predict_prob_target [:,:], instance_level_weight= weight.contiguous())'
+if source.count(anchor)!=1:raise RuntimeError('Unexpected entropy weight boundary')
+source=source.replace(anchor,anchor.replace('weight.contiguous()','entropy_weight.contiguous()'))
+anchor='                                        instance_level_weight = weight.contiguous())'
+if source.count(anchor)!=1:raise RuntimeError('Unexpected target adversarial weight boundary')
+source=source.replace(anchor,anchor.replace('weight.contiguous()','alignment_weight.contiguous()'))
 anchor='''    nomatch = online_structure.refresh(net, cls, optimizer_cls, epoch,
         reset_correspondence=(epoch == warmiter+1))'''
 if source.count(anchor)!=1: raise RuntimeError('Unexpected teacher refresh boundary')

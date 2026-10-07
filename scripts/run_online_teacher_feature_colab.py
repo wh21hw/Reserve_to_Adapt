@@ -44,11 +44,11 @@ def collect(root,shared,arms,run_name):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--run',action='store_true')
-    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto'],default='teacher-feature')
+    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
-    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1'}[args.preset]
-    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto')}[args.preset]
+    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1'}[args.preset]
+    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto')}[args.preset]
     root=Path('/content/imp-runs')/run_name
     durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
     shared=Path('/content/imp-runs/online-imp-calibration-fork-v1/warm/office31-a2w_seed3')
@@ -69,6 +69,7 @@ def main():
         overrides=dict(RTA_SEED='3',RTA_EPOCHS='10',RTA_FREEZE_ENCODER_BN='1',ONLINE_STRUCTURE_LABELS='1',
             ONLINE_CALIBRATION_MODE='confidence',ONLINE_TEACHER_SPACE=teacher,ONLINE_LABEL_SCOPE=scope,
             ONLINE_KNOWN_VETO='1' if arm=='imp_veto' else '0',
+            ONLINE_KNOWN_SCOPE={'imp_veto':'both','entropy_veto':'entropy','alignment_veto':'alignment'}.get(arm,'none'),
             ONLINE_FORK_INPUT=str(shared/'last.pt'),
             KONLY_SOURCE_PRIOR='/content/online-source/source-final.pt',RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
             PYTHONPATH='/content',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
