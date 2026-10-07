@@ -30,3 +30,5 @@
 已启动：代码9241b007、exec45/launcher109227/shell13，现有T4端点gpu-t4-s-kkb-ass1c2-1j7bns9e7dhke。首个续训epoch5完成、loss有限，实际41.15秒（含初始提取/恢复开销）；待近期轮间差估计稳定ETA。10分钟hook已替换旧确认hook，完成后自动收集，不关闭实例。
 
 epoch6 elapsed77.8955秒，epoch5→6实际36.7456秒/轮；当前第一组余64轮约39分钟，第二组估41分钟，总剩约80分钟（非硬截止）。epoch10后筛选/K变化和换组时继续重估，无OOM或非有限loss。
+
+完成：exec45/collector0，两arm各own5–70，共132新轮，final原99.0000/51.2685/67.5535→union99.6667/56.9958/72.5200（OS*/UNK/HOS%），Δ+0.6667/+5.7273/+4.9665pp，原gate通过且两侧改善。fullbest共享warm4/post4best5，仍有后期未知退化。Kfinal31→29、V26→19，ARI/NMI本批上升；新增1148真实曝光含31known（2.70%），独立unknown结构覆盖171→187。详见final_report.md，整体尚未对标论文或跨数据集完成。
