@@ -14,7 +14,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--archive',required=True)
 parser.add_argument('--target-list',required=True)
 parser.add_argument('--output',required=True)
-parser.add_argument('--arms',nargs=2,default=['self_label','structure_label'])
+parser.add_argument('--arms',nargs='+',default=['self_label','structure_label'])
 args=parser.parse_args()
 rows=[line.rsplit(None,1) for line in Path(args.target_list).read_text().splitlines() if line.strip()]
 paths=[row[0] for row in rows]

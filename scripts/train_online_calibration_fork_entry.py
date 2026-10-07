@@ -14,6 +14,7 @@ online_structure.label_scope = os.environ.get('ONLINE_LABEL_SCOPE','screened')
 online_structure.known_veto = os.environ.get('ONLINE_KNOWN_VETO','0')=='1'
 online_structure.known_scope = os.environ.get('ONLINE_KNOWN_SCOPE','both' if online_structure.known_veto else 'none')
 online_structure.veto_eligibility = os.environ.get('ONLINE_VETO_ELIGIBILITY','raw')
+online_structure.entropy_candidate_scale = float(os.environ.get('ONLINE_ENTROPY_CANDIDATE_SCALE','0'))
 online_structure.initialization_mode = os.environ.get('ONLINE_IMP_INITIALIZATION','source_only')
 online_structure.merge_mode = os.environ.get('ONLINE_IMP_MERGE','none')
 online_structure.selection_mode = os.environ.get('ONLINE_UNKNOWN_SELECTION','rta_only')

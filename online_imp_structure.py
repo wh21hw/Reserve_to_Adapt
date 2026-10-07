@@ -172,6 +172,7 @@ class OnlineStructure:
         self.label_scope = 'screened'
         self.known_veto = False
         self.known_scope = 'none'
+        self.entropy_candidate_scale = 0.0  # Legacy hard veto when entropy scope is enabled.
         self.veto_eligibility = 'raw'
         self.initialization_mode = 'source_only'
         self.merge_mode = 'none'
@@ -333,9 +334,12 @@ class OnlineStructure:
         eligible=torch.as_tensor(~blocked,
             device=original.device,dtype=original.dtype)
         masked=original*eligible
-        entropy=masked if scope in ('both','entropy') else original
+        scale=float(self.entropy_candidate_scale)
+        if not 0.0<=scale<=1.0:raise ValueError('Entropy candidate scale must lie in [0,1]')
+        entropy_masked=original*(eligible+(1-eligible)*scale)
+        entropy=entropy_masked if scope in ('both','entropy') else original
         alignment=masked if scope in ('both','alignment') else original
-        effective=masked if scope!='none' else original
+        effective=entropy if scope=='entropy' else masked if scope!='none' else original
         np.add.at(self.known_original_by_sample,indices,original.cpu().numpy())
         np.add.at(self.known_effective_by_sample,indices,effective.cpu().numpy())
         np.add.at(self.entropy_effective_by_sample,indices,entropy.cpu().numpy())
@@ -347,7 +351,8 @@ class OnlineStructure:
             selected=self.selected, structure_labels_used=self.overridden,
             known_weight_original=float(self.known_original_by_sample.sum()),
             known_weight_effective=float(self.known_effective_by_sample.sum()),
-            known_veto_enabled=self.known_scope!='none',known_objective_scope=self.known_scope)
+            known_veto_enabled=self.known_scope!='none',known_objective_scope=self.known_scope,
+            entropy_candidate_scale=self.entropy_candidate_scale)
         row.update(unknown_selection_mode=self.selection_mode,teacher_added_actual=int(self.teacher_added_by_sample.sum()),
             original_selector_actual=self.selected-int(self.teacher_added_by_sample.sum()))
         with (Path(self.args.log_dir)/'online-label-history.jsonl').open('a') as stream:
