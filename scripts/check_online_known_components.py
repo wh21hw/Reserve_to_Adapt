@@ -5,6 +5,7 @@ import torch
 from online_imp_structure import OnlineStructure
 
 b=object.__new__(OnlineStructure);b.args=SimpleNamespace(shared_classes=2);b.assignments=np.array([0,2,1])
+b.veto_eligibility='raw'
 for scope in ('none','entropy','alignment','both'):
     b.known_scope=scope
     for name in ('known_original_by_sample','known_effective_by_sample','entropy_effective_by_sample','alignment_effective_by_sample'):

@@ -135,6 +135,7 @@ class OnlineStructure:
         self.label_scope = 'screened'
         self.known_veto = False
         self.known_scope = 'none'
+        self.veto_eligibility = 'raw'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -258,7 +259,12 @@ class OnlineStructure:
         indices=np.asarray(indices);original=original.detach()
         scope=self.known_scope
         if scope not in ('none','both','entropy','alignment'):raise ValueError('Unknown known-objective scope')
-        eligible=torch.as_tensor(self.assignments[indices]<self.args.shared_classes,
+        ids=self.assignments[indices]
+        blocked=ids>=self.args.shared_classes
+        if self.veto_eligibility=='screened':
+            blocked[blocked]&=self.reliable[ids[blocked]-self.args.shared_classes]
+        elif self.veto_eligibility!='raw':raise ValueError('Unknown veto eligibility')
+        eligible=torch.as_tensor(~blocked,
             device=original.device,dtype=original.dtype)
         masked=original*eligible
         entropy=masked if scope in ('both','entropy') else original

@@ -1,1 +1,4 @@
 iteration	metric_value	delta	delta_pct	status	description	evaluator_source	timestamp
+0	70.26022744642435	-	-	reference	Prior completed none-veto sharedwarm reference	manual	2026-10-07
+1	80.64933015096654	10.38910270454219	14.787%	guard_violation	Entropy-only veto,known loss4.945pp	manual	2026-10-07
+2	67.13145873524867	-3.12876871117568	-4.453%	reverted	Alignment-only veto,no unknown improvement	manual	2026-10-07
