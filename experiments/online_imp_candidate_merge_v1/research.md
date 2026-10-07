@@ -31,3 +31,5 @@
 预声明，尚未启动。承接无merge已完成95.8790/51.2789/66.8204，source_only97.6774/54.9944/70.3694仅背景，不伪称同批控制或论文复现；整体及三任务目标未完成。
 
 已启动：fafc50f4，exec36/shell13，控制台`/content/online-candidate-merge-console.log`。新合并接口的目标单调/known身份/不强制合并、完整生成代码一次检查通过，现有runtime/mount/cache复用，无重复warm。hook5分钟已替换旧exec32。
+
+launcher65808。实测no_merge epoch6 elapsed78.0972s、epoch7 elapsed118.7820s，近期40.68秒/轮，按此速本批约8–9分钟、当前剩约6分钟；objective_merge改K/合并后重估。原控制组已完成三续训轮，K34，无错误。
