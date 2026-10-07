@@ -52,18 +52,18 @@ def main():
     parser.add_argument('--epochs',type=int,choices=[10,70],default=10)
     parser.add_argument('--arm-seconds',type=int,default=3600)
     parser.add_argument('--total-seconds',type=int,default=7200)
-    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support','entropy-dose','entropy-dose-validation','encoder-bn'],default='teacher-feature')
+    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support','entropy-dose','entropy-dose-validation','encoder-bn','entropy-intermediate'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
     if args.arm_seconds<=0 or args.total_seconds<=0:raise ValueError('Positive budgets required')
-    if args.epochs!=10 and (args.preset not in ('training-support','entropy-dose-validation','encoder-bn') or not args.run_name):
+    if args.epochs!=10 and (args.preset not in ('training-support','entropy-dose-validation','encoder-bn','entropy-intermediate') or not args.run_name):
         raise ValueError('Long validation requires declared training-support preset and separate run-name')
-    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1','entropy-dose':'online-imp-entropy-dose-v1','entropy-dose-validation':'online-imp-entropy-dose-70e-v1','encoder-bn':'online-imp-encoder-bn-v1'}[args.preset]
+    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1','entropy-dose':'online-imp-entropy-dose-v1','entropy-dose-validation':'online-imp-entropy-dose-70e-v1','encoder-bn':'online-imp-encoder-bn-v1','entropy-intermediate':'online-imp-entropy-intermediate-70e-v1'}[args.preset]
     if args.run_name:
         if not re.fullmatch(r'online-imp-[a-z0-9-]{1,64}',args.run_name):
             raise ValueError('Invalid managed run name')
         run_name=args.run_name
-    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge'),'training-support':('rta_only','reliable_union'),'entropy-dose':('entropy1','entropy0p5','entropy0'),'entropy-dose-validation':('entropy0p5','entropy0'),'encoder-bn':('frozen_encoder','normal_encoder')}[args.preset]
+    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge'),'training-support':('rta_only','reliable_union'),'entropy-dose':('entropy1','entropy0p5','entropy0'),'entropy-dose-validation':('entropy0p5','entropy0'),'encoder-bn':('frozen_encoder','normal_encoder'),'entropy-intermediate':('entropy0p1','entropy0p25')}[args.preset]
     root=Path('/content/imp-runs')/run_name
     durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
     shared=Path('/content/imp-runs/online-imp-calibration-fork-v1/warm/office31-a2w_seed3')
@@ -94,9 +94,9 @@ def main():
             KONLY_SOURCE_PRIOR='/content/online-source/source-final.pt',RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
             PYTHONPATH='/content',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
         env=dict(os.environ,**overrides)
-        if args.preset in ('entropy-dose','entropy-dose-validation'):
+        if args.preset in ('entropy-dose','entropy-dose-validation','entropy-intermediate'):
             overrides.update(ONLINE_UNKNOWN_SELECTION='reliable_union',ONLINE_KNOWN_SCOPE='entropy',
-                ONLINE_ENTROPY_CANDIDATE_SCALE={'entropy1':'1','entropy0p5':'0.5','entropy0':'0'}[arm])
+                ONLINE_ENTROPY_CANDIDATE_SCALE={'entropy1':'1','entropy0p5':'0.5','entropy0':'0','entropy0p1':'0.1','entropy0p25':'0.25'}[arm])
             env=dict(os.environ,**overrides)
         if args.preset=='encoder-bn':
             overrides.update(ONLINE_UNKNOWN_SELECTION='reliable_union',ONLINE_KNOWN_SCOPE='entropy',
