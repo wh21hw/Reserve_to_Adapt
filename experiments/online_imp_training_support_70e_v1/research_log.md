@@ -5,3 +5,5 @@
 结果整理工具去除epoch10硬编码：图按实际最大轮数，离线当前快照阶段从structure history读，最后曝光按数值轮数排序，且不得把epoch-start几何标为final特征。用已完成确认ZIP做一次针对性的记录解析检查，两组snapshot_epoch=10、解析成功；无模型重评、无重复训练，既有报告不覆盖。exec45仍running，第一组已epoch11；epoch10→11为35.74秒/轮，总剩预计约75分钟，后期/换组继续更新。
 
 用户进一步指出需寻找已知/未知sweet point，不能以1pp已知损失单独否决。已记录于experiments/OSDA_TRADEOFF_POLICY.md：本批训练和原预声明gate保留，结果另作完整取舍解释；后续风险提示与方法价值区分，不回写历史通过状态或盲目叠加新因素。
+
+换组：rta_only process-status exit_code0/timed_out=false；reliable_union已完成epoch5/6，elapsed41.3027/78.9892秒，近期37.6865秒/轮，余64新轮约40分钟。仍同exec45串行执行，无额外授权、预热或新设置。
