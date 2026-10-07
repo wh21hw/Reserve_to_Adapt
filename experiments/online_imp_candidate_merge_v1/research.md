@@ -33,3 +33,7 @@
 已启动：fafc50f4，exec36/shell13，控制台`/content/online-candidate-merge-console.log`。新合并接口的目标单调/known身份/不强制合并、完整生成代码一次检查通过，现有runtime/mount/cache复用，无重复warm。hook5分钟已替换旧exec32。
 
 launcher65808。实测no_merge epoch6 elapsed78.0972s、epoch7 elapsed118.7820s，近期40.68秒/轮，按此速本批约8–9分钟、当前剩约6分钟；objective_merge改K/合并后重估。原控制组已完成三续训轮，K34，无错误。
+
+objective_merge epoch5 elapsed41.3727s、epoch6 elapsed78.6634s，近期37.29秒/轮，K32，预计剩约两三分钟（观测时），无错误。接受的合并objective_history留存，不能将K减少当分类改善。
+
+完成：exec36/collector0，两组各续训6，229.74/224.32秒。no_merge final96.5456/49.6126/65.5438；objective_merge95.2511/52.1034/67.3601（OS*/UNK/HOS%），Δ−1.2946/+2.4907/+1.8163pp，guard失败，不推广。共接受3次合并，K34→32→31，固定特征目标总下降约0.34503；跨epoch目标不单调也未要求单调。仍低于source_only背景70.3694。未知独立训练覆盖128→140，但printer类别曝光仍0。下一单因素应回到可靠IMP成员的训练入口，不继续扫lambda/BN/保留簇。
