@@ -24,3 +24,5 @@
 ## History
 
 预声明。当前方案尚未达到三数据集目标，上一径向筛查因known guard失败未推广。
+
+已启动：a0991367，exec27/launcher54725，shell13，控制台`/content/online-head-bn-console.log`。固定统计/affine梯度/同样本batch不变性检查通过；生成训练代码检查首次缺RTA_EPOCHS，补齐后通过，无失败训练/重复warm。5分钟hook已替换旧exec23通知。
