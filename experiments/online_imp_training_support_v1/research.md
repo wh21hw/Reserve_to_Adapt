@@ -26,3 +26,7 @@
 预声明。之前标签覆盖实验只在原r内部改资格，不等于本次扩充训练集合。source_only参考97.6774/54.9944/70.3694、unknown独立结构覆盖145只是背景，重新同批控制；不推广失败承接/merge。三任务及整体未知结构目标未完成。
 
 已启动：dccc1c56，T4复用，exec40/shell13，控制台`/content/online-training-support-console.log`。一次原顺序/union去重/可靠资格/实际teacher-added标签曝光与代码生成检查通过。5分钟hook已替换旧exec36，无额外预热/数据下载。
+
+launcher71996。实测rta_only epoch7 elapsed113.9388s、epoch8 elapsed149.4899s，近期35.55秒/轮，按此速总约7.5–8分钟、剩约5分钟；union组改变选中人口后重估。控制已完成epoch8，无错误。
+
+此pilot从共享warm4之后启用入口变化。若进入完整从头训练，必须明确仅在warm4后启用扩展；warm期间即使unknown CE系数0，选中子batch前向仍会影响CLS BN，不能未经处理声称共享预热。当前不为此重跑warm或改正在运行的代码。
