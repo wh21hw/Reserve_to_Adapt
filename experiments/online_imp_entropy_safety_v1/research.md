@@ -22,3 +22,5 @@
 预声明，尚未启动；整个未知结构和三任务目标仍未达成。
 
 已启动：代码1774a263，T4复用、exec23/launcher49453/shell13，控制台`/content/online-entropy-safety-console.log`。资格接口一次通过，alignment保持原样。两个续训6，新hook已换23，每5分钟安静检查；确认母进程running。实际几轮后再估时间，不重复旧exec20结果。
+
+完成：两arm各epoch5–10完整，collector成功。raw final92.8332/72.9920/81.7256；screened96.7782/56.7397/71.5378（OS*/UNK/HOS，%）。screened相对原权重参考HOS+1.2775但OS*−1.2326pp，guard_violation，不推广。raw删除170已知/431未知entropy权重；screened仅删除2已知/32未知，仍保留763未知错误known权重。转向分类头BN坐标一致性的单因素诊断，不继续阈值网格。

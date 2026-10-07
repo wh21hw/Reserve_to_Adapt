@@ -1,0 +1,573 @@
+{
+  "stage": "Start of epoch10, not final10 network",
+  "target_truth_used": "Posthoc annotation only",
+  "actual_selected_sample_exposure_available": false,
+  "arms": {
+    "raw_entropy": {
+      "clusters": [
+        {
+          "slot": 10,
+          "members": 33,
+          "known_members": 0,
+          "unknown_members": 33,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "20": 32,
+            "25": 1
+          }
+        },
+        {
+          "slot": 11,
+          "members": 13,
+          "known_members": 1,
+          "unknown_members": 12,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "9": 1,
+            "24": 12
+          }
+        },
+        {
+          "slot": 12,
+          "members": 14,
+          "known_members": 0,
+          "unknown_members": 14,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "22": 14
+          }
+        },
+        {
+          "slot": 13,
+          "members": 27,
+          "known_members": 0,
+          "unknown_members": 27,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "27": 27
+          }
+        },
+        {
+          "slot": 14,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "25": 6
+          }
+        },
+        {
+          "slot": 15,
+          "members": 24,
+          "known_members": 0,
+          "unknown_members": 24,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "21": 1,
+            "23": 21,
+            "28": 1,
+            "29": 1
+          }
+        },
+        {
+          "slot": 16,
+          "members": 25,
+          "known_members": 0,
+          "unknown_members": 25,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "slot": 17,
+          "members": 36,
+          "known_members": 0,
+          "unknown_members": 36,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "28": 16,
+            "29": 20
+          }
+        },
+        {
+          "slot": 18,
+          "members": 19,
+          "known_members": 6,
+          "unknown_members": 13,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "9": 6,
+            "23": 6,
+            "28": 7
+          }
+        },
+        {
+          "slot": 19,
+          "members": 16,
+          "known_members": 0,
+          "unknown_members": 16,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "30": 16
+          }
+        },
+        {
+          "slot": 20,
+          "members": 3,
+          "known_members": 3,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "2": 3
+          }
+        },
+        {
+          "slot": 21,
+          "members": 12,
+          "known_members": 12,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "6": 12
+          }
+        },
+        {
+          "slot": 22,
+          "members": 16,
+          "known_members": 16,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "2": 16
+          }
+        },
+        {
+          "slot": 23,
+          "members": 14,
+          "known_members": 1,
+          "unknown_members": 13,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "5": 1,
+            "24": 13
+          }
+        },
+        {
+          "slot": 24,
+          "members": 7,
+          "known_members": 7,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "9": 7
+          }
+        },
+        {
+          "slot": 25,
+          "members": 5,
+          "known_members": 5,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "5": 5
+          }
+        },
+        {
+          "slot": 26,
+          "members": 4,
+          "known_members": 0,
+          "unknown_members": 4,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "25": 4
+          }
+        },
+        {
+          "slot": 27,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "24": 7,
+            "30": 5
+          }
+        },
+        {
+          "slot": 28,
+          "members": 15,
+          "known_members": 0,
+          "unknown_members": 15,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "21": 15
+          }
+        }
+      ],
+      "teacher_space": "bottleneck",
+      "label_scope": "screened",
+      "known_candidate_fraction": 0.17288135593220338,
+      "unknown_candidate_fraction": 0.929368029739777,
+      "known_reliable_candidate_fraction": 0.003389830508474576,
+      "unknown_reliable_candidate_fraction": 0.49070631970260226,
+      "known_label_eligible_fraction": 0.003389830508474576,
+      "unknown_label_eligible_fraction": 0.49070631970260226,
+      "known_retained_identity_accuracy": 0.8271186440677966,
+      "calibration_support": {
+        "count": 323,
+        "known_count": 264,
+        "unknown_count": 59,
+        "unknown_fraction": 0.1826625386996904,
+        "true_known_coverage": 0.8949152542372881
+      },
+      "active_exposure": {
+        "selected_total": 1344,
+        "selected_known": 103,
+        "selected_unknown": 1241,
+        "overridden_total": 770,
+        "overridden_known": 11,
+        "overridden_unknown": 759,
+        "unique_unknown_selected": 199,
+        "unique_unknown_overridden": 141,
+        "unknown_class_override_counts": {
+          "20": 300,
+          "21": 1,
+          "22": 112,
+          "23": 78,
+          "24": 77,
+          "25": 98,
+          "26": 11,
+          "27": 38,
+          "28": 7,
+          "29": 7,
+          "30": 30
+        },
+        "actual_image_seen_counts_available": false
+      },
+      "known_objective_exposure": {
+        "original_known_weight": 2827.0,
+        "effective_known_weight": 2226.0,
+        "removed_true_known_weight": 170.0,
+        "removed_true_unknown_weight": 431.0,
+        "original_true_unknown_weight": 562.0,
+        "effective_true_unknown_weight": 131.0,
+        "unique_known_vetoed": 45,
+        "unique_unknown_vetoed": 94,
+        "interpretation": "Weighted sample exposures, not loss magnitude or causal attribution"
+      },
+      "per_known_objective": {
+        "entropy": {
+          "effective_weight": 2226.0,
+          "removed_true_known_weight": 170.0,
+          "removed_true_unknown_weight": 431.0,
+          "remaining_true_unknown_weight": 131.0
+        },
+        "alignment": {
+          "effective_weight": 2827.0,
+          "removed_true_known_weight": 0.0,
+          "removed_true_unknown_weight": 0.0,
+          "remaining_true_unknown_weight": 562.0
+        }
+      },
+      "epoch10_exposure": {
+        "unknown_label_eligible_members": 132,
+        "unknown_eligible_without_ce": 34,
+        "known_overrides": 0,
+        "unknown_overrides": 145
+      }
+    },
+    "screened_entropy": {
+      "clusters": [
+        {
+          "slot": 10,
+          "members": 33,
+          "known_members": 0,
+          "unknown_members": 33,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "20": 32,
+            "25": 1
+          }
+        },
+        {
+          "slot": 11,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "24": 12
+          }
+        },
+        {
+          "slot": 12,
+          "members": 14,
+          "known_members": 0,
+          "unknown_members": 14,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "22": 14
+          }
+        },
+        {
+          "slot": 13,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "25": 6
+          }
+        },
+        {
+          "slot": 14,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "28": 6
+          }
+        },
+        {
+          "slot": 15,
+          "members": 8,
+          "known_members": 2,
+          "unknown_members": 6,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "9": 2,
+            "23": 6
+          }
+        },
+        {
+          "slot": 16,
+          "members": 23,
+          "known_members": 0,
+          "unknown_members": 23,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "27": 23
+          }
+        },
+        {
+          "slot": 17,
+          "members": 25,
+          "known_members": 0,
+          "unknown_members": 25,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "slot": 18,
+          "members": 5,
+          "known_members": 0,
+          "unknown_members": 5,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "28": 5
+          }
+        },
+        {
+          "slot": 19,
+          "members": 17,
+          "known_members": 0,
+          "unknown_members": 17,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "30": 17
+          }
+        },
+        {
+          "slot": 20,
+          "members": 11,
+          "known_members": 0,
+          "unknown_members": 11,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "28": 4,
+            "29": 7
+          }
+        },
+        {
+          "slot": 21,
+          "members": 15,
+          "known_members": 7,
+          "unknown_members": 8,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "9": 7,
+            "23": 6,
+            "28": 2
+          }
+        },
+        {
+          "slot": 22,
+          "members": 19,
+          "known_members": 19,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "2": 19
+          }
+        },
+        {
+          "slot": 23,
+          "members": 11,
+          "known_members": 11,
+          "unknown_members": 0,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "6": 11
+          }
+        },
+        {
+          "slot": 24,
+          "members": 4,
+          "known_members": 0,
+          "unknown_members": 4,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "25": 4
+          }
+        },
+        {
+          "slot": 25,
+          "members": 16,
+          "known_members": 1,
+          "unknown_members": 15,
+          "label_eligible": true,
+          "virtual_eligible": true,
+          "semantic_counts": {
+            "5": 1,
+            "24": 11,
+            "30": 4
+          }
+        },
+        {
+          "slot": 26,
+          "members": 24,
+          "known_members": 0,
+          "unknown_members": 24,
+          "label_eligible": false,
+          "virtual_eligible": false,
+          "semantic_counts": {
+            "21": 1,
+            "23": 15,
+            "28": 1,
+            "29": 7
+          }
+        }
+      ],
+      "teacher_space": "bottleneck",
+      "label_scope": "screened",
+      "known_candidate_fraction": 0.13559322033898305,
+      "unknown_candidate_fraction": 0.7769516728624535,
+      "known_reliable_candidate_fraction": 0.003389830508474576,
+      "unknown_reliable_candidate_fraction": 0.31226765799256506,
+      "known_label_eligible_fraction": 0.003389830508474576,
+      "unknown_label_eligible_fraction": 0.31226765799256506,
+      "known_retained_identity_accuracy": 0.864406779661017,
+      "calibration_support": {
+        "count": 371,
+        "known_count": 275,
+        "unknown_count": 96,
+        "unknown_fraction": 0.2587601078167116,
+        "true_known_coverage": 0.9322033898305084
+      },
+      "active_exposure": {
+        "selected_total": 1341,
+        "selected_known": 111,
+        "selected_unknown": 1230,
+        "overridden_total": 786,
+        "overridden_known": 7,
+        "overridden_unknown": 779,
+        "unique_unknown_selected": 196,
+        "unique_unknown_overridden": 137,
+        "unknown_class_override_counts": {
+          "20": 299,
+          "21": 2,
+          "22": 118,
+          "23": 74,
+          "24": 89,
+          "25": 101,
+          "26": 11,
+          "27": 7,
+          "28": 28,
+          "29": 5,
+          "30": 45
+        },
+        "actual_image_seen_counts_available": false
+      },
+      "known_objective_exposure": {
+        "original_known_weight": 3058.0,
+        "effective_known_weight": 3024.0,
+        "removed_true_known_weight": 2.0,
+        "removed_true_unknown_weight": 32.0,
+        "original_true_unknown_weight": 795.0,
+        "effective_true_unknown_weight": 763.0,
+        "unique_known_vetoed": 2,
+        "unique_unknown_vetoed": 19,
+        "interpretation": "Weighted sample exposures, not loss magnitude or causal attribution"
+      },
+      "per_known_objective": {
+        "entropy": {
+          "effective_weight": 3024.0,
+          "removed_true_known_weight": 2.0,
+          "removed_true_unknown_weight": 32.0,
+          "remaining_true_unknown_weight": 763.0
+        },
+        "alignment": {
+          "effective_weight": 3058.0,
+          "removed_true_known_weight": 0.0,
+          "removed_true_unknown_weight": 0.0,
+          "remaining_true_unknown_weight": 795.0
+        }
+      },
+      "epoch10_exposure": {
+        "unknown_label_eligible_members": 84,
+        "unknown_eligible_without_ce": 12,
+        "known_overrides": 0,
+        "unknown_overrides": 114
+      }
+    }
+  }
+}

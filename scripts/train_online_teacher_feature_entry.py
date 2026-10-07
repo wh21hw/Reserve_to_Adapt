@@ -7,6 +7,14 @@ if base.count(boundary)!=1: raise RuntimeError('Unexpected fork entry boundary')
 namespace=dict(__name__='feature_builder',__file__='/content/train_online_calibration_fork_entry.py')
 exec(compile(base.split(boundary)[0],'<feature-builder>','exec'),namespace)
 source=namespace['source']
+anchor='            im_source = im_source.cuda()'
+if source.count(anchor)!=1: raise RuntimeError('Unexpected training input boundary')
+source=source.replace(anchor,'''            if os.environ.get('ONLINE_HEAD_BN_MODE','batch')=='fixed':
+                # Preserve affine gradients; only stop per-batch coordinate/statistic drift.
+                for head_module in cls.modules():
+                    if isinstance(head_module,nn.modules.batchnorm._BatchNorm):
+                        head_module.eval()
+'''+anchor)
 anchor='            feature_otherep = torch.index_select(ft1, 0, r.view(-1))'
 if source.count(anchor)!=1: raise RuntimeError('Unexpected target selection boundary')
 source=source.replace(anchor,'''            entropy_weight,alignment_weight = online_structure.objective_weights(target_indices.cpu().numpy(),weight)
