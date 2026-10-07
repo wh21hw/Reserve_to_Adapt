@@ -15,14 +15,14 @@ import zipfile
 def rows(path): return [json.loads(line) for line in path.read_text().splitlines()]
 
 
-def collect(root,shared,arms,run_name):
+def collect(root,shared,arms,run_name,epochs=10):
     warm=rows(shared/'history.jsonl')
     summary=dict(shared_warm_epochs=4,reused_warm_checkpoint=str(shared/'last.pt'),
-        actual_new_training_epochs=12,same_warm_state=True,pre4_max_abs_metric_difference_pp=0.)
+        actual_new_training_epochs=len(arms)*(epochs-4),effective_epochs_per_arm=epochs,same_warm_state=True,pre4_max_abs_metric_difference_pp=0.)
     for arm in arms:
         run=root/arm/'office31-a2w_seed3'
         own=rows(run/'history.jsonl')
-        if [row['epoch'] for row in own]!=list(range(5,11)):raise RuntimeError('Require6 resumed epochs5–10')
+        if [row['epoch'] for row in own]!=list(range(5,epochs+1)):raise RuntimeError('Incomplete declared resumed epoch range')
         all_rows=warm+own
         summary[arm]=dict(best=max(all_rows,key=lambda row:row['HOS']),post4_best=max(own,key=lambda row:row['HOS']),
             final=own[-1],history=all_rows,K_trajectory=[row['K'] for row in all_rows],V_trajectory=[row['V'] for row in all_rows],
@@ -46,9 +46,15 @@ def collect(root,shared,arms,run_name):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--run',action='store_true')
     parser.add_argument('--run-name',help='Separate declared confirmation output name; never overwrites prior runs')
+    parser.add_argument('--epochs',type=int,choices=[10,70],default=10)
+    parser.add_argument('--arm-seconds',type=int,default=3600)
+    parser.add_argument('--total-seconds',type=int,default=7200)
     parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
+    if args.arm_seconds<=0 or args.total_seconds<=0:raise ValueError('Positive budgets required')
+    if args.epochs!=10 and (args.preset!='training-support' or not args.run_name):
+        raise ValueError('Long validation requires declared training-support preset and separate run-name')
     run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1'}[args.preset]
     if args.run_name:
         if not re.fullmatch(r'online-imp-[a-z0-9-]{1,64}',args.run_name):
@@ -72,7 +78,7 @@ def main():
             '--data_dir',str(data),'--log_dir',str(output),'--name','seed3','--batch_size','64','--learning_rate','0.00005']
         teacher=arm if args.preset=='teacher-feature' else 'bottleneck'
         scope=arm if args.preset=='label-coverage' else 'screened'
-        overrides=dict(RTA_SEED='3',RTA_EPOCHS='10',RTA_FREEZE_ENCODER_BN='1',ONLINE_STRUCTURE_LABELS='1',
+        overrides=dict(RTA_SEED='3',RTA_EPOCHS=str(args.epochs),RTA_FREEZE_ENCODER_BN='1',ONLINE_STRUCTURE_LABELS='1',
             ONLINE_CALIBRATION_MODE='confidence',ONLINE_TEACHER_SPACE=teacher,ONLINE_LABEL_SCOPE=scope,
             ONLINE_KNOWN_VETO='1' if arm=='imp_veto' else '0',
             ONLINE_KNOWN_SCOPE={'imp_veto':'both','entropy_veto':'entropy','alignment_veto':'alignment','raw_entropy':'entropy','screened_entropy':'entropy'}.get(arm,'none'),
@@ -87,11 +93,11 @@ def main():
         env=dict(os.environ,**overrides)
         for key in ('LEGACY_TASK_BUILD_ONLY','RTA_CLUSTER_LABELS','RTA_UNKNOWN_CE_WEIGHT','ONLINE_FEATURE_INTERFACE_ONLY'):env.pop(key,None)
         (output/'launch.json').write_text(json.dumps(dict(arm=arm,command=command,environment=overrides,
-            actual_new_epochs=6,effective_final_epoch=10,backbone_architecture_changed=False,
+            actual_new_epochs=args.epochs-4,effective_final_epoch=args.epochs,backbone_architecture_changed=False,
             virtual_feature_space=256,teacher_feature_space=256 if teacher=='bottleneck' else 2048,
             label_scope=scope,preset=args.preset,head_initialization_isolates_sampling_rng=True,
-            arm_seconds=3600,total_seconds=7200,model_save_policy='Full last local, best/smallrecords Drive' if args.preset=='teacher-feature' else 'All modelsonruntime, smallrecords Drive'),indent=2))
-        budget=min(3600,7200-(time.monotonic()-started));expired=threading.Event()
+            arm_seconds=args.arm_seconds,total_seconds=args.total_seconds,model_save_policy='Full last local, best/smallrecords Drive' if args.preset=='teacher-feature' else 'All modelsonruntime, smallrecords Drive'),indent=2))
+        budget=min(args.arm_seconds,args.total_seconds-(time.monotonic()-started));expired=threading.Event()
         if budget<=0:raise RuntimeError('Total budget exhausted')
         with (output/'console.log').open('x') as log:
             worker=subprocess.Popen(command,env=env,cwd='/content/rta-legacy-l4-bridge-v1',stdout=subprocess.PIPE,
@@ -112,7 +118,7 @@ def main():
                 target=durable/arm/item.relative_to(output);target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(item,target)
         if code or expired.is_set():raise RuntimeError('Arm failed; preserve evidence, noalgorithmretry')
         print('ONLINE_TEACHER_ARM_COMPLETE',arm,flush=True)
-    collect(root,shared,arms,run_name)
+    collect(root,shared,arms,run_name,args.epochs)
 
 
 if __name__=='__main__':main()
