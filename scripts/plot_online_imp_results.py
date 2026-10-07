@@ -58,6 +58,7 @@ for ax in axes.flat:
     ax.set_xlim(.5,10.5)
 axes[0,0].legend(fontsize=10,loc='lower right')
 factor='Only unknown labels differ' if control=='self_label' else 'Common warm state; only IMP feature layer differs' if control=='bottleneck' else 'Common warm state; only calibration support differs'
+if control=='batch_bn': factor='Common warm state; only classifier BN statistics differ'
 if control=='screened':factor='Common warm state; only structure-label coverage differs'
 if control=='rta_known':factor='Common warm state; only target-known eligibility differs'
 if control=='entropy_veto':factor='Common warm state; known entropy vs alignment veto'
