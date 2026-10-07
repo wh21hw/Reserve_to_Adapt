@@ -61,12 +61,17 @@ with zipfile.ZipFile(args.archive) as bundle:
         if exposure_files:
             selected=np.zeros(len(truth),dtype=np.int64)
             overridden=np.zeros(len(truth),dtype=np.int64)
+            known_original=np.zeros(len(truth),dtype=np.float64)
+            known_effective=np.zeros(len(truth),dtype=np.float64)
             final_exposure=None
             for name in sorted(exposure_files):
                 with np.load(io.BytesIO(bundle.read(name))) as exposure:
                     if exposure['target_paths'].tolist()!=paths:raise ValueError('Exposure target paths differ')
                     if not bool(exposure['unknown_ce_active']):continue
                     selected+=exposure['selected'];overridden+=exposure['overridden']
+                    if 'known_weight_original' in exposure.files:
+                        known_original+=exposure['known_weight_original']
+                        known_effective+=exposure['known_weight_effective']
                     final_exposure={key:exposure[key].copy() for key in ('selected','overridden')}
             report['arms'][arm]['active_exposure']=dict(
                 selected_total=int(selected.sum()),selected_known=int(selected[is_known].sum()),
@@ -77,6 +82,17 @@ with zipfile.ZipFile(args.archive) as bundle:
                 unique_unknown_overridden=int((overridden[~is_known]>0).sum()),
                 unknown_class_override_counts={str(c):int(overridden[truth==c].sum()) for c in np.unique(truth[~is_known])},
                 actual_image_seen_counts_available=False)
+            removed=known_original-known_effective
+            if (removed < -1e-6).any():raise ValueError('Known veto cannot increase weights')
+            report['arms'][arm]['known_objective_exposure']=dict(
+                original_known_weight=float(known_original.sum()),effective_known_weight=float(known_effective.sum()),
+                removed_true_known_weight=float(removed[is_known].sum()),
+                removed_true_unknown_weight=float(removed[~is_known].sum()),
+                original_true_unknown_weight=float(known_original[~is_known].sum()),
+                effective_true_unknown_weight=float(known_effective[~is_known].sum()),
+                unique_known_vetoed=int((removed[is_known]>0).sum()),
+                unique_unknown_vetoed=int((removed[~is_known]>0).sum()),
+                interpretation='Weighted sample exposures, not loss magnitude or causal attribution')
             if final_exposure is not None:
                 report['arms'][arm]['epoch10_exposure']=dict(
                     unknown_label_eligible_members=int((eligible&~is_known).sum()),
