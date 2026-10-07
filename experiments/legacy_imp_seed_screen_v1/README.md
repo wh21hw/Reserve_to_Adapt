@@ -8,4 +8,6 @@
 
 目标是保留三个seed全部逐轮结果，允许展示最好seed/epoch，但标注target-oracle和单任务短程探索，不伪称70轮收敛或多seed均值。评估best/final OS*/UNK/HOS和V范围，论文A→W HOS93.0、本地原RTAseedbest95.2172是不同参照。训练目标标签不进入IMP/阈值/损失。小结果Drive+电脑，模型关闭runtime前备份。已有exec51运行不干扰、不并行争同GPU，不在训练kernel排队新exec。
 
-状态：准备中，尚未启动。
+状态：已启动。旧snapshot直接来自用户2026-10-07 Downloads两个文件。shell13等待driver PID234370已等前批worker退出，旧三seed批launcher PID234371正在运行，console /content/legacy-seed-screen-console.log，root /content/imp-runs/legacy-imp-seed-screen-v1。5分钟hook同时负责前批熵结果必要收集与本批监测，不排队新exec，不重做预热审计。
+
+首轮监测：seed1 source5完成（最后loss.3914），RTA已到epoch4，history每轮正常保存。epoch3/4 elapsed160.085/189.856秒，近期每轮约30秒，估计三seed剩余约30分钟；ETA非硬截止，换seed重估。前4轮预热不作最终拒识结论，无额外新实验。

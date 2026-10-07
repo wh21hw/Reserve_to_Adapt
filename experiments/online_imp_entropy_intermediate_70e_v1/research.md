@@ -26,3 +26,5 @@
 ## History
 
 用户最新要求快速结果，70轮计划撤销且未启动。实际改为online-imp-entropy-intermediate-10e-v1，各5–10六新轮，总12新轮，900秒/arm、1800秒总保护，预计8分钟。上述70轮预算不再生效。目录名保留作为撤销记录，本批不能当70轮实验，不承诺短程超过论文。console /content/online-entropy-intermediate-10e-console.log，结果目录/content/imp-runs/online-imp-entropy-intermediate-10e-v1。
+
+完成：exec51/collector0，两组各own5–10+shared4，新增训练229.904+238.551=468.455秒（7.81分钟）。gamma.1 best/post4best/final均epoch10，OS*/UNK/HOS92.1773/76.2334/83.4506%，K22/V7、unknownARI/NMI.636656/.788914；gamma.25对应94.7794/71.1342/81.2719%，K17/V5、ARI/NMI.546739/.732708。gamma.25−.1 final+2.6022/−5.0992/−2.1787pp。两个工作点互不支配，.1 HOS更高但两组均未超论文93，不能借独立历史差值当严格配对。保留完整summary在电脑。ZIP直传两次fetch失败属于传输问题，不重训；尝试另名传输。旧方案三seed已另批启动，本批不再加密gamma扫描。
