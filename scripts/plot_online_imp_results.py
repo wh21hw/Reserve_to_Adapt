@@ -33,6 +33,8 @@ if control=='source_only':
     names={control:'IMP: source-only restart',candidate:'IMP: current-member initialization'}
 if control=='no_merge':
     names={control:'Current-member IMP: no merge',candidate:'Current-member IMP: objective merge'}
+if control=='rta_only':
+    names={control:'Original unknown selector',candidate:'Selector plus reliable IMP members'}
 if control=='bottleneck':
     names={control:'IMP: bottleneck256',candidate:'IMP: encoder2048'}
 if control=='screened':
@@ -65,6 +67,7 @@ factor='Only unknown labels differ' if control=='self_label' else 'Common warm s
 if control=='batch_bn': factor='Common warm state; only classifier BN statistics differ'
 if control=='source_only': factor='Common warm state; only unknown prototype initialization differs'
 if control=='no_merge': factor='Common warm state; only candidate objective merges differ'
+if control=='rta_only': factor='Common warm state; only unknown CE training support differs'
 if control=='screened':factor='Common warm state; only structure-label coverage differs'
 if control=='rta_known':factor='Common warm state; only target-known eligibility differs'
 if control=='entropy_veto':factor='Common warm state; known entropy vs alignment veto'

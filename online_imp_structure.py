@@ -175,6 +175,7 @@ class OnlineStructure:
         self.veto_eligibility = 'raw'
         self.initialization_mode = 'source_only'
         self.merge_mode = 'none'
+        self.selection_mode = 'rta_only'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -244,6 +245,7 @@ class OnlineStructure:
         self.counts = np.zeros(cls.fc.out_features-self.args.shared_classes, dtype=np.int64)
         self.selected_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
         self.overridden_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
+        self.teacher_added_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
         self.known_original_by_sample = np.zeros(len(self.target_names),dtype=np.float32)
         self.known_effective_by_sample = np.zeros(len(self.target_names),dtype=np.float32)
         self.entropy_effective_by_sample = np.zeros(len(self.target_names),dtype=np.float32)
@@ -270,6 +272,21 @@ class OnlineStructure:
         print('ONLINE_IMP_REFRESH', json.dumps(report), flush=True)
         return virtual.to(device)
 
+    def select_unknown(self,indices,original):
+        """Union reliable teacher members with original selector; preserve its order."""
+        original=original.view(-1)
+        indices=np.asarray(indices)
+        self.last_teacher_added=np.empty(0,dtype=np.int64)
+        if self.selection_mode=='rta_only':return original
+        if self.selection_mode!='reliable_union':raise ValueError('Unknown CE selection mode')
+        ids=self.assignments[indices];known=self.args.shared_classes
+        eligible=ids>=known
+        eligible[eligible]&=self.reliable[ids[eligible]-known]
+        eligible[original.detach().cpu().numpy()]=False
+        extra=np.flatnonzero(eligible)
+        self.last_teacher_added=indices[extra]
+        return torch.cat([original,torch.as_tensor(extra,device=original.device,dtype=original.dtype)])
+
     def labels(self, indices, fallback):
         ids = self.assignments[np.asarray(indices)]
         known = self.args.shared_classes
@@ -287,6 +304,9 @@ class OnlineStructure:
         self.counts += np.bincount(labels.cpu().numpy()-known, minlength=len(self.counts))
         if hasattr(self,'selected_by_sample'):
             np.add.at(self.selected_by_sample,np.asarray(indices),1)
+            if hasattr(self,'teacher_added_by_sample'):
+                added=np.isin(np.asarray(indices),getattr(self,'last_teacher_added',[]))
+                np.add.at(self.teacher_added_by_sample,np.asarray(indices)[added],1)
             if self.use_labels:
                 np.add.at(self.overridden_by_sample,np.asarray(indices)[mask],1)
         return labels
@@ -328,11 +348,14 @@ class OnlineStructure:
             known_weight_original=float(self.known_original_by_sample.sum()),
             known_weight_effective=float(self.known_effective_by_sample.sum()),
             known_veto_enabled=self.known_scope!='none',known_objective_scope=self.known_scope)
+        row.update(unknown_selection_mode=self.selection_mode,teacher_added_actual=int(self.teacher_added_by_sample.sum()),
+            original_selector_actual=self.selected-int(self.teacher_added_by_sample.sum()))
         with (Path(self.args.log_dir)/'online-label-history.jsonl').open('a') as stream:
             stream.write(json.dumps(row)+'\n')
         print('ONLINE_IMP_LABEL_USAGE', json.dumps(row), flush=True)
         np.savez_compressed(Path(self.args.log_dir)/('sample-exposure-%03d.npz'%(epoch+1)),
             selected=self.selected_by_sample,overridden=self.overridden_by_sample,
+            teacher_added=self.teacher_added_by_sample,
             target_paths=np.asarray(self.target_names),unknown_ce_active=np.asarray(epoch>3),
             known_weight_original=self.known_original_by_sample,known_weight_effective=self.known_effective_by_sample,
             entropy_weight_effective=self.entropy_effective_by_sample,alignment_weight_effective=self.alignment_effective_by_sample)

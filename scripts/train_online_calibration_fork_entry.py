@@ -16,6 +16,7 @@ online_structure.known_scope = os.environ.get('ONLINE_KNOWN_SCOPE','both' if onl
 online_structure.veto_eligibility = os.environ.get('ONLINE_VETO_ELIGIBILITY','raw')
 online_structure.initialization_mode = os.environ.get('ONLINE_IMP_INITIALIZATION','source_only')
 online_structure.merge_mode = os.environ.get('ONLINE_IMP_MERGE','none')
+online_structure.selection_mode = os.environ.get('ONLINE_UNKNOWN_SELECTION','rta_only')
 if os.environ.get('ONLINE_FORK_INPUT'):
     from online_imp_fork import restore_fork
     epoch,gmm,nomatch=restore_fork(os.environ['ONLINE_FORK_INPUT'],net,cls,discriminator,

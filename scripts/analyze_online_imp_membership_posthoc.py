@@ -61,6 +61,8 @@ with zipfile.ZipFile(args.archive) as bundle:
         if exposure_files:
             selected=np.zeros(len(truth),dtype=np.int64)
             overridden=np.zeros(len(truth),dtype=np.int64)
+            teacher_added=np.zeros(len(truth),dtype=np.int64)
+            teacher_added_available=False
             known_original=np.zeros(len(truth),dtype=np.float64)
             known_effective=np.zeros(len(truth),dtype=np.float64)
             entropy_effective=np.zeros(len(truth),dtype=np.float64)
@@ -72,6 +74,9 @@ with zipfile.ZipFile(args.archive) as bundle:
                     if exposure['target_paths'].tolist()!=paths:raise ValueError('Exposure target paths differ')
                     if not bool(exposure['unknown_ce_active']):continue
                     selected+=exposure['selected'];overridden+=exposure['overridden']
+                    if 'teacher_added' in exposure.files:
+                        teacher_added_available=True
+                        teacher_added+=exposure['teacher_added']
                     if 'known_weight_original' in exposure.files:
                         known_original+=exposure['known_weight_original']
                         known_effective+=exposure['known_weight_effective']
@@ -89,6 +94,11 @@ with zipfile.ZipFile(args.archive) as bundle:
                 unique_unknown_overridden=int((overridden[~is_known]>0).sum()),
                 unknown_class_override_counts={str(c):int(overridden[truth==c].sum()) for c in np.unique(truth[~is_known])},
                 actual_image_seen_counts_available=False)
+            report['arms'][arm]['teacher_added_actual_exposure']=dict(recorded=teacher_added_available,total=int(teacher_added.sum()),
+                known=int(teacher_added[is_known].sum()),unknown=int(teacher_added[~is_known].sum()),
+                unique_known=int((teacher_added[is_known]>0).sum()),unique_unknown=int((teacher_added[~is_known]>0).sum()),
+                unknown_class_counts={str(c):int(teacher_added[truth==c].sum()) for c in np.unique(truth[~is_known])})
+            if not teacher_added_available:report['arms'][arm]['teacher_added_actual_exposure']=dict(recorded=False)
             removed=known_original-known_effective
             if (removed < -1e-6).any():raise ValueError('Known veto cannot increase weights')
             report['arms'][arm]['known_objective_exposure']=dict(

@@ -18,6 +18,7 @@ source=source.replace(anchor,'''            if os.environ.get('ONLINE_HEAD_BN_MO
 anchor='            feature_otherep = torch.index_select(ft1, 0, r.view(-1))'
 if source.count(anchor)!=1: raise RuntimeError('Unexpected target selection boundary')
 source=source.replace(anchor,'''            entropy_weight,alignment_weight = online_structure.objective_weights(target_indices.cpu().numpy(),weight)
+            r = online_structure.select_unknown(target_indices.cpu().numpy(),r)
 '''+anchor)
 anchor='            entropy = EntropyLoss(predict_prob_target [:,:], instance_level_weight= weight.contiguous())'
 if source.count(anchor)!=1:raise RuntimeError('Unexpected entropy weight boundary')

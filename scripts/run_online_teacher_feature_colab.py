@@ -44,11 +44,11 @@ def collect(root,shared,arms,run_name):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--run',action='store_true')
-    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge'],default='teacher-feature')
+    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
-    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1'}[args.preset]
-    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge')}[args.preset]
+    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1'}[args.preset]
+    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge'),'training-support':('rta_only','reliable_union')}[args.preset]
     root=Path('/content/imp-runs')/run_name
     durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
     shared=Path('/content/imp-runs/online-imp-calibration-fork-v1/warm/office31-a2w_seed3')
@@ -74,6 +74,7 @@ def main():
             ONLINE_HEAD_BN_MODE='fixed' if arm=='fixed_bn' else 'batch',
             ONLINE_IMP_INITIALIZATION='current_members' if arm=='current_members' or args.preset=='candidate-merge' else 'source_only',
             ONLINE_IMP_MERGE='objective' if arm=='objective_merge' else 'none',
+            ONLINE_UNKNOWN_SELECTION=arm if args.preset=='training-support' else 'rta_only',
             ONLINE_FORK_INPUT=str(shared/'last.pt'),
             KONLY_SOURCE_PRIOR='/content/online-source/source-final.pt',RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
             PYTHONPATH='/content',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
