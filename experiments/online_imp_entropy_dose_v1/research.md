@@ -26,3 +26,5 @@
 ## History
 
 预声明，尚未启动。上一完整70轮支持入口模块有收益，但不是本批γ控制的干净对照；本批三个点同预算重新配对，旧entropy-only无union参考只能作背景。
+
+已启动：代码aa20128b，exec46/launcher146130/shell13，console /content/online-entropy-dose-console.log。新权重接口一次检查gamma1/0.5/0及alignment不变均通过，无模型/训练smoke。5分钟hook已更新为三点取舍，完整结果后不采用旧1pp单项否决。
