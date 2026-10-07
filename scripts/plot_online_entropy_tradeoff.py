@@ -11,14 +11,17 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--summary',required=True)
 parser.add_argument('--output',required=True)
 parser.add_argument('--style-root',required=True)
+parser.add_argument('--arms',nargs='+',default=['entropy1','entropy0p5','entropy0'])
 args=parser.parse_args()
 sys.path.insert(0,args.style_root)
 from style_presets import rcparams
 rcparams()
 summary=json.loads(Path(args.summary).read_text())
-arms=['entropy1','entropy0p5','entropy0']
-labels=['Candidate entropy 100%','Candidate entropy 50%','Candidate entropy 0%']
-colors=['#0072B2','#009E73','#D55E00']
+arms=args.arms
+label_map={'entropy1':'Candidate entropy 100%','entropy0p5':'Candidate entropy 50%','entropy0':'Candidate entropy 0%'}
+color_map={'entropy1':'#0072B2','entropy0p5':'#009E73','entropy0':'#D55E00'}
+labels=[label_map[a] for a in arms]
+colors=[color_map[a] for a in arms]
 fig,axes=plt.subplots(2,2,figsize=(12,8),layout='constrained')
 for arm,label,color in zip(arms,labels,colors):
     history=summary[arm]['history']
@@ -44,7 +47,7 @@ fig,ax=plt.subplots(figsize=(8,4.5),layout='constrained')
 scores=[100*summary[a]['final']['HOS'] for a in arms]
 ax.bar(labels,scores,color=colors)
 ax.axhline(scores[0]+1,ls='--',color='#555555',label='Exploratory +1pp HOS line; not a known guard')
-ax.set(ylabel='Final HOS (%)',title='Three declared working points; manual tradeoff review',ylim=(0,100))
+ax.set(ylabel='Final HOS (%)',title='Declared working points; manual tradeoff review',ylim=(0,100))
 ax.legend(fontsize=9)
 fig.savefig(output/'progress.png',dpi=180)
 plt.close(fig)
