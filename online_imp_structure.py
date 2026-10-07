@@ -133,6 +133,7 @@ class OnlineStructure:
         self.calibration_mode = 'confidence'
         self.teacher_space = 'bottleneck'
         self.label_scope = 'screened'
+        self.known_veto = False
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -197,6 +198,8 @@ class OnlineStructure:
         self.counts = np.zeros(cls.fc.out_features-self.args.shared_classes, dtype=np.int64)
         self.selected_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
         self.overridden_by_sample = np.zeros(len(self.target_names),dtype=np.int32)
+        self.known_original_by_sample = np.zeros(len(self.target_names),dtype=np.float32)
+        self.known_effective_by_sample = np.zeros(len(self.target_names),dtype=np.float32)
         self.overridden = self.selected = 0
         report.update(epoch=epoch+1, refresh_seconds=time.monotonic()-started,
             use_structure_labels=self.use_labels, raw_assignment_change_fraction=change,
@@ -238,12 +241,26 @@ class OnlineStructure:
                 np.add.at(self.overridden_by_sample,np.asarray(indices)[mask],1)
         return labels
 
+    def known_weights(self, indices, original):
+        """Veto only known entropy/target alignment, never modify the r selector."""
+        indices=np.asarray(indices)
+        known=self.assignments[indices] < self.args.shared_classes
+        original=original.detach()
+        effective=original*torch.as_tensor(known,device=original.device,dtype=original.dtype) if self.known_veto else original
+        np.add.at(self.known_original_by_sample,indices,original.cpu().numpy())
+        np.add.at(self.known_effective_by_sample,indices,effective.cpu().numpy())
+        return effective
+
     def finish_epoch(self, epoch):
         row = dict(epoch=epoch+1, K=len(self.counts), pseudo_slot_counts=self.counts.tolist(),
-            selected=self.selected, structure_labels_used=self.overridden)
+            selected=self.selected, structure_labels_used=self.overridden,
+            known_weight_original=float(self.known_original_by_sample.sum()),
+            known_weight_effective=float(self.known_effective_by_sample.sum()),
+            known_veto_enabled=self.known_veto)
         with (Path(self.args.log_dir)/'online-label-history.jsonl').open('a') as stream:
             stream.write(json.dumps(row)+'\n')
         print('ONLINE_IMP_LABEL_USAGE', json.dumps(row), flush=True)
         np.savez_compressed(Path(self.args.log_dir)/('sample-exposure-%03d.npz'%(epoch+1)),
             selected=self.selected_by_sample,overridden=self.overridden_by_sample,
-            target_paths=np.asarray(self.target_names),unknown_ce_active=np.asarray(epoch>3))
+            target_paths=np.asarray(self.target_names),unknown_ce_active=np.asarray(epoch>3),
+            known_weight_original=self.known_original_by_sample,known_weight_effective=self.known_effective_by_sample)

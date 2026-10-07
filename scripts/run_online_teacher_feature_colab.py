@@ -44,11 +44,11 @@ def collect(root,shared,arms,run_name):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--run',action='store_true')
-    parser.add_argument('--preset',choices=['teacher-feature','label-coverage'],default='teacher-feature')
+    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
-    run_name='online-imp-teacher-feature-v1' if args.preset=='teacher-feature' else 'online-imp-label-coverage-v1'
-    arms=('bottleneck','backbone') if args.preset=='teacher-feature' else ('screened','all_candidates')
+    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1'}[args.preset]
+    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto')}[args.preset]
     root=Path('/content/imp-runs')/run_name
     durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
     shared=Path('/content/imp-runs/online-imp-calibration-fork-v1/warm/office31-a2w_seed3')
@@ -68,6 +68,7 @@ def main():
         scope=arm if args.preset=='label-coverage' else 'screened'
         overrides=dict(RTA_SEED='3',RTA_EPOCHS='10',RTA_FREEZE_ENCODER_BN='1',ONLINE_STRUCTURE_LABELS='1',
             ONLINE_CALIBRATION_MODE='confidence',ONLINE_TEACHER_SPACE=teacher,ONLINE_LABEL_SCOPE=scope,
+            ONLINE_KNOWN_VETO='1' if arm=='imp_veto' else '0',
             ONLINE_FORK_INPUT=str(shared/'last.pt'),
             KONLY_SOURCE_PRIOR='/content/online-source/source-final.pt',RTA_MODEL_PATH='/content/osda-datasets/resnet50-19c8e357.pth',
             PYTHONPATH='/content',OMP_NUM_THREADS='2',OPENBLAS_NUM_THREADS='2')
@@ -77,7 +78,7 @@ def main():
             actual_new_epochs=6,effective_final_epoch=10,backbone_architecture_changed=False,
             virtual_feature_space=256,teacher_feature_space=256 if teacher=='bottleneck' else 2048,
             label_scope=scope,preset=args.preset,head_initialization_isolates_sampling_rng=True,
-            arm_seconds=3600,total_seconds=7200,model_save_policy='All modelsonruntime, smallrecords Drive' if args.preset=='label-coverage' else 'Full last local, best/smallrecords Drive'),indent=2))
+            arm_seconds=3600,total_seconds=7200,model_save_policy='Full last local, best/smallrecords Drive' if args.preset=='teacher-feature' else 'All modelsonruntime, smallrecords Drive'),indent=2))
         budget=min(3600,7200-(time.monotonic()-started));expired=threading.Event()
         if budget<=0:raise RuntimeError('Total budget exhausted')
         with (output/'console.log').open('x') as log:

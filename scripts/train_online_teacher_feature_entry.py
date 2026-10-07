@@ -7,6 +7,10 @@ if base.count(boundary)!=1: raise RuntimeError('Unexpected fork entry boundary')
 namespace=dict(__name__='feature_builder',__file__='/content/train_online_calibration_fork_entry.py')
 exec(compile(base.split(boundary)[0],'<feature-builder>','exec'),namespace)
 source=namespace['source']
+anchor='            feature_otherep = torch.index_select(ft1, 0, r.view(-1))'
+if source.count(anchor)!=1: raise RuntimeError('Unexpected target selection boundary')
+source=source.replace(anchor,'''            weight = online_structure.known_weights(target_indices.cpu().numpy(),weight)
+'''+anchor)
 anchor='''    nomatch = online_structure.refresh(net, cls, optimizer_cls, epoch,
         reset_correspondence=(epoch == warmiter+1))'''
 if source.count(anchor)!=1: raise RuntimeError('Unexpected teacher refresh boundary')

@@ -31,6 +31,8 @@ if control=='bottleneck':
     names={control:'IMP: bottleneck256',candidate:'IMP: encoder2048'}
 if control=='screened':
     names={control:'Screened IMP labels',candidate:'All candidate IMP labels'}
+if control=='rta_known':
+    names={control:'Original RTA known weights',candidate:'IMP veto of candidate known weights'}
 with zipfile.ZipFile(args.archive) as bundle:
     for arm in colors:
         rows=summary[arm].get('history') or [json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/history.jsonl').decode().splitlines()]
@@ -51,6 +53,7 @@ for ax in axes.flat:
 axes[0,0].legend(fontsize=10,loc='lower right')
 factor='Only unknown labels differ' if control=='self_label' else 'Common warm state; only IMP feature layer differs' if control=='bottleneck' else 'Common warm state; only calibration support differs'
 if control=='screened':factor='Common warm state; only structure-label coverage differs'
+if control=='rta_known':factor='Common warm state; only target-known eligibility differs'
 fig.suptitle('Office31 A→W | '+factor,fontsize=17)
 fig.savefig(output/'epoch-trajectories.png',dpi=180)
 plt.close(fig)
