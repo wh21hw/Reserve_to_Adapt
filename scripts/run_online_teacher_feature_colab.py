@@ -33,7 +33,7 @@ def collect(root,shared,arms,run_name,epochs=10):
     summary['arms']=list(arms)
     summary['deltas_vs_control_pp']={arm:{key:100*(summary[arm]['final'][key]-summary[arms[0]]['final'][key])
         for key in ('OS_star','unknown','HOS')} for arm in arms[1:]}
-    summary['caveats']=['Posthocseed3/oraclebest','Extra source3/frozenencoderBN',
+    summary['caveats']=['Posthocseed3/oraclebest','Extra source3/frozenencoderBN commonwarm; resumed encoder BN follows launch.json',
         'Only the declared preset factor changes;virtual remains256',
         'Semantic ARI/NMI and saved exposure annotation are evaluation only; not calibration']
     (root/'summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False))
@@ -52,18 +52,18 @@ def main():
     parser.add_argument('--epochs',type=int,choices=[10,70],default=10)
     parser.add_argument('--arm-seconds',type=int,default=3600)
     parser.add_argument('--total-seconds',type=int,default=7200)
-    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support','entropy-dose','entropy-dose-validation'],default='teacher-feature')
+    parser.add_argument('--preset',choices=['teacher-feature','label-coverage','known-veto','known-components','entropy-safety','head-bn','member-init','candidate-merge','training-support','entropy-dose','entropy-dose-validation','encoder-bn'],default='teacher-feature')
     args=parser.parse_args()
     if not args.run:raise ValueError('Explicit--run required')
     if args.arm_seconds<=0 or args.total_seconds<=0:raise ValueError('Positive budgets required')
-    if args.epochs!=10 and (args.preset not in ('training-support','entropy-dose-validation') or not args.run_name):
+    if args.epochs!=10 and (args.preset not in ('training-support','entropy-dose-validation','encoder-bn') or not args.run_name):
         raise ValueError('Long validation requires declared training-support preset and separate run-name')
-    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1','entropy-dose':'online-imp-entropy-dose-v1','entropy-dose-validation':'online-imp-entropy-dose-70e-v1'}[args.preset]
+    run_name={'teacher-feature':'online-imp-teacher-feature-v1','label-coverage':'online-imp-label-coverage-v1','known-veto':'online-imp-known-veto-v1','known-components':'online-imp-known-components-v1','entropy-safety':'online-imp-entropy-safety-v1','head-bn':'online-imp-head-bn-v1','member-init':'online-imp-member-init-v1','candidate-merge':'online-imp-candidate-merge-v1','training-support':'online-imp-training-support-v1','entropy-dose':'online-imp-entropy-dose-v1','entropy-dose-validation':'online-imp-entropy-dose-70e-v1','encoder-bn':'online-imp-encoder-bn-v1'}[args.preset]
     if args.run_name:
         if not re.fullmatch(r'online-imp-[a-z0-9-]{1,64}',args.run_name):
             raise ValueError('Invalid managed run name')
         run_name=args.run_name
-    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge'),'training-support':('rta_only','reliable_union'),'entropy-dose':('entropy1','entropy0p5','entropy0'),'entropy-dose-validation':('entropy0p5','entropy0')}[args.preset]
+    arms={'teacher-feature':('bottleneck','backbone'),'label-coverage':('screened','all_candidates'),'known-veto':('rta_known','imp_veto'),'known-components':('entropy_veto','alignment_veto'),'entropy-safety':('raw_entropy','screened_entropy'),'head-bn':('batch_bn','fixed_bn'),'member-init':('source_only','current_members'),'candidate-merge':('no_merge','objective_merge'),'training-support':('rta_only','reliable_union'),'entropy-dose':('entropy1','entropy0p5','entropy0'),'entropy-dose-validation':('entropy0p5','entropy0'),'encoder-bn':('frozen_encoder','normal_encoder')}[args.preset]
     root=Path('/content/imp-runs')/run_name
     durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
     shared=Path('/content/imp-runs/online-imp-calibration-fork-v1/warm/office31-a2w_seed3')
@@ -97,6 +97,10 @@ def main():
         if args.preset in ('entropy-dose','entropy-dose-validation'):
             overrides.update(ONLINE_UNKNOWN_SELECTION='reliable_union',ONLINE_KNOWN_SCOPE='entropy',
                 ONLINE_ENTROPY_CANDIDATE_SCALE={'entropy1':'1','entropy0p5':'0.5','entropy0':'0'}[arm])
+            env=dict(os.environ,**overrides)
+        if args.preset=='encoder-bn':
+            overrides.update(ONLINE_UNKNOWN_SELECTION='reliable_union',ONLINE_KNOWN_SCOPE='entropy',
+                ONLINE_ENTROPY_CANDIDATE_SCALE='0',RTA_FREEZE_ENCODER_BN='1' if arm=='frozen_encoder' else '0')
             env=dict(os.environ,**overrides)
         for key in ('LEGACY_TASK_BUILD_ONLY','RTA_CLUSTER_LABELS','RTA_UNKNOWN_CE_WEIGHT','ONLINE_FEATURE_INTERFACE_ONLY'):env.pop(key,None)
         (output/'launch.json').write_text(json.dumps(dict(arm=arm,command=command,environment=overrides,
