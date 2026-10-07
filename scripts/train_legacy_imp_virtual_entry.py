@@ -5,8 +5,9 @@ import sys
 
 root = Path('/content/rta-legacy-l4-bridge-v1')
 sys.path.insert(0, str(root))
-sys.path.insert(0, '/content/legacy-imp-virtual-v1')
-source = Path('/content/legacy-imp-virtual-v1/main_user_snapshot.py').read_text()
+snapshot = Path(os.environ.get('LEGACY_SNAPSHOT_DIR','/content/legacy-imp-virtual-v1'))
+sys.path.insert(0, str(snapshot))
+source = (snapshot/'main_user_snapshot.py').read_text()
 
 
 def replace_once(old, new):
@@ -76,5 +77,5 @@ replace_once('param = torch.from_numpy(v.cpu().numpy()[t_match])', '''if len(t_m
                 remaining = [index for index in range(args.all_classes) if index not in t_match]
                 t_match = np.concatenate([t_match, np.asarray(remaining, dtype=np.int64)])
             param = torch.from_numpy(v.cpu().numpy()[t_match])''')
-exec(compile(source, '/content/legacy-imp-virtual-v1/main_user_snapshot.py', 'exec'),
-     dict(__name__='__main__', __file__='/content/legacy-imp-virtual-v1/main_user_snapshot.py'))
+exec(compile(source, str(snapshot/'main_user_snapshot.py'), 'exec'),
+     dict(__name__='__main__', __file__=str(snapshot/'main_user_snapshot.py')))
