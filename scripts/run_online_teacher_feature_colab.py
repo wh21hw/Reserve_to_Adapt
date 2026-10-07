@@ -30,7 +30,7 @@ def collect(root,shared,arms,run_name):
     summary['final_delta_pp']={key:100*(summary[arms[1]]['final'][key]-summary[arms[0]]['final'][key])
         for key in ('OS_star','unknown','HOS')}
     summary['caveats']=['Posthocseed3/oraclebest','Extra source3/frozenencoderBN',
-        'Only teacher layer or label coverage changes as declared by preset;virtual remains256',
+        'Only the declared preset factor changes;virtual remains256',
         'Semantic ARI/NMI and saved exposure annotation are evaluation only; not calibration']
     (root/'summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False))
     archive=Path('/content')/(run_name+'-results.zip')

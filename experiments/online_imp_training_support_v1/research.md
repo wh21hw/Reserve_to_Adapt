@@ -24,3 +24,5 @@
 ## History
 
 预声明。之前标签覆盖实验只在原r内部改资格，不等于本次扩充训练集合。source_only参考97.6774/54.9944/70.3694、unknown独立结构覆盖145只是背景，重新同批控制；不推广失败承接/merge。三任务及整体未知结构目标未完成。
+
+已启动：dccc1c56，T4复用，exec40/shell13，控制台`/content/online-training-support-console.log`。一次原顺序/union去重/可靠资格/实际teacher-added标签曝光与代码生成检查通过。5分钟hook已替换旧exec36，无额外预热/数据下载。
