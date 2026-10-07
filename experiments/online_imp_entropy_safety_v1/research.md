@@ -20,3 +20,5 @@
 ## History
 
 预声明，尚未启动；整个未知结构和三任务目标仍未达成。
+
+已启动：代码1774a263，T4复用、exec23/launcher49453/shell13，控制台`/content/online-entropy-safety-console.log`。资格接口一次通过，alignment保持原样。两个续训6，新hook已换23，每5分钟安静检查；确认母进程running。实际几轮后再估时间，不重复旧exec20结果。
