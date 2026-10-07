@@ -33,6 +33,8 @@ if control=='screened':
     names={control:'Screened IMP labels',candidate:'All candidate IMP labels'}
 if control=='rta_known':
     names={control:'Original RTA known weights',candidate:'IMP veto of candidate known weights'}
+if control=='entropy_veto':
+    names={control:'Entropy-only veto',candidate:'Alignment-only veto'}
 with zipfile.ZipFile(args.archive) as bundle:
     for arm in colors:
         rows=summary[arm].get('history') or [json.loads(line) for line in bundle.read(arm+'/office31-a2w_seed3/history.jsonl').decode().splitlines()]
@@ -54,6 +56,7 @@ axes[0,0].legend(fontsize=10,loc='lower right')
 factor='Only unknown labels differ' if control=='self_label' else 'Common warm state; only IMP feature layer differs' if control=='bottleneck' else 'Common warm state; only calibration support differs'
 if control=='screened':factor='Common warm state; only structure-label coverage differs'
 if control=='rta_known':factor='Common warm state; only target-known eligibility differs'
+if control=='entropy_veto':factor='Common warm state; known entropy vs alignment veto'
 fig.suptitle('Office31 A→W | '+factor,fontsize=17)
 fig.savefig(output/'epoch-trajectories.png',dpi=180)
 plt.close(fig)

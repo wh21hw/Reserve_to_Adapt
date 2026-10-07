@@ -63,6 +63,9 @@ with zipfile.ZipFile(args.archive) as bundle:
             overridden=np.zeros(len(truth),dtype=np.int64)
             known_original=np.zeros(len(truth),dtype=np.float64)
             known_effective=np.zeros(len(truth),dtype=np.float64)
+            entropy_effective=np.zeros(len(truth),dtype=np.float64)
+            alignment_effective=np.zeros(len(truth),dtype=np.float64)
+            split_objectives=False
             final_exposure=None
             for name in sorted(exposure_files):
                 with np.load(io.BytesIO(bundle.read(name))) as exposure:
@@ -72,6 +75,10 @@ with zipfile.ZipFile(args.archive) as bundle:
                     if 'known_weight_original' in exposure.files:
                         known_original+=exposure['known_weight_original']
                         known_effective+=exposure['known_weight_effective']
+                    if 'entropy_weight_effective' in exposure.files:
+                        split_objectives=True
+                        entropy_effective+=exposure['entropy_weight_effective']
+                        alignment_effective+=exposure['alignment_weight_effective']
                     final_exposure={key:exposure[key].copy() for key in ('selected','overridden')}
             report['arms'][arm]['active_exposure']=dict(
                 selected_total=int(selected.sum()),selected_known=int(selected[is_known].sum()),
@@ -93,6 +100,14 @@ with zipfile.ZipFile(args.archive) as bundle:
                 unique_known_vetoed=int((removed[is_known]>0).sum()),
                 unique_unknown_vetoed=int((removed[~is_known]>0).sum()),
                 interpretation='Weighted sample exposures, not loss magnitude or causal attribution')
+            if split_objectives:
+                report['arms'][arm]['per_known_objective']={}
+                for kind,effective in [('entropy',entropy_effective),('alignment',alignment_effective)]:
+                    removed=known_original-effective
+                    report['arms'][arm]['per_known_objective'][kind]=dict(
+                        effective_weight=float(effective.sum()),removed_true_known_weight=float(removed[is_known].sum()),
+                        removed_true_unknown_weight=float(removed[~is_known].sum()),
+                        remaining_true_unknown_weight=float(effective[~is_known].sum()))
             if final_exposure is not None:
                 report['arms'][arm]['epoch10_exposure']=dict(
                     unknown_label_eligible_members=int((eligible&~is_known).sum()),
