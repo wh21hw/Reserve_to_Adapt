@@ -31,3 +31,5 @@
 已启动，训练代码4ed649f5，background exec8/launcher12643/独立shell13；控制台`/content/online-calibration-fork-console.log`。共同warm4完成155.5秒，K34/V20；真实恢复检查exit0且没有新history，分类动量设备/形状和CPU RNG检查通过。confidence分支正在epoch5起继续；以实际history近期轮间差值重估两分支ETA，原预算不变。旧批exec5已完成，本hook已替换为本批每5分钟等待，不能重复旧结果通知。
 
 confidence完成epoch5–7共117.0秒、近期37.04秒/轮；总批预计10–12分钟。structure_support额外初步IMP的实际耗时需换组后重估。支持接口缓存检查不增支持集合/维度/有限值通过，不把旧缓存327→327当本批效果。
+
+已完成：warm4+两续训6共16轮exit0，总608.6秒。confidence finalHOS68.1619%，结构支持67.5262%，Δ−0.6357pp/OS*−1.4651pp触发guard。当前支持污染28.75%→26.39%（115→100未知，同时285→279真已知），不足以保护未知；不晋升规则。下一单因素比较IMP表征层，复用共同warm，不延长本批，见final_report.md。

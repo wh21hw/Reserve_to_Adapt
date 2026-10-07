@@ -1,0 +1,507 @@
+{
+  "stage": "Start of epoch10, not final10 network",
+  "target_truth_used": "Posthoc annotation only",
+  "actual_selected_sample_exposure_available": false,
+  "arms": {
+    "confidence": {
+      "clusters": [
+        {
+          "slot": 10,
+          "members": 33,
+          "known_members": 0,
+          "unknown_members": 33,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "20": 32,
+            "25": 1
+          }
+        },
+        {
+          "slot": 11,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "24": 12
+          }
+        },
+        {
+          "slot": 12,
+          "members": 14,
+          "known_members": 0,
+          "unknown_members": 14,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "22": 14
+          }
+        },
+        {
+          "slot": 13,
+          "members": 4,
+          "known_members": 0,
+          "unknown_members": 4,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "25": 4
+          }
+        },
+        {
+          "slot": 14,
+          "members": 11,
+          "known_members": 0,
+          "unknown_members": 11,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "27": 11
+          }
+        },
+        {
+          "slot": 15,
+          "members": 7,
+          "known_members": 0,
+          "unknown_members": 7,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "23": 6,
+            "28": 1
+          }
+        },
+        {
+          "slot": 16,
+          "members": 25,
+          "known_members": 0,
+          "unknown_members": 25,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "slot": 17,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "28": 8,
+            "29": 4
+          }
+        },
+        {
+          "slot": 18,
+          "members": 11,
+          "known_members": 0,
+          "unknown_members": 11,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "30": 11
+          }
+        },
+        {
+          "slot": 19,
+          "members": 16,
+          "known_members": 1,
+          "unknown_members": 15,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "5": 1,
+            "24": 11,
+            "30": 4
+          }
+        },
+        {
+          "slot": 20,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "25": 6
+          }
+        },
+        {
+          "slot": 21,
+          "members": 7,
+          "known_members": 7,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "9": 7
+          }
+        },
+        {
+          "slot": 22,
+          "members": 1,
+          "known_members": 0,
+          "unknown_members": 1,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "21": 1
+          }
+        },
+        {
+          "slot": 23,
+          "members": 11,
+          "known_members": 0,
+          "unknown_members": 11,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "29": 11
+          }
+        },
+        {
+          "slot": 24,
+          "members": 8,
+          "known_members": 0,
+          "unknown_members": 8,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "28": 8
+          }
+        },
+        {
+          "slot": 25,
+          "members": 6,
+          "known_members": 2,
+          "unknown_members": 4,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "6": 2,
+            "30": 4
+          }
+        },
+        {
+          "slot": 26,
+          "members": 13,
+          "known_members": 0,
+          "unknown_members": 13,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "23": 13
+          }
+        },
+        {
+          "slot": 27,
+          "members": 10,
+          "known_members": 4,
+          "unknown_members": 6,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "9": 4,
+            "23": 6
+          }
+        },
+        {
+          "slot": 28,
+          "members": 3,
+          "known_members": 3,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "6": 3
+          }
+        },
+        {
+          "slot": 29,
+          "members": 2,
+          "known_members": 2,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "2": 2
+          }
+        },
+        {
+          "slot": 30,
+          "members": 16,
+          "known_members": 0,
+          "unknown_members": 16,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "27": 16
+          }
+        },
+        {
+          "slot": 31,
+          "members": 2,
+          "known_members": 0,
+          "unknown_members": 2,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "23": 2
+          }
+        }
+      ],
+      "known_candidate_fraction": 0.06440677966101695,
+      "unknown_candidate_fraction": 0.7843866171003717,
+      "known_reliable_candidate_fraction": 0.0,
+      "unknown_reliable_candidate_fraction": 0.2936802973977695,
+      "known_retained_identity_accuracy": 0.9355932203389831,
+      "calibration_support": {
+        "count": 400,
+        "known_count": 285,
+        "unknown_count": 115,
+        "unknown_fraction": 0.2875,
+        "true_known_coverage": 0.9661016949152542
+      }
+    },
+    "structure_support": {
+      "clusters": [
+        {
+          "slot": 10,
+          "members": 32,
+          "known_members": 0,
+          "unknown_members": 32,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "20": 31,
+            "25": 1
+          }
+        },
+        {
+          "slot": 11,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "24": 12
+          }
+        },
+        {
+          "slot": 12,
+          "members": 14,
+          "known_members": 0,
+          "unknown_members": 14,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "22": 14
+          }
+        },
+        {
+          "slot": 13,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "24": 6,
+            "30": 6
+          }
+        },
+        {
+          "slot": 14,
+          "members": 2,
+          "known_members": 0,
+          "unknown_members": 2,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "25": 2
+          }
+        },
+        {
+          "slot": 15,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "28": 6
+          }
+        },
+        {
+          "slot": 16,
+          "members": 25,
+          "known_members": 0,
+          "unknown_members": 25,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "26": 25
+          }
+        },
+        {
+          "slot": 17,
+          "members": 10,
+          "known_members": 0,
+          "unknown_members": 10,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "23": 9,
+            "28": 1
+          }
+        },
+        {
+          "slot": 18,
+          "members": 8,
+          "known_members": 0,
+          "unknown_members": 8,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "30": 8
+          }
+        },
+        {
+          "slot": 19,
+          "members": 25,
+          "known_members": 0,
+          "unknown_members": 25,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "27": 25
+          }
+        },
+        {
+          "slot": 20,
+          "members": 10,
+          "known_members": 1,
+          "unknown_members": 9,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "2": 1,
+            "28": 5,
+            "29": 4
+          }
+        },
+        {
+          "slot": 21,
+          "members": 10,
+          "known_members": 10,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "6": 10
+          }
+        },
+        {
+          "slot": 22,
+          "members": 10,
+          "known_members": 0,
+          "unknown_members": 10,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "29": 10
+          }
+        },
+        {
+          "slot": 23,
+          "members": 4,
+          "known_members": 0,
+          "unknown_members": 4,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "25": 4
+          }
+        },
+        {
+          "slot": 24,
+          "members": 7,
+          "known_members": 7,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "9": 7
+          }
+        },
+        {
+          "slot": 25,
+          "members": 5,
+          "known_members": 5,
+          "unknown_members": 0,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "5": 5
+          }
+        },
+        {
+          "slot": 26,
+          "members": 5,
+          "known_members": 0,
+          "unknown_members": 5,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "28": 4,
+            "29": 1
+          }
+        },
+        {
+          "slot": 27,
+          "members": 2,
+          "known_members": 0,
+          "unknown_members": 2,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "21": 1,
+            "23": 1
+          }
+        },
+        {
+          "slot": 28,
+          "members": 12,
+          "known_members": 0,
+          "unknown_members": 12,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "23": 11,
+            "29": 1
+          }
+        },
+        {
+          "slot": 29,
+          "members": 8,
+          "known_members": 7,
+          "unknown_members": 1,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "9": 7,
+            "28": 1
+          }
+        },
+        {
+          "slot": 30,
+          "members": 5,
+          "known_members": 0,
+          "unknown_members": 5,
+          "virtual_and_label_eligible": true,
+          "semantic_counts": {
+            "20": 1,
+            "25": 4
+          }
+        },
+        {
+          "slot": 31,
+          "members": 15,
+          "known_members": 1,
+          "unknown_members": 14,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "5": 1,
+            "24": 14
+          }
+        },
+        {
+          "slot": 32,
+          "members": 6,
+          "known_members": 0,
+          "unknown_members": 6,
+          "virtual_and_label_eligible": false,
+          "semantic_counts": {
+            "23": 6
+          }
+        }
+      ],
+      "known_candidate_fraction": 0.10508474576271186,
+      "unknown_candidate_fraction": 0.7955390334572491,
+      "known_reliable_candidate_fraction": 0.0,
+      "unknown_reliable_candidate_fraction": 0.35315985130111527,
+      "known_retained_identity_accuracy": 0.8949152542372881,
+      "calibration_support": {
+        "count": 379,
+        "known_count": 279,
+        "unknown_count": 100,
+        "unknown_fraction": 0.2638522427440633,
+        "true_known_coverage": 0.9457627118644067
+      }
+    }
+  }
+}
