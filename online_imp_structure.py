@@ -16,7 +16,7 @@ from alternating_konly import _FrozenImages
 from source_anchored_imp import SourceAnchoredIMP
 
 
-def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence', allow_zero=False, initial_candidates=None):
+def infer_structure(source, source_labels, target, target_logits, known, calibration_mode='confidence', allow_zero=False, initial_candidates=None, merge_mode='none'):
     if calibration_mode not in ('confidence','structure_supported'):
         raise ValueError('Unknown target calibration support policy')
     anchors = torch.stack([source[source_labels == c].mean(0) for c in range(known)])
@@ -61,6 +61,14 @@ def infer_structure(source, source_labels, target, target_logits, known, calibra
     mapping = {int(old): known + j for j, old in enumerate(occupied)}
     assignments = np.asarray([mapping.get(int(a), int(a)) for a in assignments], dtype=np.int64)
     candidates = centers[torch.as_tensor(occupied)]
+    if merge_mode not in ('none','objective'):raise ValueError('Unknown merge mode')
+    merge_report=dict(enabled=False)
+    if merge_mode=='objective':
+        from dpmeans_merge import merge_candidates
+        candidates,assignments,merge_report=merge_candidates(target,centers[:known],candidates,assignments,radius)
+        occupied=np.arange(known,known+len(candidates))
+        if not len(candidates) and not allow_zero:
+            raise RuntimeError('Merge inferred zero occupied candidates; do not force K1')
     candidate_distance = (candidates[:, None] - anchors[None]).square().sum(-1)
     # Conservative geometric screening, not a semantic guarantee.
     reliable = (candidate_distance > torch.tensor(radii)[None]).all(1).numpy()
@@ -70,6 +78,7 @@ def infer_structure(source, source_labels, target, target_logits, known, calibra
         prior_strength=5., steps=5, target_labels_used=False,
         candidate_count_is_semantic_count=False, calibration_mode=calibration_mode,
         initial_candidate_count=0 if initial_candidates is None else len(initial_candidates),
+        candidate_merge=merge_report,
         target_support_before_structure=support_before, preliminary_known_members=preliminary_known,
         _target_support_mask=support.numpy())
     return assignments, candidates, reliable, report
@@ -165,6 +174,7 @@ class OnlineStructure:
         self.known_scope = 'none'
         self.veto_eligibility = 'raw'
         self.initialization_mode = 'source_only'
+        self.merge_mode = 'none'
         source_rows = [r.rsplit(None, 1) for r in Path(args.source).read_text().splitlines() if r.strip()]
         self.source_names = [r[0] for r in source_rows]
         self.source_labels = torch.tensor([int(r[1]) for r in source_rows])
@@ -207,7 +217,7 @@ class OnlineStructure:
         initial=current_member_centers(arrays['target'+key],self.assignments,self.args.shared_classes) if self.initialization_mode=='current_members' else None
         assignments, candidates, reliable, report = infer_structure(arrays['source'+key],
             self.source_labels, arrays['target'+key], arrays['target_logits'], self.args.shared_classes,
-            self.calibration_mode,initial_candidates=initial)
+            self.calibration_mode,initial_candidates=initial,merge_mode=self.merge_mode)
         support_mask = report.pop('_target_support_mask')
         virtual = candidates[torch.from_numpy(reliable)]
         if self.teacher_space == 'backbone':
