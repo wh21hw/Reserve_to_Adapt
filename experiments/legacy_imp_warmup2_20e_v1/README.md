@@ -8,6 +8,14 @@
 
 新warmiter接口做一次compile/build-only针对性检查，验证loss开关与未知头初始化共用变量，不重复训练smoke/hash/checkpoint重评。保留每epoch所有评测和best/last，比较UNK上升速度、OS*代价、HOS峰值/final/尾段稳定性，不承诺超过论文93。target真值仅评价，事后seed/方法/epoch选择探索披露。小结果Drive+电脑，关闭runtime前模型必须实际备份。
 
-状态：准备，等待参数v2完毕。
+状态：完成。20轮完整，process-status exit_code=0、timed_out=false，collector与launcher均0。逐epoch记录已下载电脑pipeline-results/legacy-imp-warmup2-20e-v1-results.zip。小记录按runner复制mounted Drive，不能独立保证云同步；模型仍在runtime，关闭前需实际备份。
 
 已启动：参数v2 exec5完成collector0后，等待driver自动启动warmup launcher17227、worker17228。console /content/legacy-warmup2-console.log，shell14，运行目录/content/imp-runs/legacy-imp-warmup2-20e-v1。只本单arm，不再追加新的实验。
+
+## 完成结果（2026-10-08）
+
+best与final均第20轮：OS*=92.0805%、UNK=86.9633%、HOS=89.4488%。V范围0–4，最终2；分类头未知槽始终2。耗时690.67秒（约11.51分钟，包含source阶段）。相对同seed3/warm4/20轮final，OS*+1.9570pp、UNK+1.5982pp、HOS+1.7690pp；相对其best HOS+1.1195pp。仍低于论文A→W HOS93.0%，也未超过原版RTA复现best95.2172%。
+
+warm2第3/4/5/6轮UNK分别34.6676/68.5617/85.8093/92.7964%，第6轮OS*降至80.6021%，后期回升。最后5轮HOS为88.2052、89.4110、89.2487、88.8684、89.4488%，峰值出现在预算末轮，不能断言完全收敛。结论仅支持缩短预热改善本次20轮工作点，不证明未知语义发现或稳定超过RTA。
+
+属于目标标签选择seed/配置/epoch的探索，target标签没有进入训练或IMP阈值。旧用户两个snapshot的历史依赖未完整提供，固定bridge依赖而非完整旧环境逐字复原。等待hook已暂停，不追加实验，不关闭实例。
