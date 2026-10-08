@@ -12,6 +12,10 @@ import zipfile
 mode=os.environ.get('LEGACY_SCREEN_MODE','seeds')
 if mode not in ('seeds','parameters'):raise ValueError('Unknown declared screen')
 run_name='legacy-imp-seed-screen-v1' if mode=='seeds' else 'legacy-imp-param-screen-v1'
+if os.environ.get('LEGACY_RUN_NAME'):
+    if mode!='parameters' or os.environ['LEGACY_RUN_NAME']!='legacy-imp-param-screen-v2':
+        raise ValueError('Undeclared resumed run name')
+    run_name=os.environ['LEGACY_RUN_NAME']
 arms=[('seed%d'%seed,seed,.05,5) for seed in (1,2,3)] if mode=='seeds' else [('alpha0p01-ft5',3,.01,5),('alpha0p05-ft3',3,.05,3)]
 root=Path('/content/imp-runs')/run_name
 durable=Path('/content/drive/MyDrive/OSDA/runs')/run_name
