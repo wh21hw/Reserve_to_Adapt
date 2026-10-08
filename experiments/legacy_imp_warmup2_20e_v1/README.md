@@ -9,3 +9,5 @@
 新warmiter接口做一次compile/build-only针对性检查，验证loss开关与未知头初始化共用变量，不重复训练smoke/hash/checkpoint重评。保留每epoch所有评测和best/last，比较UNK上升速度、OS*代价、HOS峰值/final/尾段稳定性，不承诺超过论文93。target真值仅评价，事后seed/方法/epoch选择探索披露。小结果Drive+电脑，关闭runtime前模型必须实际备份。
 
 状态：准备，等待参数v2完毕。
+
+已启动：参数v2 exec5完成collector0后，等待driver自动启动warmup launcher17227、worker17228。console /content/legacy-warmup2-console.log，shell14，运行目录/content/imp-runs/legacy-imp-warmup2-20e-v1。只本单arm，不再追加新的实验。

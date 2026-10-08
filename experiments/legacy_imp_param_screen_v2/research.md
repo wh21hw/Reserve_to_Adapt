@@ -28,3 +28,5 @@
 准备：mount第一次failed，第二次15min脚本成功。缓存与旧目录可见，环境旧依赖已安装；恢复历史小结果进行中，尚未启动训练。
 
 已启动：2026-10-08 exec5，console /content/legacy-param-v2-console.log，root/content/imp-runs/legacy-imp-param-screen-v2，独立shell14。历史归档从Drive恢复到电脑pipeline-results/legacy-recovered-oct8.zip，三seed各20轮且process0，参数v1 alpha.01/source5只3轮、process−15/user stop，未自动重试而按新用户授权独立v2重新训练。原数据与预训练权重复用缓存成功，无下载数据副本。
+
+完成：exec5/collector0，两arm各恰好20轮、process0/timed_outfalse，source轮数保持5/3。结果ZIP已下载电脑pipeline-results/legacy-imp-param-screen-v2-results.zip。总训练682.293+673.632=1355.925秒（22.60分钟）。alpha.01/source5 best epoch18 OS*/UNK/HOS93.7687/85.2124/89.2860%，final94.6679/83.7730/88.8878%；alpha.05/source3 best epoch19 87.1098/90.2273/88.6411%，final86.7764/90.2273/88.4682%。V范围0–1/0–3，final1/2。两点known/unknown互不支配，均未超过论文93。详见final_report.md。参数batch不追加；已授权warm2单arm接续，hook暂保留。
