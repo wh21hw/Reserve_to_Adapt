@@ -10,4 +10,4 @@
 
 预计root/content/imp-runs/legacy-imp-hard-update-20e-v1，archive/content/legacy-imp-hard-update-20e-v1-results.zip。small日志/配置/summary自动复制mounted Drive并下载电脑，模型留runtime关闭前实际备份。完成报告全部best/final、峰值epoch、V范围和尾5轮及与soft的取舍，不只选更高best；报告后暂停hook，不关闭实例。
 
-状态：准备，复用现有T4与挂载，不重新下载数据。
+状态：已启动。T4 gpu-t4-s-kkb-usw4a2-10aku92peratz、shell14、launcher26344/worker26345，console/content/legacy-hard-update-console.log。代码91592a7e。一次硬分配与均值针对性检查exec6完成；source前3轮loss2.0283/1.1280/.6490有限，无OOM。复用现有T4与挂载，不重新下载数据。5分钟hook已启用，首个检查按RTA近期elapsed重新估算，正常保持安静。
