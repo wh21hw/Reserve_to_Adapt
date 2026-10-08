@@ -18,7 +18,8 @@ def replace_once(old, new):
 
 
 replace_once('from IMPClusterer import IMPClusterer',
-             'from IMPClusterer_user_snapshot import IMPClusterer')
+             'from legacy_imp_hard_clusterer import IMPClusterer' if os.environ.get('LEGACY_IMP_UPDATE','soft')=='hard'
+             else 'from IMPClusterer_user_snapshot import IMPClusterer')
 replace_once('args = get_args()', '''args = get_args()
 import random, json, time
 seed = int(os.environ.get('RTA_SEED', '3'))
@@ -47,6 +48,7 @@ replace_once("print(f'Log file: {log_file}\\n')", """print(f'Log file: {log_file
 with open(os.path.join(args.log_dir, 'config.json'), 'w') as stream:
     json.dump(dict(vars(args), seed=seed, source_pretrain_epochs=source_epochs, epochs=rta_epochs,
         alpha=imp_alpha, cluster_steps=5, source_centers_fixed=True,
+        imp_update=os.environ.get('LEGACY_IMP_UPDATE','soft'),
         rta_warm_epochs=rta_warmiter+1,unknown_training_start_epoch=rta_warmiter+2,
         classifier_unknown_slots=2, design='Adaptive virtual prototypes, NOT adaptive output K',
         engineering_edits=['Paths, seed, no-overwrite, metrics/checkpoints, eval no_grad',
